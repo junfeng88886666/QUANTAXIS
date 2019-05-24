@@ -4286,6 +4286,6 @@ if __name__ == '__main__':
     # QA_SU_save_index_list()
     # QA_SU_save_future_list()
 
-    QA_SU_save_future_day()
+    # QA_SU_save_future_day()
 
     QA_SU_save_future_min()

@@ -131,6 +131,7 @@ class QA_Backtest():
         else:
             QA_util_log_info("{} 的市场类型没有实现！".format(market_type))
 
+
     def _generate_account(self):
         """
         generate a simple account

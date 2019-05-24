@@ -27,7 +27,6 @@ from functools import lru_cache
 import pandas as pd
 
 from QUANTAXIS.QAARP.QAAccount import QA_Account
-from QUANTAXIS.QAARP.QAAccountPro import QA_AccountPRO
 from QUANTAXIS.QAARP.QARisk import QA_Performance, QA_Risk
 from QUANTAXIS.QAUtil import (
     DATABASE,
@@ -37,7 +36,6 @@ from QUANTAXIS.QAUtil import (
 from QUANTAXIS.QAUtil import MARKET_TYPE, RUNNING_ENVIRONMENT
 
 # pylint: disable=old-style-class, too-few-public-methods
-
 
 class QA_Portfolio(QA_Account):
     """QA_Portfolio
@@ -98,7 +96,6 @@ class QA_Portfolio(QA_Account):
             running_environment=RUNNING_ENVIRONMENT.BACKETEST
     ):
         self.user_cookie = user_cookie
-        # self.portfolio_cookie = QA_util_random_with_topic('Portfolio')
         self.portfolio_cookie = QA_util_random_with_topic(
             'Portfolio'
         ) if portfolio_cookie is None else portfolio_cookie
@@ -203,11 +200,12 @@ class QA_Portfolio(QA_Account):
                 self.cash.append(self.cash_available - account.init_cash)
                 self.account_list.append(account.account_cookie)
                 account.save()
+                self.save()
                 return account
         else:
             pass
 
-    def drop_account(self, account_cookie):
+    def drop_account(self, account_cookiee,temp = False):
         """删除一个account
 
         Arguments:
@@ -220,81 +218,22 @@ class QA_Portfolio(QA_Account):
         if account_cookie in self.account_list:
             res = self.account_list.remove(account_cookie)
             self.cash.append(
-                self.cash[-1] + self.get_account_by_cookie(res).init_cash
+                self.cash[-1] + self.get_account_by_cookie(res).cash_available
             )
+            if temp == False:
+                __client_account_temp = DATABASE.account
+                __client_account_temp.delete_one({
+                                                'user_cookie':self.user_cookie,
+                                                'portfolio_cookie':self.portfolio_cookie,
+                                                'account_cookie':account_cookie
+                                                })
+
+                self.save()
             return True
         else:
             raise RuntimeError(
                 'account {} is not in the portfolio'.format(account_cookie)
             )
-
-    def new_accountpro(
-            self,
-            account_cookie=None,
-            init_cash=1000000,
-            market_type=MARKET_TYPE.STOCK_CN,
-            *args,
-            **kwargs
-    ):
-        """创建一个新的Account
-
-        Keyword Arguments:
-            account_cookie {[type]} -- [description] (default: {None})
-
-        Returns:
-            [type] -- [description]
-        """
-
-        if account_cookie is None:
-            """创建新的account
-
-            Returns:
-                [type] -- [description]
-            """
-            # 如果组合的cash_available>创建新的account所需cash
-            if self.cash_available >= init_cash:
-
-                temp = QA_AccountPRO(
-                    user_cookie=self.user_cookie,
-                    portfolio_cookie=self.portfolio_cookie,
-                    init_cash=init_cash,
-                    market_type=market_type,
-                    *args,
-                    **kwargs
-                )
-                if temp.account_cookie not in self.account_list:
-                    #self.accounts[temp.account_cookie] = temp
-                    self.account_list.append(temp.account_cookie)
-                    temp.save()
-                    self.cash.append(self.cash_available - init_cash)
-                    return temp
-
-                else:
-                    return self.new_accountpro()
-        else:
-            if self.cash_available >= init_cash:
-                if account_cookie not in self.account_list:
-
-                    acc = QA_AccountPRO(
-                        portfolio_cookie=self.portfolio_cookie,
-                        user_cookie=self.user_cookie,
-                        init_cash=init_cash,
-                        market_type=market_type,
-                        account_cookie=account_cookie,
-                        *args,
-                        **kwargs
-                    )
-                    acc.save()
-                    self.account_list.append(acc.account_cookie)
-                    self.cash.append(self.cash_available - init_cash)
-                    return acc
-                else:
-                    return QA_AccountPRO(
-                        account_cookie=account_cookie,
-                        user_cookie=self.user_cookie,
-                        portfolio_cookie=self.portfolio_cookie,
-                        auto_reload=True
-                    )
 
     def new_account(
             self,
@@ -335,10 +274,16 @@ class QA_Portfolio(QA_Account):
                     self.account_list.append(temp.account_cookie)
                     temp.save()
                     self.cash.append(self.cash_available - init_cash)
+                    self.save()
                     return temp
 
                 else:
-                    return self.new_account()
+                    return self.new_account(account_cookie = account_cookie,
+                                            init_cash = init_cash,
+                                            market_type = market_type,
+                                            *args,
+                                            **kwargs
+                                            )
         else:
             if self.cash_available >= init_cash:
                 if account_cookie not in self.account_list:
@@ -355,6 +300,7 @@ class QA_Portfolio(QA_Account):
                     acc.save()
                     self.account_list.append(acc.account_cookie)
                     self.cash.append(self.cash_available - init_cash)
+                    self.save()
                     return acc
                 else:
                     return self.get_account_by_cookie(account_cookie)
@@ -453,9 +399,6 @@ class QA_Portfolio(QA_Account):
             amount_model=amount_model
         )
 
-    def receive_deal(self):
-        raise RuntimeError('PROTFOLIO shouldnot have this methods')
-
     @property
     def table(self):
         return pd.concat([acc.table for acc in self.accounts.values()], axis=1)
@@ -473,67 +416,6 @@ class QA_Portfolio(QA_Account):
         return sum(
             [account.cash_available for account in self.accounts.values()]
         )
-
-    # def pull(self, account_cookie=None, collection=DATABASE.account):
-    #     'pull from the databases'
-    #     if account_cookie is None:
-    #         for item in self.account_list:
-    #             try:
-    #                 message = collection.find_one({'account_cookie': item})
-    #                 QA_util_log_info('{} sync successfully'.format(item))
-    #             except Exception as e:
-    #                 QA_util_log_info(
-    #                     '{} sync wrong \\\n wrong info {}'.format(item,
-    #                                                               e)
-    #                 )
-    #             self.accounts[item].from_message(message)
-
-    #     else:
-    #         try:
-    #             message = collection.find_one(
-    #                 {'account_cookie': account_cookie}
-    #             )
-    #             QA_util_log_info('{} sync successfully'.format(item))
-    #         except Exception as e:
-    #             QA_util_log_info(
-    #                 '{} sync wrong \\\n wrong info {}'.format(
-    #                     account_cookie,
-    #                     e
-    #                 )
-    #             )
-    #         self.accounts[account_cookie].from_message(message)
-
-    # def push(self, account_cookie=None, collection=DATABASE.account):
-    #     'push to databases'
-    #     message = self.accounts[account_cookie].message
-    #     if account_cookie is None:
-    #         for item in self.account_list:
-    #             try:
-    #                 message = collection.find_one_and_update(
-    #                     {'account_cookie': item}
-    #                 )
-    #                 QA_util_log_info('{} sync successfully'.format(item))
-    #             except Exception as e:
-    #                 QA_util_log_info(
-    #                     '{} sync wrong \\\n wrong info {}'.format(item,
-    #                                                               e)
-    #                 )
-    #             self.accounts[item].from_message(message)
-
-    #     else:
-    #         try:
-    #             message = collection.find_one(
-    #                 {'account_cookie': account_cookie}
-    #             )
-    #             QA_util_log_info('{} sync successfully'.format(item))
-    #         except Exception as e:
-    #             QA_util_log_info(
-    #                 '{} sync wrong \\\n wrong info {}'.format(
-    #                     account_cookie,
-    #                     e
-    #                 )
-    #             )
-    #         self.accounts[account_cookie].from_message(message)
 
     @property
     def history_split(self):

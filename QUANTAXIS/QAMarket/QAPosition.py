@@ -62,8 +62,6 @@ class QA_Position():
 
     兼容QA_Account的创建/拆入Positions库
 
-    QAPosition 不对订单信息做正确性保证, 需要自行在外部构建 OMS系统 {QACEPEngine/QAAccountPro}
-
     """
 
     def __init__(self,
@@ -107,7 +105,6 @@ class QA_Position():
                  allow_exceed=False,
                  *args,
                  **kwargs
-
                  ):
 
         self.code = code
@@ -116,8 +113,7 @@ class QA_Position():
         self.user_cookie = user_cookie
         self.time = ''
         self.market_preset = MARKET_PRESET().get_code(self.code)
-        self.position_id = str(
-            uuid.uuid4()) if position_id is None else position_id
+        self.position_id = str(uuid.uuid4()) if position_id is None else position_id
         self.moneypreset = moneypreset
         self.moneypresetLeft = self.moneypreset if moneypresetLeft is None else moneypresetLeft
         """{'name': '原油',

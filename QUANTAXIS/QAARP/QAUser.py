@@ -30,6 +30,7 @@ from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 from QUANTAXIS.QAUtil.QARandom import QA_util_random_with_topic
 from QUANTAXIS.QAUtil.QASetting import QA_Setting, DATABASE
 from QUANTAXIS.QAUtil.QADate_trade import QA_util_get_next_day, QA_util_get_real_date
+from QUANTAXIS.QAUtil import MARKET_TYPE, RUNNING_ENVIRONMENT
 
 
 class QA_User():
@@ -202,6 +203,7 @@ class QA_User():
         """
 
         self.coins += int(coins)
+        self.save()
 
     @property
     def coins_table(self):
@@ -233,22 +235,12 @@ class QA_User():
         if self.coins > cost_coins:
             order_id = str(uuid.uuid1())
             self._subscribed_strategy[strategy_id] = {
-                'lasttime':
-                last,
-                'start':
-                str(today),
-                'strategy_id':
-                strategy_id,
-                'end':
-                QA_util_get_next_day(
-                    QA_util_get_real_date(str(today),
-                                          towards=1),
-                    last
-                ),
-                'status':
-                'running',
-                'uuid':
-                order_id
+                'lasttime':last,
+                'start':str(today),
+                'strategy_id':strategy_id,
+                'end':QA_util_get_next_day(QA_util_get_real_date(str(today),towards=1),last),
+                'status':'running',
+                'uuid':order_id
             }
             self.coins -= cost_coins
             self.coins_history.append(
@@ -261,6 +253,7 @@ class QA_User():
                     'subscribe'
                 ]
             )
+            self.save()
             return True, order_id
         else:
             # return QAERROR.
@@ -278,14 +271,15 @@ class QA_User():
         if strategy_id in self._subscribed_strategy.keys():
             self._subscribed_strategy[strategy_id]['status'] = 'canceled'
 
-        self.coins_history.append(
-            [0,
-             strategy_id,
-             str(today),
-             0,
-             order_id,
-             'unsubscribe']
-        )
+            self.coins_history.append(
+                [0,
+                 strategy_id,
+                 str(today),
+                 0,
+                 order_id,
+                 'unsubscribe']
+            )
+            self.save()
 
     @property
     def subscribed_strategy(self):
@@ -299,7 +293,7 @@ class QA_User():
 
     @property
     def subscribing_strategy(self):
-        """订阅一个策略
+        """当前正在订阅的策略
 
         Returns:
             [type] -- [description]
@@ -328,12 +322,14 @@ class QA_User():
         """
 
         self.wechat_id = id
+        self.save()
 
     def sub_code(self, code):
         """关注的品种
         """
         self._subscribed_code.append(code)
-
+        self.save()
+		
     @property
     def subscribed_code(self):
         """
@@ -344,7 +340,14 @@ class QA_User():
 
         return list(set(self._subscribed_code))
 
-    def new_portfolio(self, portfolio_cookie=None):
+    def new_portfolio(self,
+                        portfolio_cookie = None,
+                        strategy_name = None,
+                        init_cash = 100000000,
+                        sell_available = None,
+                        market_type = MARKET_TYPE.STOCK_CN,
+                        running_environment = RUNNING_ENVIRONMENT.BACKETEST
+                      ):
         '''
         根据 self.user_cookie 创建一个 portfolio
         :return:
@@ -352,8 +355,13 @@ class QA_User():
         如果已经存在 返回 这个portfolio
         '''
         _portfolio = QA_Portfolio(
-            user_cookie=self.user_cookie,
-            portfolio_cookie=portfolio_cookie
+                                user_cookie=self.user_cookie,
+                                portfolio_cookie=portfolio_cookie,
+                                strategy_name=strategy_name,
+                                init_cash=init_cash,
+                                sell_available=sell_available,
+                                market_type=market_type,
+                                running_environment=running_environment
         )
         if _portfolio.portfolio_cookie not in self.portfolio_list.keys():
             self.portfolio_list[_portfolio.portfolio_cookie] = _portfolio
@@ -476,7 +484,6 @@ class QA_User():
         """基于账户/密码去sync数据库
         """
         if self.wechat_id is not None:
-
             res = self.client.find_one({'wechat_id': self.wechat_id})
         else:
             res = self.client.find_one(
@@ -486,7 +493,6 @@ class QA_User():
                 }
             )
         if res is None:
-
             if self.client.find_one({'username': self.username}) is None:
                 self.client.insert_one(self.message)
                 return self
