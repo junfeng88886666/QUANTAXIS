@@ -28,19 +28,19 @@ from functools import lru_cache
 
 from QUANTAXIS.QAARP.QAUser import QA_User
 from QUANTAXIS.QAEngine.QAEvent import QA_Event
-from QUANTAXIS.QAFetch.QAQuery_Advance import QA_fetch_stock_day_adv, QA_fetch_stock_min_adv
+from QUANTAXIS.QAFetch.QAQuery_Advance import *
 from QUANTAXIS.QAMarket.QABacktestBroker import QA_BacktestBroker
 from QUANTAXIS.QAMarket.QAMarket import QA_Market
 from QUANTAXIS.QAUtil.QAParameter import (
-    AMOUNT_MODEL,
-    BROKER_EVENT,
-    BROKER_TYPE,
-    ENGINE_EVENT,
-    FREQUENCE,
-    MARKET_TYPE,
-    ORDER_DIRECTION,
-    ORDER_MODEL
-)
+                                            AMOUNT_MODEL,
+                                            BROKER_EVENT,
+                                            BROKER_TYPE,
+                                            ENGINE_EVENT,
+                                            FREQUENCE,
+                                            MARKET_TYPE,
+                                            ORDER_DIRECTION,
+                                            ORDER_MODEL
+                                        )
 
 from QUANTAXIS.QAUtil import QA_util_log_info, QA_Setting, QA_util_mongo_initial
 
@@ -88,7 +88,7 @@ class QA_Backtest():
         :param frequence: 'day' '1min' '5min' '15min' '30min' '60min'
         :param start:     开始日期
         :param end:       结束日期
-        :param code_list: 股票代码池
+        :param code_list: 代码池
         :param commission_fee: 交易佣金
         """
         self.user = QA_User(username=username, password=password)
@@ -118,8 +118,7 @@ class QA_Backtest():
                 self.start,
                 self.end
             ).to_qfq().panel_gen
-        elif self.market_type is MARKET_TYPE.STOCK_CN and self.frequence[
-                -3:] == 'min':
+        elif self.market_type is MARKET_TYPE.STOCK_CN and self.frequence[-3:] == 'min':
             # 获取分钟级别的回测数据
             self.ingest_data = QA_fetch_stock_min_adv(
                 self.code_list,
@@ -128,9 +127,39 @@ class QA_Backtest():
                 self.frequence
             ).to_qfq().panel_gen
 
+        elif self.market_type is MARKET_TYPE.INDEX_CN and self.frequence is FREQUENCE.DAY:
+            # 获取日线级别的回测数据
+            self.ingest_data = QA_fetch_index_day_adv(
+                self.code_list,
+                self.start,
+                self.end
+            ).panel_gen
+        elif self.market_type is MARKET_TYPE.INDEX_CN and self.frequence[-3:] == 'min':
+            # 获取日线级别的回测数据
+            self.ingest_data = QA_fetch_index_min_adv(
+                self.code_list,
+                self.start,
+                self.end,
+                self.frequence
+            ).panel_gen
+
+        elif self.market_type is MARKET_TYPE.FUTURE_CN and self.frequence is FREQUENCE.DAY:
+            # 获取日线级别的回测数据
+            self.ingest_data = QA_fetch_future_day_adv(
+                self.code_list,
+                self.start,
+                self.end
+            ).panel_gen
+        elif self.market_type is MARKET_TYPE.FUTURE_CN and self.frequence[-3:] == 'min':
+            # 获取日线级别的回测数据
+            self.ingest_data = QA_fetch_future_min_adv(
+                self.code_list,
+                self.start,
+                self.end,
+                self.frequence
+            ).panel_gen
         else:
             QA_util_log_info("{} 的市场类型没有实现！".format(market_type))
-
 
     def _generate_account(self):
         """
@@ -168,7 +197,6 @@ class QA_Backtest():
         for data in self.ingest_data:                    # 对于在ingest_data中的数据
                                                          # <class 'QUANTAXIS.QAData.QADataStruct.QA_DataStruct_Stock_day'>
             date = data.date[0]
-            print('current date : {}'.format(date))
             print('current time : {}'.format(data.datetime[0]))
             if self.market_type is MARKET_TYPE.STOCK_CN: # 如果是股票市场
                 if _date != date:                        # 如果新的date
