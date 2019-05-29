@@ -431,6 +431,7 @@ class DATABASE_NAME():
     STOCK_MIN = 'stock_min'
     STOCK_TRANSACTION = 'stock_transaction'
     STOCK_XDXR = 'stock_xdxr'
+    STOCK_BLOCK = 'stock_block'
 
     INDEX_LIST = 'index_list'
     INDEX_DAY = 'index_day'

@@ -1,86 +1,79 @@
 # coding:utf-8
+'''''''''''''
+'''
+用来校验新数据源和当前数据库数据源的一致性
+'''
+from QUANTAXIS.QAData import (QA_DataStruct_Index_day, QA_DataStruct_Index_min,
+                              QA_DataStruct_Future_day, QA_DataStruct_Future_min,
+                              QA_DataStruct_Stock_block, QA_DataStruct_Financial,
+                              QA_DataStruct_Stock_day, QA_DataStruct_Stock_min,
+                              QA_DataStruct_Stock_transaction)
+from QUANTAXIS.QAUtil.QAParameter import DATABASE_TABLE,MARKET_TYPE,FREQUENCE,DATABASE_NAME
+from QUANTAXIS.QAUtil.QADate import QA_util_date_int2str
+from 
+import pandas as pd
+import copy
 
-from QUANTAXIS.QASU import save_tdx
-from QUANTAXIS.QASU.save_financialfiles import QA_SU_save_financial_files
-from QUANTAXIS.QAUtil.QAParameter import DATABASE_NAME
-from QUANTAXIS import __version__ as QAVERSION
 
-DATABASE_NAAME_ALL = [i for i in vars(DATABASE_NAME).values() if type(i)==str][2:]
-def select_update_engine(package = 'tdx'):
-    if package == 'tdx': return save_tdx
-
-def QA_Update(update_dict = {
-                            DATABASE_NAME.STOCK_LIST:'tdx',
-                            DATABASE_NAME.STOCK_DAY:'tdx',
-                            DATABASE_NAME.STOCK_MIN:'tdx',
-                            DATABASE_NAME.STOCK_TRANSACTION:'tdx',
-                            DATABASE_NAME.STOCK_XDXR:'tdx',
-
-                            DATABASE_NAME.INDEX_LIST:'tdx',
-                            DATABASE_NAME.INDEX_DAY:'tdx',
-                            DATABASE_NAME.INDEX_MIN:'tdx',
-
-                            DATABASE_NAME.FUTURE_LIST:'tdx',
-                            DATABASE_NAME.FUTURE_DAY:'tdx',
-                            DATABASE_NAME.FUTURE_MIN:'tdx',
-                            DATABASE_NAME.FINANCIAL:None
-                            }):
-
+def select_DataStruct(database_name):
     '''
-    2019/04/28
-    TODO: 对不同的financial包增加裁定，当前只使用通达信financial包
-    :param update_dict:
-    :return:
+    market_type = MARKET_TYPE.FUTURE_CN
+    freq = FREQUENCE.ONE_MIN
     '''
-    print('QUANTAXIS {} 的数据存储当前包含: {}'.format(QAVERSION,DATABASE_NAAME_ALL))
-    print('此次更新的数据库: {}'.format(update_dict))
+    if database_name == DATABASE_NAME.STOCK_DAY: return QA_DataStruct_Stock_day
+    elif database_name == DATABASE_NAME.STOCK_MIN: return QA_DataStruct_Stock_min
+    elif database_name == DATABASE_NAME.STOCK_TRANSACTION: return QA_DataStruct_Stock_transaction
+    elif database_name == DATABASE_NAME.STOCK_BLOCK: return QA_DataStruct_Stock_block
+    
+    elif database_name == DATABASE_NAME.FUTURE_DAY: return QA_DataStruct_Future_day
+    elif database_name == DATABASE_NAME.FUTURE_MIN: return QA_DataStruct_Future_min
+    elif database_name == DATABASE_NAME.INDEX_DAY: return QA_DataStruct_Index_day
+    elif database_name == DATABASE_NAME.INDEX_MIN: return QA_DataStruct_Index_min
 
-    if DATABASE_NAME.STOCK_LIST in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_LIST])
-        engine.QA_SU_save_stock_list()
+    elif database_name == DATABASE_NAME.FINANCIAL: return QA_DataStruct_Financial
 
-    if DATABASE_NAME.STOCK_DAY in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_DAY])
-        engine.QA_SU_save_stock_day()
 
-    if DATABASE_NAME.STOCK_MIN in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_MIN])
-        engine.QA_SU_save_stock_min()
+def load_csv_cofund_future(file_path = None,database_name = None,code = None):
+    '''
+    file_path = 'Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv'
+    database_name = DATABASE_NAME.FUTURE_DAY
+    '''
+    DataStruct = select_DataStruct(database_name)
+    data = pd.read_csv(file_path,index_col = False).set_index('Date').rename(columns = {'Open':'open',
+                                                                                         'High':'high',
+                                                                                         'Low':'low',
+                                                                                         'Price':'close',
+                                                                                         'Oi':'position',
+                                                                                         'Amount':'amount',
+                                                                                         'Vol':'trade'})[['open','high','low','close','position','trade','amount']]
+    data.index = pd.Series(data.index).apply(QA_util_date_int2str)
+    data.index = pd.to_datetime(data.index)
+    data['date'] = data.index
+    data['code'] = code
+    data['trade'] = (data['trade']/100).astype(int)
+    return DataStruct(data.set_index(['date','code'])).data.fillna(0)
+    
+def load_csv_data(file_source = 'cofund',file_path = None,database_name = None,code = None):
+    if file_source == 'cofund': return load_csv_cofund_future(file_path = file_path,database_name = database_name,code = code)
 
-    if DATABASE_NAME.STOCK_TRANSACTION in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_TRANSACTION])
-        engine.QA_SU_save_stock_transaction()
 
-    if DATABASE_NAME.STOCK_XDXR in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_XDXR])
-        engine.QA_SU_save_stock_xdxr()
+def QA_CheckDB(new_data_source = None,
+               database_name = None):
+    '''
+    TODO: 当前只支持价量数据：日线，分钟线,transaction的合并，不涉及其他的合并，未来可以兼容更多
+    '''
+    database_name = copy.deepcopy(check_table_name)
+    dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20').data
 
-    if DATABASE_NAME.INDEX_LIST in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.INDEX_LIST])
-        engine.QA_SU_save_index_list()
 
-    if DATABASE_NAME.INDEX_DAY in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.INDEX_DAY])
-        engine.QA_SU_save_index_day()
 
-    if DATABASE_NAME.INDEX_MIN in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.INDEX_MIN])
-        engine.QA_SU_save_index_min()
+# =============================================================================
+# DEBUG
+data = load_csv_data('cofund','Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv',DATABASE_NAME.FUTURE_DAY,'AL9')
+data
 
-    if DATABASE_NAME.FUTURE_LIST in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.FUTURE_LIST])
-        engine.QA_SU_save_future_list()
+import QUANTAXIS as QA
+dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20').data
+dataadv = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
 
-    if DATABASE_NAME.FUTURE_DAY in update_dict.keys():
-        engine = select_update_engine(package = update_dict[DATABASE_NAME.FUTURE_DAY])
-        engine.QA_SU_save_future_day_all()
-
-    if DATABASE_NAME.FUTURE_MIN in update_dict.keys():
-        engine = select_update_engine(package=update_dict[DATABASE_NAME.FUTURE_MIN])
-        engine.QA_SU_save_future_min_all()
-
-    if DATABASE_NAME.FINANCIAL in update_dict.keys(): QA_SU_save_financial_files()
-
-if __name__ == '__main__':
-    QA_Update()
-
+# =============================================================================

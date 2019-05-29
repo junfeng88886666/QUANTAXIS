@@ -13,8 +13,9 @@ def QA_Update(update_dict = {
                             DATABASE_NAME.STOCK_LIST:'tdx',
                             DATABASE_NAME.STOCK_DAY:'tdx',
                             DATABASE_NAME.STOCK_MIN:'tdx',
-                            DATABASE_NAME.STOCK_TRANSACTION:'tdx',
-                            DATABASE_NAME.STOCK_XDXR:'tdx',
+                            # DATABASE_NAME.STOCK_TRANSACTION:'tdx',
+                            # DATABASE_NAME.STOCK_XDXR:'tdx',
+                            DATABASE_NAME.STOCK_BLOCK: 'tdx',
 
                             DATABASE_NAME.INDEX_LIST:'tdx',
                             DATABASE_NAME.INDEX_DAY:'tdx',
@@ -54,6 +55,10 @@ def QA_Update(update_dict = {
     if DATABASE_NAME.STOCK_XDXR in update_dict.keys():
         engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_XDXR])
         engine.QA_SU_save_stock_xdxr()
+
+    if DATABASE_NAME.STOCK_BLOCK in update_dict.keys():
+        engine = select_update_engine(package = update_dict[DATABASE_NAME.STOCK_BLOCK])
+        engine.QA_SU_save_stock_block()
 
     if DATABASE_NAME.INDEX_LIST in update_dict.keys():
         engine = select_update_engine(package = update_dict[DATABASE_NAME.INDEX_LIST])

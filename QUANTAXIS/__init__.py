@@ -224,6 +224,7 @@ from QUANTAXIS.QASU.main import (
 )
 from QUANTAXIS.QASU.save_strategy import QA_SU_save_strategy
 from QUANTAXIS.QASU.user import QA_user_sign_in, QA_user_sign_up
+from QUANTAXIS.QASU.QAUpdate import QA_Update
 from QUANTAXIS.QAUtil import (  # QAPARAMETER
     AMOUNT_MODEL, BROKER_EVENT, BROKER_TYPE, DATABASE, DATASOURCE,
     ENGINE_EVENT, EXCHANGE_ID, FREQUENCE, MARKET_ERROR, MARKET_EVENT,
