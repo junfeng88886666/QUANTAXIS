@@ -69,11 +69,34 @@ def QA_CheckDB(new_data_source = None,
 
 # =============================================================================
 # DEBUG
-data = load_csv_data('cofund','Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv',DATABASE_NAME.FUTURE_DAY,'AL9')
-data
-
-import QUANTAXIS as QA
-dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20').data
-dataadv = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
-
-# =============================================================================
+#data = load_csv_data('cofund','Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv',DATABASE_NAME.FUTURE_DAY,'AL9')
+#data
+#
+#import QUANTAXIS as QA
+#
+#
+#
+#
+#dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20')
+#dataadv.to_qfq()
+#dataadv = QA.QA_fetch_stock_day_adv('000001','2013-01-10','2019-05-20')
+#dataadv.plot('AL8')
+#dataadv.to_qfq().plot('AL8')
+#
+#
+#.data
+#dataadv = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
+#QA.QA_fetch_future_list_adv()
+## =============================================================================
+#aa = QA.QA_fetch_get_future_min('tdx','AL8','2019-01-01','2019-05-23')
+## =============================================================================
+#aa = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
+#aa
+#QA.QA_fetch_get_stock_latest('tdx',['000001','000002'])
+#
+#QA.QAFetch.QATdx.QA_fetch_get_stock_latest('000001')
+#
+#QA.QA_fetch_get_future_list('tdx')
+#
+#
+#import SuperQuant as SQ

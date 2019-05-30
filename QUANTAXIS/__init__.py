@@ -138,6 +138,7 @@ from QUANTAXIS.QAFetch import (
     QA_fetch_get_stock_info,
     QA_fetch_get_stock_list,
     QA_fetch_get_stock_min,
+    QA_fetch_get_stock_latest,
     QA_fetch_get_stock_realtime,
     QA_fetch_get_stock_transaction,
     QA_fetch_get_stock_transaction_realtime,

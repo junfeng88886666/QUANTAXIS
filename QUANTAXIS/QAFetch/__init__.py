@@ -31,6 +31,7 @@ QAFetch is Under [QAStandard#0.0.2@10x] Protocol
 
 
 """
+from QUANTAXIS.QAFetch import QACoFund as QACoFund
 from QUANTAXIS.QAFetch import QAWind as QAWind
 from QUANTAXIS.QAFetch import QATushare as QATushare
 from QUANTAXIS.QAFetch import QATdx as QATdx
@@ -57,7 +58,8 @@ def use(package):
         return QAThs
     elif package in ['HEXUN', 'Hexun', 'hexun']:
         return QAHexun
-
+    elif package in ['cofund', 'cof','CoFund','COFUND']:
+        return QACoFund
 
 def QA_fetch_get_stock_day(package, code, start, end, if_fq='01', level='day', type_='pd'):
     Engine = use(package)
@@ -74,6 +76,10 @@ def QA_fetch_get_stock_day(package, code, start, end, if_fq='01', level='day', t
 def QA_fetch_get_stock_realtime(package, code):
     Engine = use(package)
     return Engine.QA_fetch_get_stock_realtime(code)
+
+def QA_fetch_get_stock_latest(package,code,frequence = 'day'):
+    Engine = use(package)
+    return Engine.QA_fetch_get_stock_latest(code,frequence)
 
 
 def QA_fetch_get_stock_indicator(package, code, start, end):
