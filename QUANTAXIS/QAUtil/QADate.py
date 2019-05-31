@@ -70,7 +70,12 @@ def QA_util_date_str2int(date):
     elif isinstance(date, int):
         return date
 
-
+def QA_util_datetime_fixstr1(wrong_datetime):
+    '''eg.2013/01/01 21:01:01  to 2013-01-01 21:01:01'''
+    if '/' in wrong_datetime: return wrong_datetime.replace('/','-')
+    else:
+        if ' ' in wrong_datetime: return '{}-{}-{} 0{}:{}:{}'.format(wrong_datetime[:4],wrong_datetime[4:6],wrong_datetime[6:8],wrong_datetime[9],wrong_datetime[10:12],wrong_datetime[12:14])
+        else: return '{}-{}-{} {}:{}:{}'.format(wrong_datetime[:4],wrong_datetime[4:6],wrong_datetime[6:8],wrong_datetime[8:10],wrong_datetime[10:12],wrong_datetime[12:14])
 def QA_util_date_int2str(int_date):
     """
     类型datetime.datatime

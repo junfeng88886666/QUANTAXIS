@@ -449,3 +449,13 @@ class DATABASE_NAME():
     # FUTURE_TRANSACTION = 'future_transaction'
 
     FINANCIAL = 'financial'
+
+
+class DATASOURCE():
+    '''
+    数据来源
+    '''
+    TDX = 'tdx'
+    COFUND = 'cofund'
+    TUSHARE = 'tushare'
+    THS = 'ths'

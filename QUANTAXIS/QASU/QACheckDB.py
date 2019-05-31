@@ -69,34 +69,97 @@ def QA_CheckDB(new_data_source = None,
 
 # =============================================================================
 # DEBUG
-#data = load_csv_data('cofund','Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv',DATABASE_NAME.FUTURE_DAY,'AL9')
-#data
-#
-#import QUANTAXIS as QA
-#
-#
-#
-#
-#dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20')
-#dataadv.to_qfq()
-#dataadv = QA.QA_fetch_stock_day_adv('000001','2013-01-10','2019-05-20')
-#dataadv.plot('AL8')
-#dataadv.to_qfq().plot('AL8')
-#
-#
-#.data
-#dataadv = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
-#QA.QA_fetch_future_list_adv()
-## =============================================================================
-#aa = QA.QA_fetch_get_future_min('tdx','AL8','2019-01-01','2019-05-23')
-## =============================================================================
-#aa = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
-#aa
-#QA.QA_fetch_get_stock_latest('tdx',['000001','000002'])
-#
-#QA.QAFetch.QATdx.QA_fetch_get_stock_latest('000001')
-#
-#QA.QA_fetch_get_future_list('tdx')
-#
-#
-#import SuperQuant as SQ
+data = load_csv_data('cofund','Z:\Interns\hengpan\FutureMainDayData\Csv\A.csv',DATABASE_NAME.FUTURE_DAY,'AL9')
+data
+
+import QUANTAXIS as QA
+
+
+
+
+dataadv = QA.QA_fetch_future_day_adv('AL8','2013-01-10','2019-05-20')
+dataadv.to_qfq()
+dataadv = QA.QA_fetch_stock_day_adv('000001','2013-01-10','2019-05-20')
+dataadv.plot('AL8')
+dataadv.to_qfq().plot('AL8')
+
+
+.data
+dataadv = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
+QA.QA_fetch_future_list_adv()
+# =============================================================================
+aa = QA.QA_fetch_get_future_min('tdx','AL8','2019-01-01','2019-05-23')
+# =============================================================================
+aa = QA.QA_fetch_get_future_day('tdx','AL8','2013-01-10','2019-05-20')
+aa
+QA.QA_fetch_get_stock_latest('tdx',['000001','000002'])
+
+QA.QAFetch.QATdx.QA_fetch_get_stock_latest('000001')
+
+QA.QA_fetch_get_future_list('tdx')
+aa
+
+import SuperQuant as SQ
+import os
+
+def listdir(path,types = 'mat',if_ends = False):
+    dirlist = os.listdir(path)
+    if if_ends: return [i for i in dirlist if (i.split('.')[-1]==types)&(len(i.split('.'))>1)]
+    return [i.split('.')[0] for i in dirlist if (i.split('.')[-1]==types)&(len(i.split('.'))>1)]
+
+a = 'a.mat'
+a.split('.')[-1]
+import datetime
+'21:50:00'<datetime.time(21,0)
+listdir(path)
+
+
+    for file in os.listdir(path):  
+        file_path = os.path.join(path, file)  
+        if os.path.isdir(file_path):  
+            listdir(file_path, list_name)  
+        elif os.path.splitext(file_path)[1]==types:  
+            list_name.append(file_path)  
+    return list_name
+
+a = os.walk('Z:\Interns\hengpan\FutureMainMinData\商品期货分钟数据\Data\InitialMinuteDataBase\1min', topdown= True, onerror=None, followlinks=False)  
+a[0]
+file_name(os.path.abspath('Z:\Interns\hengpan\FutureMainMinData\商品期货分钟数据\Data\InitialMinuteDataBase\1min'))
+os.walk(os.path.abspath('Z:\Interns\hengpan\FutureMainMinData\商品期货分钟数据\Data\InitialMinuteDataBase\1min'))
+path =os.path.abspath('Z:/Interns/hengpan/FutureMainMinData/商品期货分钟数据/Data/InitialMinuteDataBase/1min')
+list_name = listdir(path)
+os.listdir(path)
+QA.QA_fetch_get_stock_day('ts','000001','2010-01-01','2019-05-01')
+QA.QA_fetch_get_future_list('cof')
+QA.QA_fetch_get_stock_list('cof')
+
+
+aa = QA.QA_fetch_get_stock_day('tdx','000001','2019-05-29','2019-05-30')
+bb = QA.QA_fetch_get_stock_latest('tdx','000001')
+
+ti = '2019-01-10 21:58:00'
+len(ti)
+QA.QAUtil.QADate_trade.QA_util_future_to_realdatetime(ti)
+270*152034
+ti.apply(QA.QAUtil.QADate_trade.QA_util_future_to_realdatetime(),1)
+
+aaa = QA.QA_fetch_get_future_min('cof','AL8','2018-01-01','2018-05-20')
+aaa.datetime.min()
+
+#%%
+
+from QUANTAXIS.QAUtil import (
+    DATABASE,
+    QA_util_get_next_day,
+    QA_util_get_real_date,
+    QA_util_log_info,
+    QA_util_to_json_from_pandas,
+    trade_date_sse
+)
+
+QA_util_to_json_from_pandas(aaa)
+aaa['2018-05-10 14:10:00':'2018-05-10 15:00:00']
+
+aaa = QA.QA_fetch_get_future_min('cof','JL8','2018-01-01','2018-05-20')
+
+

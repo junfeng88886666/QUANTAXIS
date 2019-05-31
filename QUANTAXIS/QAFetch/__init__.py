@@ -62,255 +62,252 @@ def use(package):
         return QACoFund
 
 def QA_fetch_get_stock_day(package, code, start, end, if_fq='01', level='day', type_='pd'):
-    Engine = use(package)
-    if package in ['ths', 'THS', 'wind']:
-        return Engine.QA_fetch_get_stock_day(code, start, end, if_fq)
-    elif package in ['ts', 'tushare']:
-        return Engine.QA_fetch_get_stock_day(code, start, end, if_fq, type_)
-    elif package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_day(code, start, end, if_fq, level)
-    else:
-        return Engine.QA_fetch_get_stock_day(code, start, end)
-
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_stock_realtime(package, code):
-    Engine = use(package)
-    return Engine.QA_fetch_get_stock_realtime(code)
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_realtime(code)
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_stock_latest(package,code,frequence = 'day'):
-    Engine = use(package)
-    return Engine.QA_fetch_get_stock_latest(code,frequence)
-
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_latest(code,frequence)
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_stock_indicator(package, code, start, end):
-    Engine = use(package)
-    return Engine.QA_fetch_get_stock_indicator(code, start, end)
-
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_indicator(code, start, end)
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_trade_date(package, end, exchange):
-    Engine = use(package)
-    return Engine.QA_fetch_get_trade_date(end, exchange)
-
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_trade_date(end, exchange)
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_stock_min(package, code, start, end, level='1min'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_min(code, start, end, level)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_stock_transaction(package, code, start, end, retry=2):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_transaction(code, start, end, retry)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_stock_transaction_realtime(package, code):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_transaction_realtime(code)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_stock_xdxr(package, code):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_xdxr(code)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_index_day(package, code, start, end, level='day'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_index_day(code, start, end, level)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_index_min(package, code, start, end, level='1min'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_index_min(code, start, end, level)
-    else:
+    except:
         return 'Unsupport packages'
 
-
 def QA_fetch_get_stock_block(package):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx', 'ths']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_block()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_stock_info(package, code):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_info(code)
-    else:
+    except:
         return 'Unsupport packages'
 
 # LIST
 
 
 def QA_fetch_get_stock_list(package, type_='stock'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_stock_list(type_)
-    else:
+    except:
         return 'Unsupport packages'
-
 
 def QA_fetch_get_bond_list(package):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_bond_list()
-    else:
+    except:
         return 'Unsupport packages'
-
 
 def QA_fetch_get_index_list(package):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_index_list()
-    else:   
+    except:
         return 'Unsupport packages'
 
-
 def QA_fetch_get_future_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_future_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_option_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_option_list()
-    else:
+    except:
         return 'Unsupport packages'
 
-
 def QA_fetch_get_globalfuture_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_globalfuture_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_hkstock_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_hkstock_list()
-    else:
+    except:
         return 'Unsupport packages'
 
-
 def QA_fetch_get_hkfund_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_hkfund_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_hkindex_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_hkindex_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_usstock_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_usstock_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_macroindex_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_macroindex_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 def QA_fetch_get_globalindex_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_globalindex_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 def QA_fetch_get_exchangerate_list(package,):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_exchangerate_list()
-    else:
+    except:
         return 'Unsupport packages'
 
 
 #######################
 
-
-def QA_fetch_get_security_bars(code, _type, lens):
+def QA_fetch_get_security_bars(package,code, _type, lens):
     return QATdx.QA_fetch_get_security_bars(code, _type, lens)
 
 
 def QA_fetch_get_future_transaction(package, code, start, end):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_future_transaction(code, start, end)
-    else:
+    except:
         return 'Unsupport packages'
-
 
 def QA_fetch_get_future_transaction_realtime(package, code):
     """
     期货实时tick
     """
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_future_transaction_realtime(code)
-    else:
+    except:
         return 'Unsupport packages'
 
-
 def QA_fetch_get_future_realtime(package, code):
-    Engine = use(package)
-    return Engine.QA_fetch_get_future_realtime(code)
-
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_future_realtime(code)
+    except:
+        return 'Unsupport packages'
 
 def QA_fetch_get_future_day(package, code, start, end, frequence='day'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_future_day(code, start, end, frequence=frequence)
-    else:
+    except:
         return 'Unsupport packages'
 
 
 def QA_fetch_get_future_min(package, code, start, end, frequence='1min'):
-    Engine = use(package)
-    if package in ['tdx', 'pytdx']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_future_min(code, start, end, frequence=frequence)
-    else:
+    except:
         return 'Unsupport packages'
 
 def QA_fetch_get_chibor(package, frequence):
-    Engine = use(package)
-    if package in ['Hexun', 'hexun']:
+    try:
+        Engine = use(package)
         return Engine.QA_fetch_get_chibor(frequence)
-    else:
+    except:
         return 'Unsupport packages'
 
 QA_fetch_get_option_day = QA_fetch_get_future_day

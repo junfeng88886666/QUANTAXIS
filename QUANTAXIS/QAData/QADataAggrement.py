@@ -1,150 +1,71 @@
 # coding:utf-8
 
 import datetime
-
 import pandas as pd
 
+from QUANTAXIS.QAData import (QADataAggrement_CoFund)
+
 from QUANTAXIS.QAUtil import DATABASE, QA_util_log_info
-# TODO 当前只有期货日线和分钟线的数据协议
+# TODO 当前只有COFund期货列表，日线和分钟线的数据协议
+
+def use(package):
+    if package in ['cofund', 'cof','CoFund','COFUND']:
+        return QADataAggrement_CoFund
+    else: raise NotImplementedError
+
 def QA_DataAggrement_Future_day(package,DataFrame):
-    pass
+    Engine = use(package)
+    return Engine.QA_DataAggrement_Future_day(DataFrame)
 
-
-def QA_DataAggrement_CoFund_Future_day(package, DataFrame):
-    pass
-
-def _QA_data_stock_to_fq(bfq_data, xdxr_data, fqtype):
-    '使用数据库数据进行复权'
-    info = xdxr_data.query('category==1')
-    bfq_data = bfq_data.assign(if_trade=1)
-
-    if len(info) > 0:
-        data = pd.concat(
-            [
-                bfq_data,
-                info.loc[bfq_data.index[0]:bfq_data.index[-1],
-                         ['category']]
-            ],
-            axis=1
-        )
-
-        data['if_trade'].fillna(value=0, inplace=True)
-        data = data.fillna(method='ffill')
-
-        data = pd.concat(
-            [
-                data,
-                info.loc[bfq_data.index[0]:bfq_data.index[-1],
-                         ['fenhong',
-                          'peigu',
-                          'peigujia',
-                          'songzhuangu']]
-            ],
-            axis=1
-        )
-    else:
-        data = pd.concat(
-            [
-                bfq_data,
-                info.
-                loc[:,
-                    ['category',
-                     'fenhong',
-                     'peigu',
-                     'peigujia',
-                     'songzhuangu']]
-            ],
-            axis=1
-        )
-    data = data.fillna(0)
-    data['preclose'] = (
-        data['close'].shift(1) * 10 - data['fenhong'] +
-        data['peigu'] * data['peigujia']
-    ) / (10 + data['peigu'] + data['songzhuangu'])
-
-    if fqtype in ['01', 'qfq']:
-        data['adj'] = (data['preclose'].shift(-1) /
-                       data['close']).fillna(1)[::-1].cumprod()
-    else:
-        data['adj'] = (data['close'] /
-                       data['preclose'].shift(-1)).cumprod().shift(1).fillna(1)
-
-    for col in ['open', 'high', 'low', 'close', 'preclose']:
-        data[col] = data[col] * data['adj']
-    data['volume'] = data['volume'] / \
-        data['adj'] if 'volume' in data.columns else data['vol']/data['adj']
+def QA_DataAggrement_Future_min(package,DataFrame):
+    '''
+    该数据协议为：返回的数据应包含以下列和对应的数据格式，若无该列数据，则填充0
+        index:[str] 真实的datetime
+        open [float] 开盘价
+        high [float] 最高价
+        low [float] 最低价
+        close [float] 收盘价
+        price [float] 结算价
+        position [float] 持仓量
+        trade [float] 交易量
+        amount [float] 成交额
+        datetime [str] 真实的datetime
+        tradetime [str] 交易的datetime(晚上21点之后进入下一天)
+        code [str] 品种代码
+        contract [str] 品种合约
+        date [str] 交易日期
+        date_stamp [float] 日期的时间戳
+        time_stamp [float] datetime的时间戳
+        type [str] 级别
+    :return: 经过数据协议调整格式后的国内期货分钟数据数据集
+    '''
     try:
-        data['high_limit'] = data['high_limit'] * data['adj']
-        data['low_limit'] = data['high_limit'] * data['adj']
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Future_min(DataFrame)
+        data = data[['index','open','high','low','close','price','position','trade','amount','datetime','tradetime','code','contract','date','date_stamp','time_stamp','type','source']]
+        data['index'] = data['index'].astype(str)
+        data['open'] = data['open'].astype(float)
+        data['high'] = data['high'].astype(float)
+        data['low'] = data['low'].astype(float)
+        data['close'] = data['close'].astype(float)
+        data['price'] = data['price'].astype(float)
+        data['position'] = data['position'].astype(float)
+        data['trade'] = data['trade'].astype(float)
+        data['amount'] = data['amount'].astype(float)
+        data['datetime'] = data['datetime'].astype(str)
+        data['tradetime'] = data['tradetime'].astype(str)
+        data['code'] = data['code'].astype(str)
+        data['contract'] = data['contract'].astype(str)
+        data['date'] = data['date'].astype(str)
+        data['date_stamp'] = data['date_stamp'].astype(float)
+        data['time_stamp'] = data['time_stamp'].astype(float)
+        data['type'] = data['type'].astype(str)
+        data['source'] = data['source'].astype(str)
+        return data.set_index('index')
     except:
-        pass
-    return data.query('if_trade==1 and open != 0').drop(
-        ['fenhong',
-         'peigu',
-         'peigujia',
-         'songzhuangu',
-         'if_trade',
-         'category'],
-        axis=1,
-        errors='ignore'
-    )
+        print('QUANTAXIS DataAggrement Error')
+        return None
 
-
-def QA_data_stock_to_fq(__data, type_='01'):
-
-    def __QA_fetch_stock_xdxr(
-            code,
-            format_='pd',
-            collections=DATABASE.stock_xdxr
-    ):
-        '获取股票除权信息/数据库'
-        try:
-            data = pd.DataFrame(
-                [item for item in collections.find({'code': code})]
-            ).drop(['_id'],
-                   axis=1)
-            data['date'] = pd.to_datetime(data['date'])
-            return data.set_index(['date', 'code'], drop=False)
-        except:
-            return pd.DataFrame(
-                data=[],
-                columns=[
-                    'category',
-                    'category_meaning',
-                    'code',
-                    'date',
-                    'fenhong',
-                    'fenshu',
-                    'liquidity_after',
-                    'liquidity_before',
-                    'name',
-                    'peigu',
-                    'peigujia',
-                    'shares_after',
-                    'shares_before',
-                    'songzhuangu',
-                    'suogu',
-                    'xingquanjia'
-                ]
-            )
-
-    '股票 日线/分钟线 动态复权接口'
-
-    code = __data.index.remove_unused_levels().levels[1][0] if isinstance(
-        __data.index,
-        pd.core.indexes.multi.MultiIndex
-    ) else __data['code'][0]
-
-    return _QA_data_stock_to_fq(
-        bfq_data=__data,
-        xdxr_data=__QA_fetch_stock_xdxr(code),
-        fqtype=type_
-    )
-
-    # if type_ in ['01', 'qfq']:
-    #     return QA_data_make_qfq(__data, __QA_fetch_stock_xdxr(code))
-    # elif type_ in ['02', 'hfq']:
-    #     return QA_data_make_hfq(__data, __QA_fetch_stock_xdxr(code))
-    # else:
-    #     QA_util_log_info('wrong fq type! Using qfq')
-    #     return QA_data_make_qfq(__data, __QA_fetch_stock_xdxr(code))
+def QA_DataAggrement_Future_list(package,DataFrame):
+    Engine = use(package)
+    return Engine.QA_DataAggrement_Future_list(DataFrame)
