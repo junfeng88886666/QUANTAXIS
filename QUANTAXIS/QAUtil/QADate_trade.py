@@ -7411,16 +7411,20 @@ def QA_util_date_gap(date, gap, methods):
     :return: 字符串 eg：2000-01-01
     '''
     try:
-        if methods in ['>', 'gt']:
-            return trade_date_sse[trade_date_sse.index(date) + gap]
-        elif methods in ['>=', 'gte']:
-            return trade_date_sse[trade_date_sse.index(date) + gap - 1]
-        elif methods in ['<', 'lt']:
-            return trade_date_sse[trade_date_sse.index(date) - gap]
-        elif methods in ['<=', 'lte']:
-            return trade_date_sse[trade_date_sse.index(date) - gap + 1]
-        elif methods in ['==', '=', 'eq']:
-            return date
+        if date in trade_date_sse:
+            if methods in ['>', 'gt']:
+                return trade_date_sse[trade_date_sse.index(date) + gap]
+            elif methods in ['>=', 'gte']:
+                return trade_date_sse[trade_date_sse.index(date) + gap - 1]
+            elif methods in ['<', 'lt']:
+                return trade_date_sse[trade_date_sse.index(date) - gap]
+            elif methods in ['<=', 'lte']:
+                return trade_date_sse[trade_date_sse.index(date) - gap + 1]
+            elif methods in ['==', '=', 'eq']:
+                return date
+        else:
+            date = str(pd.to_datetime(date) - datetime.timedelta(1))[:10]
+            return QA_util_date_gap(date, gap, methods)
 
     except:
         return 'wrong date'
@@ -7478,10 +7482,8 @@ def QA_util_future_to_tradedatetime(real_datetime):
             str(real_datetime)[0:19],
             '%Y-%m-%d %H:%M:%S'
         )
-        return dt if dt.time(
-        ) < datetime.time(21,
-                          0) else QA_util_get_next_datetime(dt,
-                                                            1)
+        return dt if ((dt.time() < datetime.time(21,0))&(dt.time() >= datetime.time(8,50))) else QA_util_get_next_datetime(dt,1)
+
     elif len(str(real_datetime)) == 16:
         dt = datetime.datetime.strptime(
             str(real_datetime)[0:16],

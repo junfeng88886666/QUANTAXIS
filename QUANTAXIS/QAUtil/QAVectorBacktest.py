@@ -11,7 +11,7 @@ warnings.simplefilter("ignore")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn
-seaborn.set(palette='deep',style='darkgrid')
+
 
 # =============================================================================
 
@@ -25,6 +25,7 @@ def QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop(settle_time = '14:57
     '''
     data的index为'datetime'[str],含signal列
     '''
+    seaborn.set(palette='deep', style='darkgrid')
     def maximum_down(dataframe):
         data = list(dataframe)
         index_j = np.argmax(np.maximum.accumulate(data) - data)  # 结束位置

@@ -13,7 +13,7 @@ from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
                               QA_util_date_str2int, QA_util_date_valid,
                               QA_util_get_real_date, QA_util_get_real_datelist,
                               QA_util_future_to_realdatetime, QA_util_future_to_tradedatetime,
-                              QA_util_get_trade_gap, QA_util_log_info,QA_util_date_int2str,
+                              QA_util_get_trade_gap, QA_util_log_info,QA_util_date_int2str,trade_date_sse,
                               QA_util_time_stamp, QA_util_web_ping,
                               QA_util_get_trade_range,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1)
 from QUANTAXIS.QASetting.QALocalize import log_path
@@ -316,8 +316,8 @@ def QA_fetch_get_future_min(code, start, end, frequence=FREQUENCE.ONE_MIN):
     TODO 当前仅支持L8和L9
     期货数据 分钟线
     code = 'IL8'
-    start = '2010-01-10'
-    end = '2018-05-10'
+    start = '2014-12-27'
+    end = '2014-12-31'
     '''    
     market_type = MARKET_TYPE.FUTURE_CN
     try:
@@ -338,6 +338,7 @@ def QA_fetch_get_future_min(code, start, end, frequence=FREQUENCE.ONE_MIN):
                 
                 date_calendar = QA_util_get_trade_range(max(start[:10],QA_util_date_int2str(min(QA_util_listfile(path,'csv')))),min((end[:10]),QA_util_date_int2str(max(QA_util_listfile(path,'csv')))))
 #                date_calendar = QA_util_get_trade_range(start[:10],end[:10])
+                
                 data = pd.DataFrame()
                 for date in date_calendar:
                     try:
@@ -345,15 +346,16 @@ def QA_fetch_get_future_min(code, start, end, frequence=FREQUENCE.ONE_MIN):
                         file_temp = pd.read_csv(os.path.join(path,str(intdate)+'.csv'))
                         data = data.append(file_temp)
                     except: pass
-                data = data[data['Time']>=85900]
+#                data = data[data['Time']>=85900]
                 data['type'] = frequence
                 data['code'] = code
-                
+                data = data.drop_duplicates(subset = ['RealDate','Time'])
+
                 data = QA_DataAggrement_Future_min('CoFund',data)
-                
-                return data[start:end]
+                return data[start:end]                    
             else:
                 print('当前仅支持1分钟的数据调用')
+                raise NotImplementedError
         else:
             print('当前仅支持L8的数据调用')
             raise NotImplementedError
@@ -407,9 +409,5 @@ QA_fetch_get_globalindex_min = QA_fetch_get_future_min
 
 
 
-
-
 if __name__ == '__main__':
     pass
-
-
