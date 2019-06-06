@@ -135,10 +135,11 @@ def QA_VectorBacktest(data = None,
     print('回测品种列表：{}'.format(code_list))
     print('####################################################################################')
     if if_optimize_parameters == False:
-        if if_reorder_params: params_use = _edit_params(params,code_list)
-        else: params_use = copy.deepcopy(params)
-        print('依据给定参数回测，参数：{}'.format(params))
-        params_id = 'params_1'
+        params_temp = copy.deepcopy(params)
+        if if_reorder_params: params_use = _edit_params(params_temp,code_list)
+        else: params_use = copy.deepcopy(params_temp)
+        print('依据给定参数回测，参数：{}'.format(params_temp))
+        params_id = 'params_default'
         ####
         calculated_data = pd.DataFrame()
         for code in code_list:
@@ -147,7 +148,7 @@ def QA_VectorBacktest(data = None,
             temp_data = func(temp_data,params_use)
             calculated_data = calculated_data.append(temp_data)
         ###
-        res_temp = _QA_VectorBacktest(calculated_data,comission,params,params_id)
+        res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
         calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
         res = res.append(res_temp)
     else:
@@ -172,7 +173,7 @@ def QA_VectorBacktest(data = None,
                 calculated_data = calculated_data.append(temp_data)
                 
             ###
-            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id)
+            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
@@ -419,7 +420,7 @@ def _edit_params(params,code_list):
         params[code] = params_record
     return params
         
-def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = None):
+def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = None,save_path =None):
     '''
     将日内收益转化成每日来计量的矢量式回测
     输入：multiindex:['datetime','code']
@@ -460,43 +461,8 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
         del return_table_temp['cum_ret_series']
 # =============================================================================
 #   存储回测结果
-#        return_table['cum_strategy'] = return_table['strategy_return_daily'].cumprod()    
-#        return_table['strategy'] = return_table['strategy_return_daily']-1
-#        
-#        annual_rtn  = pow(return_table['cum_strategy'].iloc[-1] / return_table['cum_strategy'].iloc[0], 250/len(return_table) ) -1
-#        return_table['ex_pct_close'] = return_table['strategy'] - 0.02/252
-#        P1,P2,P3,P4,P5,P6 = 0,0,0,0,0,0
-#        try:
-#            P1 = round(return_table[return_table['strategy']>0].shape[0]/return_table[(return_table['strategy']>0)|(return_table['strategy']<0)].shape[0]*100,2)
-#            P2 = round(annual_rtn*100,2)
-#            P3 = round(maximum_down(return_table[['cum_strategy']].values)[0][0]*100,2)
-#            P4 = round((return_table['ex_pct_close'].mean() * math.sqrt(252))/return_table['ex_pct_close'].std(),2)
-#            P5 = round(return_table[return_table['strategy']>0]['strategy'].mean() / abs(return_table[return_table['strategy']<0]['strategy'].mean()),2)
-#            P6 = round(return_table.shape[0]/return_table[return_table['strategy']!=0].shape[0],2)
-#        
-##            print('胜率: '+str(P1)+'%')
-##            print('年化收益率：'+str(P2)+'%')
-##            print('最大回撤：'+str(P3)+'%')
-##            print('夏普比率：'+str(P4))
-##            print('平均盈亏比：'+str(P5))
-##            print('交易频率(天)：'+str(P6))
-#        except: pass
-#        
-#        result_temp = {}
-#        result_temp['code'] = code
-#        result_temp['params_id'] = params_id
-#        result_temp['params'] = params
-#        result_temp['winrate'] = P1/100
-#        result_temp['annual_return'] = P2/100
-#        result_temp['max_drawback'] = P3/100
-#        result_temp['sharpe'] = P4
-#        result_temp['yingkuibi'] = P5
-#        result_temp['trading_freq'] = P6
-#        result_temp['trading_date_series'] = return_table.index.tolist()
-#        result_temp['ret_series'] = return_table['strategy_return_daily'].tolist()
-#        result_temp = pd.DataFrame(pd.Series(result_temp)).T
-        data.to_csv('D:/Quant/programe/strategy_pool_adv/test/acheck_data_'+code+'_'+params_id+'.csv')
-        return_table_temp.to_csv('D:/Quant/programe/strategy_pool_adv/test/acheck_'+code+'_'+params_id+'.csv')
+        data.to_csv(os.path.join(save_path,'acheck_data_'+code+'_'+params_id+'.csv'))
+        return_table_temp.to_csv(os.path.join(save_path,'acheck_'+code+'_'+params_id+'.csv'))
         result_temp = _get_result(return_table = return_table_temp, code = code, params_id = params_id, params = params)
         result = result.append(result_temp)
     return result
@@ -534,7 +500,9 @@ def _get_result(return_table = None, code = None, params_id = None, params = Non
     result_temp = {}
     result_temp['code'] = code
     result_temp['params_id'] = params_id
-    result_temp['params'] = params
+    if code not in list(params.keys()): result_temp['params'] = params
+    else: 
+        result_temp['params'] = params[code]
     result_temp['winrate'] = P1/100
     result_temp['annual_return'] = P2/100
     result_temp['max_drawback'] = P3/100
@@ -580,13 +548,13 @@ def _get_all_optimize_info(params_optimize_dict):
     return optimize_dict
     
 def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_profit_ret = None):
-    data['enter_long_price_mark'] = np.where(data['signal']==1,data['close'],np.nan)
-    data['enter_short_price_mark'] = np.where(data['signal']==-1,data['close'],np.nan)
+    data['enter_long_price_mark'] = np.where(data['signal']>0,data['close'],np.nan)
+    data['enter_short_price_mark'] = np.where(data['signal']<0,data['close'],np.nan)
     data['enter_long_price_mark'] = data['enter_long_price_mark'].ffill()
     data['enter_short_price_mark'] = data['enter_short_price_mark'].ffill()
     data['current_signal'] = data['signal'].ffill()
-    data['current_ret'] = np.where(data['current_signal']==1,(data['close']/data['enter_long_price_mark'])-1,np.nan)
-    data['current_ret'] = np.where(data['current_signal']==-1,(data['enter_short_price_mark']/data['close'])-1,data['current_ret'])
+    data['current_ret'] = np.where(data['current_signal']>0,(data['close']/data['enter_long_price_mark'])-1,np.nan)
+    data['current_ret'] = np.where(data['current_signal']<0,(data['enter_short_price_mark']/data['close'])-1,data['current_ret'])
     data['signal'] = np.where(data['current_ret']<=stop_loss_ret,0,data['signal'])
     data['signal'] = np.where(data['current_ret']>=stop_profit_ret,0,data['signal'])
     return data
