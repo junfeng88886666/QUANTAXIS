@@ -124,7 +124,9 @@ def QA_VectorBacktest(data = None,
     '''
     import copy
     s = datetime.datetime.now()
-    if if_reload_save_files: shutil.rmtree(save_path) 
+    if if_reload_save_files: 
+        try: shutil.rmtree(save_path)
+        except: pass
     if not os.path.exists(save_path):os.makedirs(save_path)
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
