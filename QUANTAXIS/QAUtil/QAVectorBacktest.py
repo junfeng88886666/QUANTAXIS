@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from pylab import *
 
-
+import shutil
 import seaborn
 import datetime
 import prettytable as pt
@@ -117,12 +117,14 @@ def QA_VectorBacktest(data = None,
                       run_year_list = None, 
                       if_optimize_parameters = False,
                       if_reorder_params = True,
-                      save_path = None):
+                      save_path = None,
+                      if_reload_save_files = True):
     '''
     data： QA.DataStruct.data
     '''
     import copy
     s = datetime.datetime.now()
+    if if_reload_save_files: shutil.rmtree(save_path) 
     if not os.path.exists(save_path):os.makedirs(save_path)
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
