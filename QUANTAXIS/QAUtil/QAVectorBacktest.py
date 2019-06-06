@@ -121,6 +121,9 @@ def QA_VectorBacktest(data = None,
     '''
     data： QA.DataStruct.data
     '''
+    import copy
+    s = datetime.datetime.now()
+    print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
     print("func 的输入格式应和data相同，输出格式应为dataframe,reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal仅为[1,0,-1]")
     code_list = list(set(data.reset_index()['code']))
@@ -145,6 +148,7 @@ def QA_VectorBacktest(data = None,
             calculated_data = calculated_data.append(temp_data)
         ###
         res_temp = _QA_VectorBacktest(calculated_data,comission,params,params_id)
+        calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
         res = res.append(res_temp)
     else:
         print('参数优化开启，时间：{}'.format(str(datetime.datetime.now())))
@@ -155,9 +159,10 @@ def QA_VectorBacktest(data = None,
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             print('优化参数：{}，值：{}'.format(optimize_item,optimize_dict[optimize_item]))
             params_id = 'params_'+str(optimize_item)
+            params_temp = copy.deepcopy(params)
             for item_temp in optimize_dict[optimize_item].keys():
-                params[item_temp] = optimize_dict[optimize_item][item_temp]
-            params_use = _edit_params(params,code_list)
+                params_temp[item_temp] = optimize_dict[optimize_item][item_temp]
+            params_use = _edit_params(params_temp,code_list)
             ###
             calculated_data = pd.DataFrame()
             for code in code_list:
@@ -167,10 +172,11 @@ def QA_VectorBacktest(data = None,
                 calculated_data = calculated_data.append(temp_data)
                 
             ###
-            res_temp = _QA_VectorBacktest(calculated_data,comission,params,params_id)
+            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id)
+            calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
-    params_res = res[['params_id','params']]
+    params_res = res[['params_id','params']].drop_duplicates(subset = ['params_id'])
                 
     '''
     结果展示区域
@@ -201,7 +207,7 @@ def QA_VectorBacktest(data = None,
     params_id_list = list(set(res.params_id.tolist()))
     '''展示0'''
     _draw_based_on_result_dataframe(result = res,save_path = save_path,title = '所有单一回测结果')
-    if if_optimize_parameters == False:
+    if if_optimize_parameters == True:
         '''展示1'''
         show_results_single(result = res,code_list = code_list,params_id_list = params_id_list,by = 'code',save_path = save_path)
         '''展示2'''
@@ -243,6 +249,10 @@ def QA_VectorBacktest(data = None,
         simple_res_group_average.to_csv(os.path.join(save_path,'全市场最优参数平均资金分配_重要回测结果参数.csv'))
         params_res_group_average.to_csv(os.path.join(save_path,'全市场最优参数平均资金分配_回测参数表.csv'))
         
+    e = datetime.datetime.now()
+    print('矢量回测结束，结束时间：{}'.format(str(e)))
+    try: print('矢量回测共耗时：{}，回测品种数：{}，回测参数数：{}'.format(str(e-s),len(code_list),len(optimize_dict)))
+    except: print('矢量回测共耗时：{}，回测品种数：{}，回测参数数：{}'.format(str(e-s),len(code_list),1))
     return res,simple_res,params_res,res_group_average,simple_res_group_average,params_res_group_average
 
 # =============================================================================
@@ -277,7 +287,7 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None):
         temp_title = '各品种最优参数结果展示, 最优衡量标准为：{}最优'.format(by)
         print(temp_title)
         result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
-        
+
     elif on == 'params': 
         temp_title = '各参数最优品种结果展示, 最优衡量标准为：{}最优'.format(by)
         print(temp_title)
@@ -289,12 +299,24 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None):
 def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     import copy
     print('####################################################################################')
+    
+# =============================================================================
+#   '''设置筛选顺序，按by给定的为最优，若有相同的，则按，sharpe>annual_return>winrate来获取最优'''
+    if by == 'sharpe': filter_list = ['sharpe','annual_return','winrate']
+    elif by == 'annual_return': filter_list = ['annual_return','sharpe','winrate']
+    elif by == 'winrate': filter_list = ['winrate','sharpe','annual_return']
+
+# =============================================================================
+
+
     temp_title = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
     print(temp_title)
     
 # =============================================================================
 #   获取平均分配资金的日收益序列
-    result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
+    for j,i in enumerate(filter_list):
+        if j ==0: result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
+        else: result_max = result_max.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
     
     for item in range(len(result_max)):
         temp_result_max = result_max.iloc[item]
@@ -324,7 +346,6 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     
 # =============================================================================
 #   生成统计表格
-    result_max['params'].tolist()
     group_params = dict(
                             zip(
                                 result_max['code'].tolist(),
@@ -337,7 +358,7 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     simple_res_all_1 = res_all_1[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','by']]
     params_res_all_1 = res_all_1[['params_id','params','by']]
     
-    temp_simple_result = _edit_result_to_print_format(result = result)
+    temp_simple_result = _edit_result_to_print_format(result = res_all_1)
     _print_table(temp_simple_result)
 # =============================================================================
     return res_all_1,simple_res_all_1,params_res_all_1
@@ -425,16 +446,18 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
         data['real_return'] = data['close'].pct_change().shift(-1)
     
         data['strategy'] = data['signal']*data['real_return']
-    
-        return_table = data.pivot(index='minute', columns='date', values='strategy')
-        return_table = (return_table.fillna(0)+1).cumprod(axis=0)
-        return_table = return_table.T
-        return_table['cum_ret_series'] = list(map(lambda x:list(x),return_table.values))
-        return_table = return_table[['cum_ret_series']]
-        return_table['strategy_return_daily'] = list(map(lambda x:x[-1],return_table['cum_ret_series']))
+        data['strategy'] = np.where((data['signal']!=0)&(data['signal'].shift(1)==0),data['strategy']-(comission/2),data['strategy'])
+        data['strategy'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),data['strategy']-(comission/2),data['strategy'])
 
-        return_table['strategy_return_daily'] = np.where(return_table['strategy_return_daily']!=1,return_table['strategy_return_daily']-comission,return_table['strategy_return_daily'])
-        del return_table['cum_ret_series']
+        return_table_temp = data.pivot(index='minute', columns='date', values='strategy')
+        return_table_temp = (return_table_temp.fillna(0)+1).cumprod(axis=0)
+        return_table_temp = return_table_temp.T
+        return_table_temp['cum_ret_series'] = list(map(lambda x:list(x),return_table_temp.values))
+        return_table_temp = return_table_temp[['cum_ret_series']]
+        return_table_temp['strategy_return_daily'] = list(map(lambda x:x[-1],return_table_temp['cum_ret_series']))
+
+#        return_table['strategy_return_daily'] = np.where(return_table['strategy_return_daily']!=1,return_table['strategy_return_daily']-comission,return_table['strategy_return_daily'])
+        del return_table_temp['cum_ret_series']
 # =============================================================================
 #   存储回测结果
 #        return_table['cum_strategy'] = return_table['strategy_return_daily'].cumprod()    
@@ -472,7 +495,9 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
 #        result_temp['trading_date_series'] = return_table.index.tolist()
 #        result_temp['ret_series'] = return_table['strategy_return_daily'].tolist()
 #        result_temp = pd.DataFrame(pd.Series(result_temp)).T
-        result_temp = _get_result(return_table = return_table, code = code, params_id = params_id, params = params)
+        data.to_csv('D:/Quant/programe/strategy_pool_adv/test/acheck_data_'+code+'_'+params_id+'.csv')
+        return_table_temp.to_csv('D:/Quant/programe/strategy_pool_adv/test/acheck_'+code+'_'+params_id+'.csv')
+        result_temp = _get_result(return_table = return_table_temp, code = code, params_id = params_id, params = params)
         result = result.append(result_temp)
     return result
 
@@ -530,6 +555,11 @@ def _get_all_optimize_info(params_optimize_dict):
                             'fac3':['1','2','3']}
     
     '''
+    types_dict = {}
+    for i in params_optimize_dict.keys():
+        types_dict[i] = type(params_optimize_dict[i][0])
+    
+    
     fn = lambda x, code=',': reduce(lambda x, y: [str(i)+code+str(j) for i in x for j in y], x)
     lists = []
     params_name = []
@@ -545,8 +575,8 @@ def _get_all_optimize_info(params_optimize_dict):
         splited_item = item.split(',')
         temp = {}
         for i,sub_item in enumerate(params_name):
-            temp[sub_item] = splited_item[i]
-        optimize_dict[count] = temp     
+            temp[sub_item] = types_dict[sub_item](splited_item[i])
+        optimize_dict[count] = temp   
     return optimize_dict
     
 def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_profit_ret = None):
@@ -563,7 +593,7 @@ def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_
 
 def QA_VectorBacktest_func_fill_signal(data = None):
     data['signal'] = data['signal'].ffill().fillna(0)
-    data['signal'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),0,data['signal'])
+#    data['signal'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),0,data['signal'])
     return data
     
 
