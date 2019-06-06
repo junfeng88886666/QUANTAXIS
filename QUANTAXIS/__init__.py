@@ -255,7 +255,9 @@ from QUANTAXIS.QAUtil import (  # QAPARAMETER
     QA_util_to_json_from_pandas, QA_util_to_list_from_numpy,
     QA_util_to_list_from_pandas, QA_util_to_pandas_from_json,
     QA_util_to_pandas_from_list, QA_util_web_ping, QATZInfo_CN, future_ip_list,
-    info_ip_list, stock_ip_list, trade_date_sse,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1)
+    info_ip_list, stock_ip_list, trade_date_sse,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1,
+    QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,QA_VectorBacktest,QA_VectorBacktest_func_add_fixed_stop,QA_VectorBacktest_func_fill_signal)
+
 
 # from QUANTAXIS.QASU.save_backtest import (
 #     QA_SU_save_account_message, QA_SU_save_backtest_message, QA_SU_save_account_to_csv)

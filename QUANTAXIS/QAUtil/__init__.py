@@ -27,7 +27,10 @@ util tool
 """
 # path
 #####
-from QUANTAXIS.QAUtil.QAVectorBacktest import QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop
+from QUANTAXIS.QAUtil.QAVectorBacktest import (QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,
+                                               QA_VectorBacktest,
+                                                QA_VectorBacktest_func_add_fixed_stop,
+                                                QA_VectorBacktest_func_fill_signal)
 #####
 from QUANTAXIS.QAUtil.Parallelism import Parallelism
 # bar
