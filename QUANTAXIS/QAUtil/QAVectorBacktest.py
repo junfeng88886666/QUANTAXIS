@@ -130,7 +130,7 @@ def QA_VectorBacktest(data = None,
     if not os.path.exists(save_path):os.makedirs(save_path)
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
-    print("func 的输入格式应和data相同，输出格式应为dataframe,reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal仅为[1,0,-1]")
+    print("func 的输入格式应和data相同，输出格式应为dataframe,reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
     code_list = list(set(data.reset_index()['code']))
     data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
 
@@ -146,13 +146,14 @@ def QA_VectorBacktest(data = None,
         print('依据给定参数回测，参数：{}'.format(params_temp))
         params_id = 'params_default'
         ####
-        calculated_data = pd.DataFrame()
-        for code in code_list:
-            print('计算信号，品种：{}'.format(code))
-            temp_data = data.loc[(slice(None), code), :]
-            temp_data = func(temp_data,params_use)
-            calculated_data = calculated_data.append(temp_data)
+        # calculated_data = pd.DataFrame()
+        # for code in code_list:
+        #     print('计算信号，品种：{}'.format(code))
+        #     temp_data = data.loc[(slice(None), code), :]
+        #     temp_data = func(temp_data,params_use)
+        #     calculated_data = calculated_data.append(temp_data)
         ###
+        calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
         res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
         calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
         res = res.append(res_temp)
@@ -170,14 +171,14 @@ def QA_VectorBacktest(data = None,
                 params_temp[item_temp] = optimize_dict[optimize_item][item_temp]
             params_use = _edit_params(params_temp,code_list)
             ###
-            calculated_data = pd.DataFrame()
-            for code in code_list:
-                print('计算信号，品种：{}'.format(code))
-                temp_data = data.loc[(slice(None), code), :]
-                temp_data = func(temp_data,params_use)
-                calculated_data = calculated_data.append(temp_data)
-                
+            # calculated_data = pd.DataFrame()
+            # for code in code_list:
+            #     print('计算信号，品种：{}'.format(code))
+            #     temp_data = data.loc[(slice(None), code), :]
+            #     temp_data = func(temp_data,params_use)
+            #     calculated_data = calculated_data.append(temp_data)
             ###
+            calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
             res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
