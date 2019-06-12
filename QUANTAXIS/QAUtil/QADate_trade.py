@@ -7482,17 +7482,14 @@ def QA_util_future_to_tradedatetime(real_datetime):
             str(real_datetime)[0:19],
             '%Y-%m-%d %H:%M:%S'
         )
-        return dt if ((dt.time() < datetime.time(21,0))&(dt.time() >= datetime.time(8,50))) else QA_util_get_next_datetime(dt,1)
+        return dt if ((dt.time() < datetime.time(20,59))&(dt.time() >= datetime.time(8,50))) else QA_util_get_next_datetime(dt,1)
 
     elif len(str(real_datetime)) == 16:
         dt = datetime.datetime.strptime(
             str(real_datetime)[0:16],
             '%Y-%m-%d %H:%M'
         )
-        return dt if dt.time(
-        ) < datetime.time(21,
-                          0) else QA_util_get_next_datetime(dt,
-                                                            1)
+        return dt if dt.time() < datetime.time(20,59) else QA_util_get_next_datetime(dt,1)
 
 
 def QA_util_future_to_realdatetime(trade_datetime):

@@ -124,10 +124,12 @@ def QA_VectorBacktest(data = None,
     '''
     import copy
     s = datetime.datetime.now()
+    '''重置回测文件夹下的子文件夹'''
     if if_reload_save_files: 
         try: shutil.rmtree(save_path)
         except: pass
     if not os.path.exists(save_path):os.makedirs(save_path)
+    ''''''
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
     print("func 的输入格式应和data相同，输出格式应为dataframe,reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
@@ -183,7 +185,7 @@ def QA_VectorBacktest(data = None,
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
-    params_res = res[['params_id','params']].drop_duplicates(subset = ['params_id'])
+    params_res = res[['code','params_id','params']].drop_duplicates(subset = ['code'])
                 
     '''
     结果展示区域
@@ -540,7 +542,7 @@ def _get_all_optimize_info(params_optimize_dict):
     for i in params_optimize_dict.keys():
         lists.append(params_optimize_dict[i])
         params_name.append(i)
-        
+
     combination = fn(lists,',')
     count = 0
     optimize_dict = {}
@@ -564,6 +566,10 @@ def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_
     data['signal'] = np.where(data['current_ret']<=stop_loss_ret,0,data['signal'])
     data['signal'] = np.where(data['current_ret']>=stop_profit_ret,0,data['signal'])
     return data
+
+def QA_VectorBacktest_func_add_limit_order(data = None,limit_point = None,limit_ret = None,interday = False):
+    pass
+
 
 def QA_VectorBacktest_func_fill_signal(data = None):
     data['signal'] = data['signal'].ffill().fillna(0)

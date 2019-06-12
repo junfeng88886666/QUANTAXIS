@@ -31,6 +31,7 @@ from QUANTAXIS.QAUtil.QAVectorBacktest import (QA_VectorBacktest_InterDayOnceTra
                                                QA_VectorBacktest,
                                                 QA_VectorBacktest_func_add_fixed_stop,
                                                 QA_VectorBacktest_func_fill_signal)
+from QUANTAXIS.QAUtil.QAMath import QA_util_math_cross
 #####
 from QUANTAXIS.QAUtil.Parallelism import Parallelism
 # bar
