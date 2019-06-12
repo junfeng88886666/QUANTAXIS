@@ -26,9 +26,9 @@ from QUANTAXIS.QAData.QADataAggrement import (QA_DataAggrement_Future_day,
 #%%
 cofund_data_path = {
 (MARKET_TYPE.FUTURE_CN, FREQUENCE.DAY,'商品期货','主连'):'Z:/Interns/hengpan/FutureMainDayData/Mat/',
-(MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'商品期货','主连'):'Z:/Interns/hengpan/FutureMainMinData/商品期货分钟数据/Data/InitialMinuteDataBase/1min/',
+(MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'商品期货','主连'):'Z:/300_Group/Future_HZ/Min/',#'Z:/Interns/hengpan/FutureMainMinData/商品期货分钟数据/Data/InitialMinuteDataBase/1min/',
 (MARKET_TYPE.FUTURE_CN, FREQUENCE.DAY,'商品期货','指数'):'Z:/Interns/hengpan/FutureIndexDayData/Mat/',
-(MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'商品期货','指数'):'Z:/Interns/hengpan/FutureMainMinData/商品期货分钟数据/Data/ContinuousMinuteDataBase/1min/',
+(MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'商品期货','指数'):'Z:/300_Group/Future_HZ/Min/',
 (MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'股指期货','主连'):'Z:/Interns/hengpan/IndexMinData/股指期货分钟数据/Data/InitialMinuteDataBase/1min/',
 (MARKET_TYPE.FUTURE_CN, FREQUENCE.ONE_MIN,'股指期货','指数'):'Z:/Interns/hengpan/IndexMinData/股指期货分钟数据/Data/ContinuousMinuteDataBase/1min/'
 }
