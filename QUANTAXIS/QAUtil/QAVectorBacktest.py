@@ -121,6 +121,7 @@ def QA_VectorBacktest(data = None,
                       if_reload_save_files = True):
     '''
     data： QA.DataStruct.data
+    TODO: 增加根据code_list筛选code的功能
     '''
     import copy
     s = datetime.datetime.now()
@@ -167,6 +168,7 @@ def QA_VectorBacktest(data = None,
         for steps,optimize_item in enumerate(optimize_dict.keys()):
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
             print('优化参数：{}，值：{}'.format(optimize_item,optimize_dict[optimize_item]))
+            temp_s = datetime.datetime.now()
             params_id = 'params_'+str(optimize_item)
             params_temp = copy.deepcopy(params)
             for item_temp in optimize_dict[optimize_item].keys():
@@ -184,6 +186,10 @@ def QA_VectorBacktest(data = None,
             res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
+            temp_e = datetime.datetime.now()
+            print('此轮耗时：{}'.format(temp_e - temp_s))
+            print('剩余时间: {}'.format((len(optimize_dict.keys())-steps) * (temp_e - temp_s)))
+
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
     params_res = res[['code','params_id','params']].drop_duplicates(subset = ['code'])
                 
@@ -475,7 +481,7 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
         result = result.append(result_temp)
     return result
 
-def _get_result(return_table = None, code = None, params_id = None, params = None):
+def _get_result(return_table = None, code = None, params_id = None, params = None,if_show_params = True):
     '''
     输入的return_table要求：dataframe, index:date, 列包含：strategy_return_daily不减1但减去了手续费的日收益
     '''    
@@ -508,9 +514,11 @@ def _get_result(return_table = None, code = None, params_id = None, params = Non
     result_temp = {}
     result_temp['code'] = code
     result_temp['params_id'] = params_id
-    if code not in list(params.keys()): result_temp['params'] = params
-    else: 
-        result_temp['params'] = params[code]
+    if if_show_params:
+        if code not in list(params.keys()): result_temp['params'] = params
+        else:
+            result_temp['params'] = params[code]
+    else: pass
     result_temp['winrate'] = P1/100
     result_temp['annual_return'] = P2/100
     result_temp['max_drawback'] = P3/100
@@ -575,102 +583,6 @@ def QA_VectorBacktest_func_fill_signal(data = None):
     data['signal'] = data['signal'].ffill().fillna(0)
 #    data['signal'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),0,data['signal'])
     return data
-    
 
-
-
-
-
-
-
-
-
-    
-#def _draw_single_code_multi_params(result = None, code = None,params_id_list = None,save_path = None):
-#    '''
-#    调试参数
-#    code = 'IC'
-#    params_id_list = ['params_1','params_2','params_3']
-#    '''
-#    '''获取临时表格'''
-#    print('####################################################################################')
-#    all_params_id_list = list(set(result.params_id.tolist()))
-#    if len(params_id_list) == len(all_params_id_list): print('展示：单品种的全参数回测结果, 品种：{}'.format(code))
-#    else: print('展示：单品种的部分参数回测结果, 品种：{}'.format(code))
-#    mpl.rcParams['font.sans-serif'] = ['SimHei']
-#    temp_result = result[(result.code==code)&(result.params_id.isin(params_id_list))]
-#    temp_simple_result = temp_result[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
-#    '''设置临时表格格式（胜率，年化收益率，最大回撤：调整为百分比格式）'''
-#    temp_simple_result['winrate'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['winrate']))
-#    temp_simple_result['annual_return'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['annual_return']))
-#    temp_simple_result['max_drawback'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['max_drawback']))
-#
-## =============================================================================
-##   图像显示部分
-#    '''设置画布'''
-#    fig = plt.figure(figsize=(20,10))
-#    figp = fig.subplots(1,1)
-#    '''绘制曲线'''
-#    for params_id in params_id_list:
-#        '''分参数绘制曲线'''
-#        single_result = temp_result[(temp_result.code==code)&(temp_result.params_id == params_id)]
-#        temp_draw_series = pd.Series(index = single_result['trading_date_series'].values[0],data = single_result['cum_ret_series'].values[0])
-#        figp.plot(temp_draw_series,label = params_id)    
-#    '''设置显示属性和标题'''
-#    figp.xaxis.set_major_locator(ticker.MultipleLocator(80))
-#    figp.legend()
-#    figp.set_title('品种：{}，多参数的矢量回测结果'.format(code))
-#    fig.show()
-#    if save_path == None: pass
-#    else: fig.savefig(os.path.join(save_path,'品种：{}，多参数的矢量回测结果.jpg'.format(code)))
-## =============================================================================
-## =============================================================================
-##   表格显示部分
-#    tb = pt.PrettyTable()
-#    temp_columns_list = temp_simple_result.columns.tolist()
-#    for temp_column in temp_columns_list:
-#        tb.add_column(temp_column,temp_simple_result[temp_column].tolist())
-#    print(tb)
-## =============================================================================
-#    
-#def _draw_single_params_multi_code(result = None, params_id = None,code_list = None,save_path = None):
-#    '''获取临时表格'''
-#    print('####################################################################################')
-#    all_code_list = list(set(result.code.tolist()))
-#    if len(code_list) == len(all_code_list): print('展示：单参数的全品种回测结果，参数：{}'.format(params_id))
-#    else: print('展示：单参数的部分品种回测结果, 参数：{}'.format(params_id))
-#
-#    mpl.rcParams['font.sans-serif'] = ['SimHei']
-#    temp_result = result[(result.params_id==params_id)&(result.code.isin(code_list))]
-#    temp_simple_result = temp_result[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
-#    '''设置临时表格格式（胜率，年化收益率，最大回撤：调整为百分比格式）'''
-#    temp_simple_result['winrate'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['winrate']))
-#    temp_simple_result['annual_return'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['annual_return']))
-#    temp_simple_result['max_drawback'] = list(map(lambda x:str(round(x*100,2))+'%',temp_simple_result['max_drawback']))
-#
-## =============================================================================
-##   图像显示部分
-#    '''设置画布'''
-#    fig = plt.figure(figsize=(20,10))
-#    figp = fig.subplots(1,1)
-#    '''绘制曲线'''
-#    for code in code_list:
-#        '''分参数绘制曲线'''
-#        single_result = temp_result[(temp_result.code==code)&(temp_result.params_id == params_id)]
-#        temp_draw_series = pd.Series(index = single_result['trading_date_series'].values[0],data = single_result['cum_ret_series'].values[0])
-#        figp.plot(temp_draw_series,label = code)    
-#    '''设置显示属性和标题'''
-#    figp.xaxis.set_major_locator(ticker.MultipleLocator(80))
-#    figp.legend()
-#    figp.set_title('参数：{}，多品种的矢量回测结果'.format(params_id))
-#    fig.show()
-#    if save_path == None: pass
-#    else: fig.savefig(os.path.join(save_path,'参数：{}，多品种的矢量回测结果.jpg'.format(params_id)))
-## =============================================================================
-## =============================================================================
-##   表格显示部分
-#    tb = pt.PrettyTable()
-#    temp_columns_list = temp_simple_result.columns.tolist()
-#    for temp_column in temp_columns_list:
-#        tb.add_column(temp_column,temp_simple_result[temp_column].tolist())
-#    print(tb)
+def check_result():
+    pass

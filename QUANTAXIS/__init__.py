@@ -258,6 +258,9 @@ from QUANTAXIS.QAUtil import (  # QAPARAMETER
     info_ip_list, stock_ip_list, trade_date_sse,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1,
     QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,QA_VectorBacktest,QA_VectorBacktest_func_add_fixed_stop,QA_VectorBacktest_func_fill_signal,QA_util_math_cross)
 
+from QUANTAXIS.QAArgorithm import *
+
+
 
 # from QUANTAXIS.QASU.save_backtest import (
 #     QA_SU_save_account_message, QA_SU_save_backtest_message, QA_SU_save_account_to_csv)

@@ -401,10 +401,10 @@ def QA_fetch_future_min(
 
         __data.append([str(item['code']), float(item['open']), float(item['high']), float(
             item['low']), float(item['close']), float(item['position']), float(item['price']), float(item['trade']),
-            item['datetime'], item['tradetime'], item['time_stamp'], item['date'], item['type']])
+            item['datetime'], item['tradetime'], item['time_stamp'], item['date'], item['type'],str(item['contract'])])
 
     __data = DataFrame(__data, columns=[
-        'code', 'open', 'high', 'low', 'close',  'position', 'price', 'trade', 'datetime', 'tradetime', 'time_stamp', 'date', 'type'])
+        'code', 'open', 'high', 'low', 'close',  'position', 'price', 'trade', 'datetime', 'tradetime', 'time_stamp', 'date', 'type','contract'])
 
     __data['datetime'] = pd.to_datetime(__data['datetime'])
     __data = __data.set_index('datetime', drop=False)
