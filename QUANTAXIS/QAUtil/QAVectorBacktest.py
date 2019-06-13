@@ -133,11 +133,12 @@ def QA_VectorBacktest(data = None,
     ''''''
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
-    print("func 的输入格式应和data相同，输出格式应为dataframe,reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
+    print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
     code_list = list(set(data.reset_index()['code']))
     data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
 
     data = data[data['year'].isin(run_year_list)]
+    data = data.sort_index()
     res = pd.DataFrame()
     print('回测年份：{}'.format(run_year_list))
     print('回测品种列表：{}'.format(code_list))
@@ -157,6 +158,7 @@ def QA_VectorBacktest(data = None,
         #     calculated_data = calculated_data.append(temp_data)
         ###
         calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
+        calculated_data = calculated_data.sort_values(by=['datetime', 'code'])
         res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
         calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
         res = res.append(res_temp)
@@ -183,6 +185,7 @@ def QA_VectorBacktest(data = None,
             #     calculated_data = calculated_data.append(temp_data)
             ###
             calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
+            calculated_data = calculated_data.sort_values(by=['datetime','code'])
             res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
@@ -339,8 +342,9 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
         if item == 0: temp_df_all = copy.deepcopy(temp_df)
         else:
             temp_df_all = pd.merge(temp_df_all,temp_df,left_index = True,right_index = True,how = 'outer')
+    temp_df_all = temp_df_all.sort_index()
     temp_df_all = temp_df_all.fillna(1)
-    temp_df_all = temp_df_all.sum(axis=1)/temp_df_all.shape[1]   
+    temp_df_all = temp_df_all.sum(axis=1)/temp_df_all.shape[1]
     temp_df_all = pd.DataFrame(temp_df_all)
     temp_df_all.columns = ['strategy_return_daily']
     
@@ -379,6 +383,9 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     return res_all_1,simple_res_all_1,params_res_all_1
 
 def _draw_based_on_result_dataframe(result = None,save_path = None,title = None):
+    '''
+    TODO 修复绘图的时候时间错乱的问题
+    '''
     mpl.rcParams['font.sans-serif'] = ['SimHei'] #设置matplotlib的中文字体显示
     
 # =============================================================================
@@ -484,7 +491,7 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
 def _get_result(return_table = None, code = None, params_id = None, params = None,if_show_params = True):
     '''
     输入的return_table要求：dataframe, index:date, 列包含：strategy_return_daily不减1但减去了手续费的日收益
-    '''    
+    '''
     def maximum_down(dataframe):
         data = list(dataframe)
         index_j = np.argmax(np.maximum.accumulate(data) - data)  # 结束位置
