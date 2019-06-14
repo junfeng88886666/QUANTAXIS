@@ -118,10 +118,11 @@ def QA_VectorBacktest(data = None,
                       if_optimize_parameters = False,
                       if_reorder_params = True,
                       save_path = None,
-                      if_reload_save_files = True):
+                      if_reload_save_files = True,
+                      if_legend = True,
+                      code_list = None):
     '''
     data： QA.DataStruct.data
-    TODO: 增加根据code_list筛选code的功能
     '''
     import copy
     s = datetime.datetime.now()
@@ -134,6 +135,8 @@ def QA_VectorBacktest(data = None,
     print('矢量回测开始，开始时间：{}'.format(str(s)))
     print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
     print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
+    if code_list!= None: data = data.loc[(slice(None), code_list), :]
+
     code_list = list(set(data.reset_index()['code']))
     data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
 
@@ -155,6 +158,7 @@ def QA_VectorBacktest(data = None,
         #     print('计算信号，品种：{}'.format(code))
         #     temp_data = data.loc[(slice(None), code), :]
         #     temp_data = func(temp_data,params_use)
+        #     print(temp_data)
         #     calculated_data = calculated_data.append(temp_data)
         ###
         calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
@@ -224,34 +228,34 @@ def QA_VectorBacktest(data = None,
     code_list = list(set(res.code.tolist()))
     params_id_list = list(set(res.params_id.tolist()))
     '''展示0'''
-    _draw_based_on_result_dataframe(result = res,save_path = save_path,title = '所有单一回测结果')
+    _draw_based_on_result_dataframe(result = res,save_path = save_path,titles = '所有单一回测结果',if_legend=if_legend)
     if if_optimize_parameters == True:
         '''展示1'''
-        show_results_single(result = res,code_list = code_list,params_id_list = params_id_list,by = 'code',save_path = save_path)
+        show_results_single(result = res,code_list = code_list,params_id_list = params_id_list,by = 'code',save_path = save_path,if_legend=if_legend)
         '''展示2'''
-        show_results_single(result = res,code_list = code_list,params_id_list = params_id_list,by = 'params_id',save_path = save_path)
+        show_results_single(result = res,code_list = code_list,params_id_list = params_id_list,by = 'params_id',save_path = save_path,if_legend=if_legend)
         '''展示3'''
-        show_results_max(result = res, on = 'code',by = 'annual_return',save_path = save_path)
+        show_results_max(result = res, on = 'code',by = 'annual_return',save_path = save_path,if_legend=if_legend)
         '''展示4'''
-        show_results_max(result = res, on = 'code',by = 'sharpe',save_path = save_path)
+        show_results_max(result = res, on = 'code',by = 'sharpe',save_path = save_path,if_legend=if_legend)
         '''展示5'''
-        show_results_max(result = res, on = 'code',by = 'winrate',save_path = save_path)    
+        show_results_max(result = res, on = 'code',by = 'winrate',save_path = save_path,if_legend=if_legend)
         '''展示6'''
-        show_results_max(result = res, on = 'params',by = 'annual_return',save_path = save_path)
+        show_results_max(result = res, on = 'params',by = 'annual_return',save_path = save_path,if_legend=if_legend)
         '''展示7'''
-        show_results_max(result = res, on = 'params',by = 'sharpe',save_path = save_path)
+        show_results_max(result = res, on = 'params',by = 'sharpe',save_path = save_path,if_legend=if_legend)
         '''展示8'''
-        show_results_max(result = res, on = 'params',by = 'winrate',save_path = save_path)   
+        show_results_max(result = res, on = 'params',by = 'winrate',save_path = save_path,if_legend=if_legend)
     '''展示9.1.2.3'''
     res_group_average = pd.DataFrame()
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'annual_return',save_path = save_path)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'annual_return',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'sharpe',save_path = save_path)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'sharpe',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'winrate',save_path = save_path)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'winrate',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
         
     simple_res_group_average = res_group_average[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','by']]
@@ -275,7 +279,7 @@ def QA_VectorBacktest(data = None,
 
 # =============================================================================
 # 结果展示函数区域
-def show_results_single(result = None,code_list = None,params_id_list = None,by = 'code',save_path = None):
+def show_results_single(result = None,code_list = None,params_id_list = None,by = 'code',save_path = None, if_legend=True):
     print('####################################################################################')
     print('各品种各参数结果展示')
     all_code_list = list(set(result.code.tolist()))
@@ -290,31 +294,31 @@ def show_results_single(result = None,code_list = None,params_id_list = None,by 
             if len(params_id_list) == len(all_params_id_list): print('展示：单品种的全参数回测结果，品种：{}'.format(code))
             
             temp_result = result[(result.code==code)&(result.params_id.isin(params_id_list))]
-            _draw_based_on_result_dataframe(result = temp_result,save_path = save_path,title = '品种：{}，多参数的矢量回测结果'.format(code))
+            _draw_based_on_result_dataframe(result = temp_result,save_path = save_path,titles = '品种：{}，多参数的矢量回测结果'.format(code),if_legend = if_legend)
     elif by == 'params_id':
         for params_id in params_id_list:
             print('####################################################################################')
             if len(code_list) == len(all_code_list): print('展示：单参数的全品种回测结果，参数：{}'.format(params_id))
 
             temp_result = result[(result.params_id==params_id)&(result.code.isin(code_list))]
-            _draw_based_on_result_dataframe(result = temp_result,save_path = save_path,title = '参数：{}，多品种的矢量回测结果'.format(params_id))
+            _draw_based_on_result_dataframe(result = temp_result,save_path = save_path,titles = '参数：{}，多品种的矢量回测结果'.format(params_id),if_legend = if_legend)
             
-def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None):
+def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,if_legend=True):
     print('####################################################################################')
     if on == 'code': 
-        temp_title = '各品种最优参数结果展示, 最优衡量标准为：{}最优'.format(by)
-        print(temp_title)
+        temp_titles = '各品种最优参数结果展示, 最优衡量标准为：{}最优'.format(by)
+        print(temp_titles)
         result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
 
     elif on == 'params': 
-        temp_title = '各参数最优品种结果展示, 最优衡量标准为：{}最优'.format(by)
-        print(temp_title)
+        temp_titles = '各参数最优品种结果展示, 最优衡量标准为：{}最优'.format(by)
+        print(temp_titles)
         result_max = result.groupby('params_id',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
 
-    _draw_based_on_result_dataframe(result = result_max,save_path = save_path,title = temp_title)
+    _draw_based_on_result_dataframe(result = result_max,save_path = save_path,titles = temp_titles,if_legend = if_legend)
 
             
-def show_results_group_average(result = None,by = 'sharpe',save_path = None):
+def show_results_group_average(result = None,by = 'sharpe',save_path = None,if_legend=True):
     import copy
     print('####################################################################################')
     
@@ -325,11 +329,8 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     elif by == 'winrate': filter_list = ['winrate','sharpe','annual_return']
 
 # =============================================================================
-
-
-    temp_title = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
-    print(temp_title)
-    
+    temp_titles = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
+    print(temp_titles)    
 # =============================================================================
 #   获取平均分配资金的日收益序列
     for j,i in enumerate(filter_list):
@@ -349,20 +350,7 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     temp_df_all.columns = ['strategy_return_daily']
     
 # =============================================================================
-
     '''画图画表'''
-    fig = plt.figure(figsize=(20,10))
-    figp = fig.subplots(1,1)
-    '''绘制曲线'''
-    figp.plot(temp_df_all.cumprod(),label = str(result_max.code.tolist())+' && '+str(result_max.params_id.tolist()))    
-    '''设置显示属性和标题'''
-    figp.xaxis.set_major_locator(ticker.MultipleLocator(80))
-    figp.legend()
-    figp.set_title(temp_title)
-    fig.show()
-    if save_path == None: pass
-    else: fig.savefig(os.path.join(save_path,temp_title+'.jpg'))
-    
 # =============================================================================
 #   生成统计表格
     group_params = dict(
@@ -379,42 +367,77 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None):
     
     temp_simple_result = _edit_result_to_print_format(result = res_all_1)
     _print_table(temp_simple_result)
+    
+    plot_series = temp_df_all['strategy_return_daily'].cumprod()
+    texts = []
+    texts.append(plot_series.index.min())
+    texts.append(plot_series.min()+(plot_series.max()-plot_series.min())*0.8)
+    texts.append('\n 年化收益率: {}  \n 胜率: {} \n 最大回撤:{} \n 夏普比率: {} \
+                 \n 盈亏比: {} \n 交易频率: {}'.format(temp_simple_result['annual_return'].values[0],
+                                                     temp_simple_result['winrate'].values[0],
+                                                     temp_simple_result['max_drawback'].values[0],
+                                                     temp_simple_result['sharpe'].values[0],
+                                                     temp_simple_result['yingkuibi'].values[0],
+                                                     temp_simple_result['trading_freq'].values[0],
+                                                     ))    
+    
+    __matplotlib_plot(data = plot_series,
+                      texts = texts,
+                      titles = temp_titles,
+                      label = temp_titles,
+                      if_legend = False,
+                      save_path = save_path)
 # =============================================================================
     return res_all_1,simple_res_all_1,params_res_all_1
 
-def _draw_based_on_result_dataframe(result = None,save_path = None,title = None):
+def _draw_based_on_result_dataframe(result = None,save_path = None,titles = None,if_legend = True):
     '''
     TODO 修复绘图的时候时间错乱的问题
+    result = res
+    titles = 'ABC'
     '''
     mpl.rcParams['font.sans-serif'] = ['SimHei'] #设置matplotlib的中文字体显示
     
 # =============================================================================
 #   图像显示部分
     '''设置画布'''
-    fig = plt.figure(figsize=(20,10))
-    figp = fig.subplots(1,1)
+
     '''绘制曲线'''
+    __save_all = pd.DataFrame()
     for item in range(len(result)):
         '''分参数绘制曲线'''
         temp_result = result.iloc[item]
         temp_draw_series = pd.Series(index = temp_result['trading_date_series'],data = temp_result['ret_series'])
-        temp_draw_series = temp_draw_series.cumprod()
-        figp.plot(temp_draw_series,label = temp_result.code+' && '+temp_result.params_id)    
+        temp_draw_series = pd.DataFrame(temp_draw_series)
+        temp_draw_series.columns=[temp_result.code+' && '+temp_result.params_id]
+        __save_all = pd.merge(__save_all,temp_draw_series,left_index=True,right_index=True,how='outer')
+
     '''设置显示属性和标题'''
-    figp.xaxis.set_major_locator(ticker.MultipleLocator(80))
-    figp.legend()
-    figp.set_title(title)
-    fig.show()
-    if save_path == None: pass
-    else: fig.savefig(os.path.join(save_path,title+'.jpg'))
+    __save_all = __save_all.fillna(1)
+    __save_all = __save_all.sort_index()
+    __save_all = __save_all.cumprod()
+    __matplotlib_plot(data = __save_all,
+                      titles = titles,
+                      label = __save_all.columns.tolist(),
+                      if_legend = if_legend,
+                      save_path = save_path)
 # =============================================================================
-    
 # =============================================================================
 #   表格显示部分
     temp_simple_result = _edit_result_to_print_format(result = result)
     _print_table(temp_simple_result)
 # =============================================================================   
-    
+def __matplotlib_plot(data = None,texts = None, titles = None, label = None,figsize = (20,10), if_reset_xaxis_MultipleLocator = True,if_legend = True,save_path = None):
+    fig = plt.figure(figsize=figsize)
+    figp = fig.subplots(1,1)
+    if if_reset_xaxis_MultipleLocator: figp.xaxis.set_major_locator(ticker.MultipleLocator(int(len(__save_all)/10)))
+    figp.plot(data,label = label)
+    if texts != None: figp.text(texts[0], texts[1], texts[2])
+    if titles != None: figp.set_title(titles)
+    if if_legend: figp.legend()
+    fig.show()
+    if save_path == None: pass
+    else: fig.savefig(os.path.join(save_path,titles+'.jpg'))   
     
 def _edit_result_to_print_format(result = None):
     temp_simple_result = result[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
