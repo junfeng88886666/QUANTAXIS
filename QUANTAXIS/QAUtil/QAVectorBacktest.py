@@ -28,6 +28,9 @@ try:
     import reduce
 except:
     from functools import reduce
+
+
+from QUANTAXIS.QAUtil.QARandom import QA_util_random_with_topic
     
 # =============================================================================
 
@@ -109,6 +112,88 @@ def QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop(settle_time = '14:57
     return return_table,[P1,P2,P3,P4,P5,P6]
 
 
+
+def QA_VectorBacktest_adv(backtest_id = None,
+                          code_list = None,
+                          in_sample_year_list = None,
+                          out_sample_year_list = None,
+                          in_sample_timeperiod = None,
+                          out_sample_timeperiod = None,
+                          all_yeal_list = None,
+                          all_timeperiod = None,
+                          data_engine = None,
+                          func = None,
+                          comission = 0.00025,
+                          params=None,
+                          params_optimize_dict=None,
+                          if_optimize_parameters=False,
+                          root_save_path=None,
+                          if_reload_save_files=True,
+                          if_legend=True
+                          ):
+    backtest_id = QA_util_random_with_topic(topic='backtest', lens=8) if backtest_id == None else backtest_id
+    print('######################################################################################')
+    print('此次回测的回测id:{}'.format(backtest_id))
+    print('此次回测的回测根目录:{}'.format(root_save_path))
+
+    if_in_sample = False
+    if_out_sample = False
+    if_all_ample = False
+
+    backtest_list = []
+    if (in_sample_year_list!=None)|(in_sample_timeperiod != None):
+        if_in_sample = True
+        backtest_list.append('样本内')
+    if (out_sample_year_list!=None)|(out_sample_timeperiod != None):
+        if_out_sample = True
+        backtest_list.append('样本外')
+    if (all_yeal_list!=None)|(all_timeperiod != None):
+        if_all_sample = True
+        backtest_list.append('全样本')
+    print('此次回测的回测列表：{}'.format(backtest_list))
+
+    if if_in_sample:
+        in_sample_path = os.path.join(root_save_path,backtest_id,'in_sample')
+        print('此次回测的样本内回测目录:{}'.format(in_sample_path))
+    if if_out_sample:
+        out_sample_path = os.path.join(root_save_path, backtest_id, 'out_sample')
+        print('此次回测的样本外回测目录:{}'.format(out_sample_path))
+    if if_all_sample:
+        all_sample_path = os.path.join(root_save_path, backtest_id, 'all_sample')
+        print('此次回测的全样本回测目录:{}'.format(all_sample_path))
+
+    '''样本内回测'''
+    if if_in_sample:
+        if in_sample_timeperiod==None:
+            print('开始样本内测试，样本内测试年份：'.format(in_sample_year_list))
+            data_start = min(in_sample_year_list)+'-01-01 00:00:00'
+            data_end = max(in_sample_year_list)+'-12-31 24:00:00'
+        elif  in_sample_year_list==None:
+            print('开始样本内测试，样本内测试开始时间：{}，样本内测试结束时间：{}'.format(in_sample_timeperiod[0],in_sample_timeperiod[1]))
+            data_start = in_sample_timeperiod[0]
+            data_end = in_sample_timeperiod[1]
+            run_year_list = None
+
+    result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end),
+                                                                                                                          func = func,
+                                                                                                                          comission = comission,
+                                                                                                                          params = params,
+                                                                                                                          params_optimize_dict = params_optimize_dict,
+                                                                                                                          run_year_list = run_year_list,
+                                                                                                                          if_optimize_parameters = True,
+                                                                                                                          if_reorder_params = True,
+                                                                                                                          save_path = in_sample_path,
+                                                                                                                          if_reload_save_files = if_reload_save_files)
+
+
+
+
+
+
+
+
+
+
 def QA_VectorBacktest(data = None,
                       func = None, 
                       comission = 0.00025, 
@@ -133,24 +218,25 @@ def QA_VectorBacktest(data = None,
     if not os.path.exists(save_path):os.makedirs(save_path)
     ''''''
     print('矢量回测开始，开始时间：{}'.format(str(s)))
-    print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['close',......][float]")
-    print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','close','signal'][str,str,float,float],signal为[float]")
+    print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['open','close',......][float]")
+    print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','open','close','signal'][str,str,float,float],signal为[float]")
     if code_list!= None: data = data.loc[(slice(None), code_list), :]
 
     code_list = list(set(data.reset_index()['code']))
-    data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
-
-    data = data[data['year'].isin(run_year_list)]
+    if run_year_list != None:
+        if 'year' not in data.columns: data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
+        data = data[data['year'].isin(run_year_list)]
+        print('回测年份：{}'.format(run_year_list))
     data = data.sort_index()
     res = pd.DataFrame()
-    print('回测年份：{}'.format(run_year_list))
+
     print('回测品种列表：{}'.format(code_list))
     print('####################################################################################')
     if if_optimize_parameters == False:
         params_temp = copy.deepcopy(params)
         if if_reorder_params: params_use = _edit_params(params_temp,code_list)
         else: params_use = copy.deepcopy(params_temp)
-        print('依据给定参数回测，参数：{}'.format(params_temp))
+        print('不启用参数优化，依据给定参数回测，参数：{}'.format(params_temp))
         params_id = 'params_default'
         ####
         # calculated_data = pd.DataFrame()
@@ -198,7 +284,7 @@ def QA_VectorBacktest(data = None,
             print('剩余时间: {}'.format((len(optimize_dict.keys())-steps) * (temp_e - temp_s)))
 
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
-    params_res = res[['code','params_id','params']].drop_duplicates(subset = ['code'])
+    params_res = res[['code','params_id','params']].drop_duplicates(subset = ['code','params_id'])
                 
     '''
     结果展示区域
@@ -487,12 +573,10 @@ def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = Non
     for code in code_list:
         print('回测参数ID：{}, 回测代码：{}'.format(params_id,code))
         data = df[df['code']==code]
-
-        data['real_return'] = data['close'].pct_change().shift(-1)
-    
+        # data['real_return'] = data['close'].pct_change().shift(-1)
+        data['real_return'] = np.where((data['signal']!=0)&(data['signal'].shift(1)!=data['signal']),data['close'].shift(-1)/data['open'].shift(-1),data['close'].shift(-1)/data['close'])
         data['strategy'] = data['signal']*data['real_return']
-        data['strategy'] = np.where((data['signal']!=0)&(data['signal'].shift(1)==0),data['strategy']-(comission/2),data['strategy'])
-        data['strategy'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),data['strategy']-(comission/2),data['strategy'])
+        data['strategy'] = np.where((data['signal']!=0)&(data['signal'].shift(1)!=data['signal']),data['strategy']-comission,data['strategy'])
 
         return_table_temp = data.pivot(index='minute', columns='date', values='strategy')
         return_table_temp = (return_table_temp.fillna(0)+1).cumprod(axis=0)
