@@ -13,8 +13,7 @@ import copy
 import warnings
 warnings.simplefilter("ignore")
 import matplotlib as mpl
-#mpl.use('Agg')
-#mpl.rcParams['font.sans-serif'] = ['SimHei']
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from pylab import *
@@ -129,14 +128,14 @@ def QA_VectorBacktest_adv(backtest_id = None,
                           params=None,
                           params_optimize_dict=None,
                           filter_optimize_params=None,
+                          weights=None,
                           if_optimize_parameters=False,
                           root_save_path=None,
                           if_reload_save_files=True,
                           if_legend=True,
                           best_type_select = 'sharpe',
                           model = 'open2close',
-                          if_continue_former_in_sample_test = False,
-                          show_result_dict = {'in_sample':[]}
+                          if_continue_former_in_sample_test = False
                           ):
     '''
     高级回测类
@@ -209,6 +208,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
                                                                                                                               params = params,
                                                                                                                               params_optimize_dict = params_optimize_dict,
                                                                                                                               filter_optimize_params = filter_optimize_params,
+                                                                                                                              weights=weights,
                                                                                                                               run_year_list = run_year_list,
                                                                                                                               if_optimize_parameters = True,
                                                                                                                               if_reorder_params = True,
@@ -230,6 +230,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
                                                                                                                               params = params_selected,
                                                                                                                               params_optimize_dict = None,
                                                                                                                               filter_optimize_params = None,
+                                                                                                                              weights=weights,
                                                                                                                               run_year_list = run_year_list,
                                                                                                                               if_optimize_parameters = False,
                                                                                                                               if_reorder_params = False,
@@ -251,6 +252,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
                                                                                                                               params = params_selected,
                                                                                                                               params_optimize_dict = None,
                                                                                                                               filter_optimize_params = None,
+                                                                                                                              weights=weights,
                                                                                                                               run_year_list = run_year_list,
                                                                                                                               if_optimize_parameters = False,
                                                                                                                               if_reorder_params = False,
@@ -283,6 +285,7 @@ def QA_VectorBacktest(data = None,
                       params = None,
                       params_optimize_dict = None,
                       filter_optimize_params = None,
+                      weights = None,
                       run_year_list = None, 
                       if_optimize_parameters = False,
                       if_reorder_params = True,
@@ -299,7 +302,7 @@ def QA_VectorBacktest(data = None,
     s = datetime.datetime.now()
     '''重置回测文件夹下的子文件夹'''
     if if_continue_former_in_sample_test == False:
-        '''正常模式'''
+        print('''正常模式''')
         if if_reload_save_files:
             try: shutil.rmtree(save_path)
             except: pass
@@ -376,7 +379,12 @@ def QA_VectorBacktest(data = None,
                 print('剩余时间: {}'.format((len(optimize_dict.keys())-steps) * (temp_e - temp_s)))
     else:
         print('断点续传模式开启')
-        '''先判断当前断点的位置'''
+        '''先判断当前断点的位置: 1，生成code+params_id的列表；2，在in_sample中遍历，文件存在则读取并在列表中删除；3，最剩下列表中的元素进行计算（先判断：若剩下列表元素>0,则引入data数据）'''
+        '''1，生成读取文件列表'''
+
+        raise NotImplementedError
+        # optimize_dict = _get_all_optimize_info(params_optimize_dict)
+        # result_temp = _get_result(return_table=return_table_temp, code=code, params_id=params_id, params=params)
 
 
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
@@ -431,13 +439,13 @@ def QA_VectorBacktest(data = None,
     '''展示9.1.2.3'''
     res_group_average = pd.DataFrame()
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'annual_return',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'annual_return',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'sharpe',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'sharpe',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'winrate',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'winrate',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
         
     simple_res_group_average = res_group_average[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','by']]
@@ -446,6 +454,7 @@ def QA_VectorBacktest(data = None,
     if save_path == None: print('不存储数据')
     else: 
         print('存储数据,存储文件夹：{}'.format(save_path))
+        if weights != None: pd.DataFrame(pd.Series(weights)).rename(columns = {0:'weight'}).to_csv(os.path.join(save_path,'代码权重.csv'))
         res.to_csv(os.path.join(save_path,'全部回测结果.csv'))
         simple_res.to_csv(os.path.join(save_path,'重要回测结果参数.csv'))
         params_res.to_csv(os.path.join(save_path,'回测参数表.csv'))
@@ -510,36 +519,63 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,i
 
     _draw_based_on_result_dataframe(result = result_max,save_path = save_path,titles = temp_titles,if_legend = if_legend)
 
-            
-def show_results_group_average(result = None,by = 'sharpe',save_path = None,if_legend=True):
+
+def _get_max_result(result,by):
     import copy
     print('####################################################################################')
-    
-# =============================================================================
-#   '''设置筛选顺序，按by给定的为最优，若有相同的，则按，sharpe>annual_return>winrate来获取最优'''
-    if by == 'sharpe': filter_list = ['sharpe','annual_return','winrate']
-    elif by == 'annual_return': filter_list = ['annual_return','sharpe','winrate']
-    elif by == 'winrate': filter_list = ['winrate','sharpe','annual_return']
+    # =============================================================================
+    #   '''设置筛选顺序，按by给定的为最优，若有相同的，则按，sharpe>annual_return>winrate来获取最优'''
+    if by == 'sharpe':
+        filter_list = ['sharpe', 'annual_return', 'winrate']
+    elif by == 'annual_return':
+        filter_list = ['annual_return', 'sharpe', 'winrate']
+    elif by == 'winrate':
+        filter_list = ['winrate', 'sharpe', 'annual_return']
+    elif by == 'annual_ret_div_abs_drawback':
+        result['annual_ret_div_abs_drawback'] = result['annual_return'] / abs(result['max_drawback'])
+        filter_list = ['annual_ret_div_abs_drawback', 'sharpe', 'annual_return', 'winrate']
 
-# =============================================================================
-    temp_titles = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
-    print(temp_titles)    
-# =============================================================================
-#   获取平均分配资金的日收益序列
-    for j,i in enumerate(filter_list):
-        if j ==0: result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
-        else: result_max = result_max.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
+
+    #   获取最优日收益序列
+    temp_res = result.dropna()
+    for j, i in enumerate(filter_list):
+        if j == 0:
+            result_max = temp_res.groupby('code', as_index=False).apply(lambda t: t[t[i] == t[i].max()])
+        else:
+            result_max = result_max.groupby('code', as_index=False).apply(lambda t: t[t[i] == t[i].max()])
     result_max = result_max.drop_duplicates(subset=['code'])
-    
+    return result_max
+
+def show_results_group_average(result = None,weights = None, by = 'sharpe',save_path = None,if_legend=True):
+    import copy
+    # =============================================================================
+    if weights == None: temp_titles = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
+    else: temp_titles = '全品种最优参数加权分配资金, 最优衡量标准为：{}最优'.format(by)
+
+    print(temp_titles)
+    # =============================================================================
+
+    result_max = _get_max_result(result,by)
     for item in range(len(result_max)):
         temp_result_max = result_max.iloc[item]
-        temp_df = pd.DataFrame(index = temp_result_max['trading_date_series'],data = temp_result_max['ret_series']).rename(columns = {0:'series_'+str(item)})
+        try:
+            temp_df = pd.DataFrame(index = temp_result_max['trading_date_series'],
+                                   data = temp_result_max['ret_series']).rename(columns = {0:temp_result_max['code']})
+        except:
+            temp_df = pd.DataFrame(index=eval(temp_result_max['trading_date_series']),
+                                   data=eval(temp_result_max['ret_series'])).rename(columns={0:temp_result_max['code']})
         if item == 0: temp_df_all = copy.deepcopy(temp_df)
         else:
             temp_df_all = pd.merge(temp_df_all,temp_df,left_index = True,right_index = True,how = 'outer')
     temp_df_all = temp_df_all.sort_index()
     temp_df_all = temp_df_all.fillna(1)
-    temp_df_all = temp_df_all.sum(axis=1)/temp_df_all.shape[1]
+
+    if weights != None:
+        for code in temp_df_all.columns:
+            weight = weights[code]
+            temp_df_all[code]*=weight
+        temp_df_all = temp_df_all.sum(axis=1)
+    else: temp_df_all = temp_df_all.sum(axis=1) / temp_df_all.shape[1]
     temp_df_all = pd.DataFrame(temp_df_all)
     temp_df_all.columns = ['strategy_return_daily']
     
@@ -623,6 +659,7 @@ def _draw_based_on_result_dataframe(result = None,save_path = None,titles = None
     _print_table(temp_simple_result)
 # =============================================================================   
 def __matplotlib_plot(data = None,texts = None, titles = None, label = None,figsize = (20,10), if_reset_xaxis_MultipleLocator = True,if_legend = True,save_path = None):
+    mpl.rcParams['font.sans-serif'] = ['SimHei'] #设置matplotlib的中文字体显示
     fig = plt.figure(figsize=figsize)
     figp = fig.subplots(1,1)
     if if_reset_xaxis_MultipleLocator: figp.xaxis.set_major_locator(ticker.MultipleLocator(int(len(data)/10)))
@@ -861,8 +898,9 @@ def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
         pass
     params_max = params_df[params_df['cum_ret'] == params_df['max']]
 
-    params_max = params_max[params_max['max'] >= minimum_in_sample_cumret_required]
-    params_max = params_max[params_max['max'] <= maximum_in_sample_cumret_required]
+    params_max = params_max[params_max['cum_ret'] >= minimum_in_sample_cumret_required]
+    params_max = params_max[params_max['cum_ret'] <= maximum_in_sample_cumret_required]
+    params_max = params_max.drop_duplicates(subset=['code'])
     '''获取表现最优参数的累积收益数据'''
     steps = 0
     for i in range(len(params_max)):
@@ -902,3 +940,172 @@ def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
                                    if_legend=False,
                                    titles='样本内全品种annual_ret 最优参数回测结果')
     return params_df,params_max,dataall,ret_table
+
+
+def QA_VectorBacktest_check_results2_afterprocess(
+        in_sample_save_path=None,
+        result_save_path=None,
+        data_engine=None,
+        data_freq = None,
+        func=None,
+        comission=None,
+        best_type_select='annual_ret_div_abs_drawback',
+        if_weight_by_in_sample_performace = False,
+        minimum_in_sample_select_required=0.1,
+        maximum_in_sample_select_required=1000,
+        out_sample_year_list=None,
+        all_sample_year_list=None,
+        out_sample_timeperiod=None,
+        all_sample_timeperiod=None,
+        if_legend=True,
+        if_reload_save_files=False,
+        model='open2close'
+):
+    '''
+    根据当前样本内的calculated_data,完成多条件组合的样本内样本外回测，有测试选项开关
+    '''
+    '''基本整理'''
+    if_out_sample = False
+    if_all_sample = False
+
+    backtest_list = []
+    if (out_sample_year_list != None) | (out_sample_timeperiod != None):
+        if_out_sample = True
+        backtest_list.append('样本外')
+    if (all_sample_year_list != None) | (all_sample_timeperiod != None):
+        if_all_sample = True
+        backtest_list.append('全样本')
+    print('此次回测的回测列表：样本内,{}'.format(backtest_list))
+
+    in_sample_path = os.path.join(result_save_path, 'in_sample')
+    if not os.path.exists(in_sample_path): os.makedirs(in_sample_path)
+    print('此次回测的样本内回测目录:{}'.format(in_sample_path))
+    if if_out_sample:
+        out_sample_path = os.path.join(result_save_path, 'out_sample')
+        if not os.path.exists(out_sample_path): os.makedirs(out_sample_path)
+        print('此次回测的样本外回测目录:{}'.format(out_sample_path))
+    if if_all_sample:
+        all_sample_path = os.path.join(result_save_path, 'all_sample')
+        if not os.path.exists(all_sample_path): os.makedirs(all_sample_path)
+        print('此次回测的全样本回测目录:{}'.format(all_sample_path))
+
+    print('''样本内组合回测开始''')
+    res = pd.read_csv(os.path.join(in_sample_save_path, '全部回测结果.csv'), encoding='gbk', index_col=0)
+    simple_res = res[
+        ['code', 'params_id', 'winrate', 'annual_return', 'max_drawback', 'sharpe', 'yingkuibi', 'trading_freq']]
+    params_res = res[['code', 'params_id', 'params']].drop_duplicates(subset=['code', 'params_id'])
+
+    code_list = list(set(res.code.tolist()))
+    params_id_list = list(set(res.params_id.tolist()))
+
+    if if_weight_by_in_sample_performace:
+        result_max = _get_max_result(res, best_type_select)
+        weights = {}
+        result_max['weight'] = result_max[best_type_select]/result_max[best_type_select].sum()
+        for i in range(len(result_max)):
+            temp = result_max.iloc[i]
+            weights[temp['code']] = temp['weight']
+            # weights[temp['code']][temp['params_id']] = temp['weight']
+    else: weights = None
+
+    res_all_1, simple_res_all_1, params_res_all_1 = show_results_group_average(result=res,
+                                                                               weights=weights,
+                                                                               by=best_type_select,
+                                                                               save_path=in_sample_path,
+                                                                               if_legend=if_legend)
+
+    print('存储数据,存储文件夹：{}'.format(in_sample_path))
+    if weights != None: pd.DataFrame(pd.Series(weights)).rename(columns={0: 'weight'}).to_csv(os.path.join(in_sample_path, '代码权重.csv'))
+    res.to_csv(os.path.join(in_sample_path, '全部回测结果.csv'))
+    simple_res.to_csv(os.path.join(in_sample_path, '重要回测结果参数.csv'))
+    params_res.to_csv(os.path.join(in_sample_path, '回测参数表.csv'))
+    res_all_1.to_csv(os.path.join(in_sample_path, '全市场最优参数_回测结果.csv'))
+    simple_res_all_1.to_csv(os.path.join(in_sample_path, '全市场最优参数_重要回测结果参数.csv'))
+    params_res_all_1.to_csv(os.path.join(in_sample_path, '全市场最优参数_回测参数表.csv'))
+
+    if if_out_sample:
+        print('''样本外组合回测开始''')
+        params_res_group_average = pd.read_csv(os.path.join(in_sample_path, '全市场最优参数_回测参数表.csv'), index_col=0)
+        params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
+        for item in params_selected: params_selected[item] = eval(params_selected[item])
+        data_start, data_end, run_year_list = _get_start_and_end(out_sample_year_list, out_sample_timeperiod)
+        result, simple_result, params_res, res_group_average, simple_res_group_average, params_res_group_average = QA_VectorBacktest(
+                                                                                                                                    data=data_engine(code_list, data_start, data_end, data_freq).data,
+                                                                                                                                    func=func,
+                                                                                                                                    comission=comission,
+                                                                                                                                    params=params_selected,
+                                                                                                                                    params_optimize_dict=None,
+                                                                                                                                    filter_optimize_params=None,
+                                                                                                                                    weights = weights,
+                                                                                                                                    run_year_list=run_year_list,
+                                                                                                                                    if_optimize_parameters=False,
+                                                                                                                                    if_reorder_params=False,
+                                                                                                                                    save_path=out_sample_path,
+                                                                                                                                    if_reload_save_files=if_reload_save_files,
+                                                                                                                                    if_legend=if_legend,
+                                                                                                                                    code_list=code_list,
+                                                                                                                                    model=model,
+                                                                                                                                    if_continue_former_in_sample_test=False)
+    if if_all_sample:
+        print('''全样本组合回测开始''')
+        params_res_group_average = pd.read_csv(os.path.join(in_sample_path, '全市场最优参数_回测参数表.csv'), index_col=0)
+        params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
+        for item in params_selected: params_selected[item] = eval(params_selected[item])
+        data_start, data_end, run_year_list = _get_start_and_end(all_sample_year_list, all_sample_timeperiod)
+        result, simple_result, params_res, res_group_average, simple_res_group_average, params_res_group_average = QA_VectorBacktest(
+                                                                                                                                    data=data_engine(code_list, data_start, data_end, data_freq).data,
+                                                                                                                                    func=func,
+                                                                                                                                    comission=comission,
+                                                                                                                                    params=params_selected,
+                                                                                                                                    params_optimize_dict=None,
+                                                                                                                                    filter_optimize_params=None,
+                                                                                                                                    weights=weights,
+                                                                                                                                    run_year_list=run_year_list,
+                                                                                                                                    if_optimize_parameters=False,
+                                                                                                                                    if_reorder_params=False,
+                                                                                                                                    save_path=all_sample_path,
+                                                                                                                                    if_reload_save_files=if_reload_save_files,
+                                                                                                                                    if_legend=if_legend,
+                                                                                                                                    code_list=code_list,
+                                                                                                                                    model=model,
+                                                                                                                                    if_continue_former_in_sample_test=False)
+
+if __name__ == '__main__':
+    params_df, params_max, dataall, ret_table = QA_VectorBacktest_check_results1_onprocess(
+                                                                                            in_sample_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/in_sample',
+                                                                                            result_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/check_result',
+                                                                                            params_num_list=list(np.arange(1, 216)),
+                                                                                            future_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
+                                                                                            minimum_in_sample_cumret_required=0,
+                                                                                            maximum_in_sample_cumret_required=10000,
+                                                                                            if_legend=False,
+                                                                                            params_df=[])
+
+    params_df, params_max, dataall, ret_table = QA_VectorBacktest_check_results1_onprocess(
+                                                                                            in_sample_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/in_sample',
+                                                                                            result_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/check_result',
+                                                                                            params_num_list=list(np.arange(1, 216)),
+                                                                                            future_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
+                                                                                            minimum_in_sample_cumret_required=1.2,
+                                                                                            maximum_in_sample_cumret_required=10000,
+                                                                                            if_legend=False,
+                                                                                            params_df=params_df)
+
+    QA_VectorBacktest_check_results2_afterprocess(
+                                                in_sample_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/in_sample',
+                                                result_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/check_result',
+                                                data_engine=QA.QA_fetch_future_min_adv,
+                                                data_freq='1min',
+                                                func=None,
+                                                comission=None,
+                                                best_type_select='annual_ret_div_abs_drawback',
+                                                minimum_in_sample_select_required=0.1,
+                                                maximum_in_sample_select_required=1000,
+                                                out_sample_year_list=None,
+                                                all_sample_yeal_list=None,
+                                                out_sample_timeperiod=None,
+                                                all_sample_timeperiod=None,
+                                                if_legend=True,
+                                                if_reload_save_files=False,
+                                                model='open2close'
+                                                )
