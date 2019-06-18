@@ -27,10 +27,7 @@ util tool
 """
 # path
 #####
-from QUANTAXIS.QAUtil.QAVectorBacktest import (QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,
-                                               QA_VectorBacktest,
-                                                QA_VectorBacktest_func_add_fixed_stop,
-                                                QA_VectorBacktest_func_fill_signal)
+
 from QUANTAXIS.QAUtil.QAMath import QA_util_math_cross
 #####
 from QUANTAXIS.QAUtil.Parallelism import Parallelism
@@ -87,7 +84,9 @@ from QUANTAXIS.QAUtil.QADict import QA_util_dict_remove_key
 from QUANTAXIS.QAUtil.QAFile import QA_util_file_md5
 # list function
 from QUANTAXIS.QAUtil.QAList import (QA_util_diff_list,
-                                     QA_util_multi_demension_list)
+                                     QA_util_multi_demension_list,
+                                     QA_util_list_cut,
+                                     QA_util_list_cut_iteration)
 # log
 from QUANTAXIS.QAUtil.QALogs import (QA_util_log_debug, QA_util_log_expection,
                                      QA_util_log_info)
@@ -126,6 +125,12 @@ from QUANTAXIS.QAUtil.QAWebutil import QA_util_web_ping
 # 文件夹搜索相关
 from QUANTAXIS.QAUtil.QADirSearch import QA_util_listdir,QA_util_listfile
 
+# 矢量回测相关
+from QUANTAXIS.QAUtil.QAVectorBacktest import (QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,
+                                               QA_VectorBacktest,
+                                                QA_VectorBacktest_func_add_fixed_stop,
+                                                QA_VectorBacktest_func_fill_signal,
+                                               QA_VectorBacktest_adv)
 # QUANTAXIS Setting
 
 

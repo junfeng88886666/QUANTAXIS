@@ -118,56 +118,23 @@ def QA_VectorBacktest_adv(backtest_id = None,
                           code_list = None,
                           in_sample_year_list = None,
                           out_sample_year_list = None,
-                          all_sample_yeal_list = None,
                           in_sample_timeperiod = None,
                           out_sample_timeperiod = None,
-                          all_sample_timeperiod = None,
+                          all_yeal_list = None,
+                          all_timeperiod = None,
                           data_engine = None,
                           data_freq = None,
                           func = None,
                           comission = 0.00025,
                           params=None,
                           params_optimize_dict=None,
-                          filter_optimize_params=None,
                           if_optimize_parameters=False,
                           root_save_path=None,
                           if_reload_save_files=True,
                           if_legend=True,
-                          best_type_select = 'sharpe',
-                          model = 'open2close',
-                          if_continue_former_in_sample_test = False,
-                          show_result_dict = {'in_sample':[]}
+                          code_num_each_process = 5
                           ):
-    '''
-    高级回测类
-    TODO
-    1，集成样本内样本外全样本测试为一体
-    2，拥有根据样本内的calculated_data进行断点续传的功能,
-    3，拥有输出方案选择功能
-    :param backtest_id:
-    :param code_list:
-    :param in_sample_year_list:
-    :param out_sample_year_list:
-    :param all_sample_yeal_list:
-    :param in_sample_timeperiod:
-    :param out_sample_timeperiod:
-    :param all_sample_timeperiod:
-    :param data_engine:
-    :param data_freq:
-    :param func:
-    :param comission:
-    :param params:
-    :param params_optimize_dict:
-    :param filter_optimize_params:
-    :param if_optimize_parameters:
-    :param root_save_path:
-    :param if_reload_save_files:
-    :param if_legend:
-    :param best_type_select:
-    :param model:
-    :return:
-    '''
-    backtest_id = QA_util_random_with_topic(topic='backtest', lens=8)+'_'+str(datetime.datetime.now())[:19] if backtest_id == None else backtest_id
+    backtest_id = QA_util_random_with_topic(topic='backtest', lens=8) if backtest_id == None else backtest_id
     print('######################################################################################')
     print('此次回测的回测id:{}'.format(backtest_id))
     print('此次回测的回测根目录:{}'.format(root_save_path))
@@ -183,7 +150,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
     if (out_sample_year_list!=None)|(out_sample_timeperiod != None):
         if_out_sample = True
         backtest_list.append('样本外')
-    if (all_sample_yeal_list!=None)|(all_sample_timeperiod != None):
+    if (all_yeal_list!=None)|(all_timeperiod != None):
         if_all_sample = True
         backtest_list.append('全样本')
     print('此次回测的回测列表：{}'.format(backtest_list))
@@ -200,89 +167,37 @@ def QA_VectorBacktest_adv(backtest_id = None,
 
     '''样本内回测'''
     if if_in_sample:
-        print('###########################################################################################################')
-        print('样本内回测启动')
-        data_start, data_end, run_year_list = _get_start_and_end(in_sample_year_list,in_sample_timeperiod)
-        result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
-                                                                                                                              func = func,
-                                                                                                                              comission = comission,
-                                                                                                                              params = params,
-                                                                                                                              params_optimize_dict = params_optimize_dict,
-                                                                                                                              filter_optimize_params = filter_optimize_params,
-                                                                                                                              run_year_list = run_year_list,
-                                                                                                                              if_optimize_parameters = True,
-                                                                                                                              if_reorder_params = True,
-                                                                                                                              save_path = in_sample_path,
-                                                                                                                              if_reload_save_files = if_reload_save_files,
-                                                                                                                              if_legend= if_legend,
-                                                                                                                              code_list= code_list,
-                                                                                                                              model = model,
-                                                                                                                              if_continue_former_in_sample_test = if_continue_former_in_sample_test)
-    if if_out_sample:
-        print('###########################################################################################################')
-        print('样本外回测启动')
-        params_res_group_average = pd.read_csv(os.path.join(in_sample_path, '全市场最优参数平均资金分配_回测参数表.csv'), index_col=0)
-        params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
-        data_start, data_end, run_year_list = _get_start_and_end(out_sample_year_list, out_sample_timeperiod)
-        result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
-                                                                                                                              func = func,
-                                                                                                                              comission = comission,
-                                                                                                                              params = params_selected,
-                                                                                                                              params_optimize_dict = None,
-                                                                                                                              filter_optimize_params = None,
-                                                                                                                              run_year_list = run_year_list,
-                                                                                                                              if_optimize_parameters = False,
-                                                                                                                              if_reorder_params = False,
-                                                                                                                              save_path = out_sample_path,
-                                                                                                                              if_reload_save_files = if_reload_save_files,
-                                                                                                                              if_legend= if_legend,
-                                                                                                                              code_list= code_list,
-                                                                                                                              model = model,
-                                                                                                                              if_continue_former_in_sample_test = False)
-    if if_all_sample:
-        print('###########################################################################################################')
-        print('全样本回测启动')
-        params_res_group_average = pd.read_csv(os.path.join(in_sample_path, '全市场最优参数平均资金分配_回测参数表.csv'), index_col=0)
-        params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
-        data_start, data_end, run_year_list = _get_start_and_end(all_sample_yeal_list, all_sample_timeperiod)
-        result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
-                                                                                                                              func = func,
-                                                                                                                              comission = comission,
-                                                                                                                              params = params_selected,
-                                                                                                                              params_optimize_dict = None,
-                                                                                                                              filter_optimize_params = None,
-                                                                                                                              run_year_list = run_year_list,
-                                                                                                                              if_optimize_parameters = False,
-                                                                                                                              if_reorder_params = False,
-                                                                                                                              save_path = out_sample_path,
-                                                                                                                              if_reload_save_files = if_reload_save_files,
-                                                                                                                              if_legend= if_legend,
-                                                                                                                              code_list= code_list,
-                                                                                                                              model = model,
-                                                                                                                              if_continue_former_in_sample_test = False)
+        if in_sample_timeperiod==None:
+            print('开始样本内测试，样本内测试年份：{}'.format(in_sample_year_list))
+            data_start = min(in_sample_year_list)+'-01-01 00:00:00'
+            data_end = max(in_sample_year_list)+'-12-31 23:59:00'
+            run_year_list = in_sample_year_list
+        elif  in_sample_year_list==None:
+            print('开始样本内测试，样本内测试开始时间：{}，样本内测试结束时间：{}'.format(in_sample_timeperiod[0],in_sample_timeperiod[1]))
+            data_start = in_sample_timeperiod[0]
+            data_end = in_sample_timeperiod[1]
+            run_year_list = None
 
-def _get_start_and_end(year_list,period):
-    if period == None:
-        data_start = min(year_list) + '-01-01 00:00:00'
-        data_end = max(year_list) + '-12-31 23:59:00'
-        run_year_list = year_list
-        print('测试年份：{}，数据获取开始时间：{}，数据获取结束时间：{}'.format(run_year_list,data_start,data_end))
-        return data_start, data_end, run_year_list
-
-    elif year_list == None:
-        print('测试开始时间：{}，样本内测试结束时间：{}'.format(period[0], period[1]))
-        data_start = period[0]
-        data_end = period[1]
-        run_year_list = None
-        return data_start,data_end,run_year_list
-
+    result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
+                                                                                                                          func = func,
+                                                                                                                          comission = comission,
+                                                                                                                          params = params,
+                                                                                                                          params_optimize_dict = params_optimize_dict,
+                                                                                                                          run_year_list = run_year_list,
+                                                                                                                          if_optimize_parameters = True,
+                                                                                                                          if_reorder_params = True,
+                                                                                                                          save_path = in_sample_path,
+                                                                                                                          if_reload_save_files = if_reload_save_files,
+                                                                                                                          if_legend= if_legend,
+                                                                                                                          code_list= code_list,
+                                                                                                                          code_num_each_process = code_num_each_process
+                                                                                                                          )
 
 def QA_VectorBacktest(data = None,
                       func = None, 
                       comission = 0.00025, 
                       params = None,
                       params_optimize_dict = None,
-                      filter_optimize_params = None,
                       run_year_list = None, 
                       if_optimize_parameters = False,
                       if_reorder_params = True,
@@ -290,94 +205,124 @@ def QA_VectorBacktest(data = None,
                       if_reload_save_files = True,
                       if_legend = True,
                       code_list = None,
-                      model = 'open2close',
-                      if_continue_former_in_sample_test = False):
+                      code_num_each_process = 3):
     '''
     data： QA.DataStruct.data
     '''
     import copy
     s = datetime.datetime.now()
     '''重置回测文件夹下的子文件夹'''
-    if if_continue_former_in_sample_test == False:
-        '''正常模式'''
-        if if_reload_save_files:
-            try: shutil.rmtree(save_path)
-            except: pass
-        if not os.path.exists(save_path):os.makedirs(save_path)
-        ''''''
-        print('矢量回测开始，开始时间：{}'.format(str(s)))
-        print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['open','close',......][float]")
-        print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','open','close','signal'][str,str,float,float,float],signal为[float]")
-        if code_list!= None: data = data.loc[(slice(None), code_list), :]
+    if if_reload_save_files: 
+        try: shutil.rmtree(save_path)
+        except: pass
+    if not os.path.exists(save_path):os.makedirs(save_path)
+    ''''''
+    print('矢量回测开始，开始时间：{}'.format(str(s)))
+    print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['open','close',......][float]")
+    print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','open','close','signal'][str,str,float,float],signal为[float]")
+    print(data)
+    if code_list!= None: data = data.loc[(slice(None), code_list), :]
 
-        code_list = list(set(data.reset_index()['code']))
-        if run_year_list != None:
-            if 'year' not in data.columns: data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
-            data = data[data['year'].isin(run_year_list)]
-            print('当前回测年份：{}'.format(run_year_list))
-        data = data.sort_index()
-        res = pd.DataFrame()
+    code_list = list(set(data.reset_index()['code']))
+    if run_year_list != None:
+        if 'year' not in data.columns: data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
+        data = data[data['year'].isin(run_year_list)]
+        print('回测年份：{}'.format(run_year_list))
+    data = data.sort_index()
+    res = pd.DataFrame()
 
-        print('回测品种列表：{}'.format(code_list))
+    print('回测品种列表：{}'.format(code_list))
+    print('####################################################################################')
+    if if_optimize_parameters == False:
+        params_temp = copy.deepcopy(params)
+        if if_reorder_params: params_use = _edit_params(params_temp,code_list)
+        else: params_use = copy.deepcopy(params_temp)
+        print('不启用参数优化，依据给定参数回测，参数：{}'.format(params_temp))
+        params_id = 'params_default'
+        ####
+        # calculated_data = pd.DataFrame()
+        # for code in code_list:
+        #     print('计算信号，品种：{}'.format(code))
+        #     temp_data = data.loc[(slice(None), code), :]
+        #     temp_data = func(temp_data,params_use)
+        #     print(temp_data)
+        #     calculated_data = calculated_data.append(temp_data)
+        ###
+
+        ####################################################################################
+        calculated_data = pd.DataFrame()
+
+        res_list = []
+        length = len(code_list)
+
+        process_num = math.ceil(length / code_num_each_process)
+        code_list_set = QA_util_list_cut(code_list, code_num_each_process)
+        p = Pool(process_num)
+        for code_list_temp in code_list_set:
+            rt = p.apply_async(_calculate_data_multi_codes,
+                               args=(data, code_list_temp, func, params_use,))
+            print(rt.get())
+            res_list.append(rt)
+        p.close()
+        p.join()
+        for i in res_list: calculated_data = calculated_data.append(i.get())
+
+        ####################################################################################
+
+        # calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
+        calculated_data = calculated_data.sort_values(by=['datetime','code'])
+        res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,code_num_each_process)
+        calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
+        res = res.append(res_temp)
+    else:
+        print('参数优化开启，时间：{}'.format(str(datetime.datetime.now())))
+        optimize_dict = _get_all_optimize_info(params_optimize_dict)
+        print('优化参数字典：{}'.format(optimize_dict))
         print('####################################################################################')
-        if if_optimize_parameters == False:
+        for steps,optimize_item in enumerate(optimize_dict.keys()):
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            print('优化参数：{}，值：{}'.format(optimize_item,optimize_dict[optimize_item]))
+            temp_s = datetime.datetime.now()
+            params_id = 'params_'+str(optimize_item)
             params_temp = copy.deepcopy(params)
-            if if_reorder_params: params_use = _edit_params(params_temp,code_list)
-            else: params_use = copy.deepcopy(params_temp)
-            print('不启用参数优化，依据给定参数回测，参数：{}'.format(params_temp))
-            params_id = 'params_default'
-            ####
+            for item_temp in optimize_dict[optimize_item].keys():
+                params_temp[item_temp] = optimize_dict[optimize_item][item_temp]
+            params_use = _edit_params(params_temp,code_list)
+            ###
             # calculated_data = pd.DataFrame()
             # for code in code_list:
             #     print('计算信号，品种：{}'.format(code))
             #     temp_data = data.loc[(slice(None), code), :]
             #     temp_data = func(temp_data,params_use)
-            #     print(temp_data)
             #     calculated_data = calculated_data.append(temp_data)
-            ###
-            calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
+            ##
+            ####################################################################################
+            # calculated_data = _calculate_data_multi_codes(data, code_list, func, params_use)
+            calculated_data = pd.DataFrame()
+
+            res_list = []
+            length = len(code_list)
+
+            process_num = math.ceil(length / code_num_each_process)
+            code_list_set = QA_util_list_cut(code_list, code_num_each_process)
+            p = Pool(process_num)
+            for code_list_temp in code_list_set:
+                rt = p.apply_async(_calculate_data_multi_codes,
+                                    args=(data, code_list_temp,func, params_use,))
+                res_list.append(rt)
+            p.close()
+            p.join()
+            for i in res_list: calculated_data = calculated_data.append(i.get())
+            ####################################################################################
+            # calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
             calculated_data = calculated_data.sort_values(by=['datetime','code'])
-            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model)
+
+            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,code_num_each_process)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
-        else:
-            print('参数优化开启，时间：{}'.format(str(datetime.datetime.now())))
-            optimize_dict = _get_all_optimize_info(params_optimize_dict)
-            print('优化参数字典：{}'.format(optimize_dict))
-            print('####################################################################################')
-            for steps,optimize_item in enumerate(optimize_dict.keys()):
-                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-                print('优化参数：{}，值：{}'.format(optimize_item,optimize_dict[optimize_item]))
-                temp_s = datetime.datetime.now()
-                params_id = 'params_'+str(optimize_item)
-                params_temp = copy.deepcopy(params)
-                if optimize_dict[optimize_item] == filter_optimize_params: print('参数被过滤，不采用该参数')
-                else:
-                    for item_temp in optimize_dict[optimize_item].keys():
-                        params_temp[item_temp] = optimize_dict[optimize_item][item_temp]
-                    params_use = _edit_params(params_temp,code_list)
-                    ###
-                    # calculated_data = pd.DataFrame()
-                    # for code in code_list:
-                    #     print('计算信号，品种：{}'.format(code))
-                    #     temp_data = data.loc[(slice(None), code), :]
-                    #     temp_data = func(temp_data,params_use)
-                    #     calculated_data = calculated_data.append(temp_data)
-                    ##
-
-                    calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
-                    calculated_data = calculated_data.sort_values(by=['datetime','code'])
-
-                    res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model)
-                    calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
-                    res = res.append(res_temp)
-                    temp_e = datetime.datetime.now()
-                print('此轮耗时：{}'.format(temp_e - temp_s))
-                print('剩余时间: {}'.format((len(optimize_dict.keys())-steps) * (temp_e - temp_s)))
-    else:
-        print('断点续传模式开启')
-        '''先判断当前断点的位置'''
-
+            temp_e = datetime.datetime.now()
+            print('此轮耗时：{}'.format(temp_e - temp_s))
+            print('剩余时间: {}'.format((len(optimize_dict.keys())-steps) * (temp_e - temp_s)))
 
     simple_res = res[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq']]
     params_res = res[['code','params_id','params']].drop_duplicates(subset = ['code','params_id'])
@@ -500,13 +445,11 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,i
         temp_titles = '各品种最优参数结果展示, 最优衡量标准为：{}最优'.format(by)
         print(temp_titles)
         result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
-        if save_path != None: result_max.to_csv(os.path.join(save_path,'各品种最优参数结果_最优衡量标准为_{}最优.csv'.format(by)))
 
     elif on == 'params': 
         temp_titles = '各参数最优品种结果展示, 最优衡量标准为：{}最优'.format(by)
         print(temp_titles)
         result_max = result.groupby('params_id',as_index = False).apply(lambda t: t[t[by]==t[by].max()])
-        if save_path != None: result_max.to_csv(os.path.join(save_path,'各参数最优品种结果_最优衡量标准为_{}最优.csv'.format(by)))
 
     _draw_based_on_result_dataframe(result = result_max,save_path = save_path,titles = temp_titles,if_legend = if_legend)
 
@@ -529,7 +472,6 @@ def show_results_group_average(result = None,by = 'sharpe',save_path = None,if_l
     for j,i in enumerate(filter_list):
         if j ==0: result_max = result.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
         else: result_max = result_max.groupby('code',as_index = False).apply(lambda t: t[t[i]==t[i].max()])
-    result_max = result_max.drop_duplicates(subset=['code'])
     
     for item in range(len(result_max)):
         temp_result_max = result_max.iloc[item]
@@ -659,38 +601,69 @@ def _edit_params(params,code_list):
         params[code] = params_record
     return params
         
-
-def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, save_path=None,model='open2close'):
+def _QA_VectorBacktest(df = None,comission = None, params = None,params_id = None,save_path =None,code_num_each_process = 3):
     '''
+    多进程处理每个参数在全品种上的回测
     将日内收益转化成每日来计量的矢量式回测
     输入：multiindex:['datetime','code']
     return: dataframe for the record of each code, columns = ['code','params_id','params','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','cum_ret_series']
     '''
     seaborn.set(palette='deep', style='darkgrid')
     code_list = list(set(df.reset_index()['code']))
-    df = df.sort_values(by=['datetime', 'code'])
-    if 'date' not in df.columns: df['date'] = list(map(lambda x: str(x)[:10], df['datetime']))
-    if 'minute' not in df.columns: df['minute'] = list(map(lambda x: str(x)[11:], df['datetime']))
+    df = df.sort_values(by=['datetime','code'])
+    if 'date' not in df.columns: df['date'] = list(map(lambda x:str(x)[:10],df['datetime']))
+    if 'minute' not in df.columns: df['minute'] = list(map(lambda x:str(x)[11:],df['datetime']))
 
     result = pd.DataFrame()
-    for code in code_list:
-        print('回测参数ID：{}, 回测代码：{}'.format(params_id, code))
-        data = df[df['code'] == code]
-        data, return_table_temp = _get_return_series(data, comission,model)
-        # =============================================================================
-        #   存储回测结果
-        data.to_csv(os.path.join(save_path, 'acheck_data_' + code + '_' + params_id + '.csv'))
-        return_table_temp.to_csv(os.path.join(save_path, 'acheck_' + code + '_' + params_id + '.csv'))
-        result_temp = _get_result(return_table=return_table_temp, code=code, params_id=params_id, params=params)
-        result = result.append(result_temp)
+    res_list = []
+    length = len(code_list)
+
+    process_num = math.ceil(length/code_num_each_process)
+
+    code_list_set = QA_util_list_cut(code_list, code_num_each_process)
+    p = Pool(process_num)
+    for code_list_temp in code_list_set:
+        rt = p.apply_async(_get_result_multi_codes, args=(df,code_list_temp,comission,params_id,params,save_path,))
+        res_list.append(rt)
+    p.close()
+    p.join()
+    for i in res_list:
+        result = result.append(i.get())
+
     return result
 
-def _get_result_multi_codes(df = None,code_list = None, comission = None,params_id = None,params=None, save_path = None,model='open2close'):
+
+# def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, save_path=None):
+#     '''
+#     将日内收益转化成每日来计量的矢量式回测
+#     输入：multiindex:['datetime','code']
+#     return: dataframe for the record of each code, columns = ['code','params_id','params','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','cum_ret_series']
+#     '''
+#     seaborn.set(palette='deep', style='darkgrid')
+#     code_list = list(set(df.reset_index()['code']))
+#     df = df.sort_values(by=['datetime', 'code'])
+#     if 'date' not in df.columns: df['date'] = list(map(lambda x: str(x)[:10], df['datetime']))
+#     if 'minute' not in df.columns: df['minute'] = list(map(lambda x: str(x)[11:], df['datetime']))
+#
+#     result = pd.DataFrame()
+#     for code in code_list:
+#         print('回测参数ID：{}, 回测代码：{}'.format(params_id, code))
+#         data = df[df['code'] == code]
+#         data, return_table_temp = _get_return_series(data, comission)
+#         # =============================================================================
+#         #   存储回测结果
+#         data.to_csv(os.path.join(save_path, 'acheck_data_' + code + '_' + params_id + '.csv'))
+#         return_table_temp.to_csv(os.path.join(save_path, 'acheck_' + code + '_' + params_id + '.csv'))
+#         result_temp = _get_result(return_table=return_table_temp, code=code, params_id=params_id, params=params)
+#         result = result.append(result_temp)
+#     return result
+
+def _get_result_multi_codes(df = None,code_list = None, comission = None,params_id = None,params=None, save_path = None):
     temp_res = pd.DataFrame()
     for code in code_list:
         print('回测参数ID：{}, 回测代码：{}'.format(params_id,code))
         data = df[df['code']==code]
-        data, return_table_temp = _get_return_series(data,comission,model)
+        data, return_table_temp = _get_return_series(data,comission)
 # =============================================================================
 #   存储回测结果
         data.to_csv(os.path.join(save_path,'acheck_data_'+code+'_'+params_id+'.csv'))
@@ -699,11 +672,11 @@ def _get_result_multi_codes(df = None,code_list = None, comission = None,params_
         temp_res = temp_res.append(result_temp)
     return temp_res
 
-def _get_return_series(data,comission,model):
-    if model == 'close2close': data['real_return'] = data['close'].pct_change().shift(-1)
-    elif model == 'open2close': data['real_return'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
-                                                               (data['close'].shift(-1) / data['open'].shift(-1))-1,
-                                                               (data['close'].shift(-1) / data['close'])-1)
+def _get_return_series(data,comission):
+    # data['real_return'] = data['close'].pct_change().shift(-1)
+    data['real_return'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
+                                   data['close'].shift(-1) / data['open'].shift(-1),
+                                   data['close'].shift(-1) / data['close'])
     data['strategy'] = data['signal'] * data['real_return']
     data['strategy'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                 data['strategy'] - comission, data['strategy'])
@@ -798,9 +771,7 @@ def _get_all_optimize_info(params_optimize_dict):
             temp[sub_item] = types_dict[sub_item](splited_item[i])
         optimize_dict[count] = temp   
     return optimize_dict
-
-
-#%% 功能性工具位置
+    
 def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_profit_ret = None):
     data['enter_long_price_mark'] = np.where(data['signal']>0,data['close'],np.nan)
     data['enter_short_price_mark'] = np.where(data['signal']<0,data['close'],np.nan)
@@ -809,8 +780,8 @@ def QA_VectorBacktest_func_add_fixed_stop(data = None,stop_loss_ret = None,stop_
     data['current_signal'] = data['signal'].ffill()
     data['current_ret'] = np.where(data['current_signal']>0,(data['close']/data['enter_long_price_mark'])-1,np.nan)
     data['current_ret'] = np.where(data['current_signal']<0,(data['enter_short_price_mark']/data['close'])-1,data['current_ret'])
-    if stop_loss_ret != None: data['signal'] = np.where(data['current_ret']<=stop_loss_ret,0,data['signal'])
-    if stop_profit_ret != None: data['signal'] = np.where(data['current_ret']>=stop_profit_ret,0,data['signal'])
+    data['signal'] = np.where(data['current_ret']<=stop_loss_ret,0,data['signal'])
+    data['signal'] = np.where(data['current_ret']>=stop_profit_ret,0,data['signal'])
     return data
 
 def QA_VectorBacktest_func_add_limit_order(data = None,limit_point = None,limit_ret = None,interday = False):
@@ -822,83 +793,5 @@ def QA_VectorBacktest_func_fill_signal(data = None):
 #    data['signal'] = np.where((data['signal']!=0)&(data['signal'].shift(-1)==0),0,data['signal'])
     return data
 
-
-def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
-                                               result_save_path=None,
-                                               params_num_list=None,
-                                               future_list=None,
-                                               minimum_in_sample_cumret_required=0,
-                                               maximum_in_sample_cumret_required=10000,
-                                               if_legend=False,
-                                               params_df=None):
-    '''
-    回测运行过程中查看样本内表现的函数
-    save_path = 'D:/Quant/programe/strategy_pool_adv/strategy07/backtest'
-    '''
-    import copy
-    '''取出所有的样本内收益数据'''
-    if not os.path.exists(result_save_path): os.makedirs(result_save_path)
-
-    path = in_sample_save_path
-    if len(params_df) == 0:
-        params_id_list = ['params_' + str(i) for i in params_num_list]
-        params_record = {}
-
-        for params_id in params_id_list:
-            print(params_id)
-            for code in future_list:
-                filename = 'acheck_{}_{}'.format(code, params_id)
-                data = pd.read_csv(os.path.join(path, filename + '.csv'))
-                cumprod = data.set_index('date').cumprod().iloc[-1].values[0]
-                if code not in params_record.keys(): params_record[code] = {}
-                params_record[code][params_id] = cumprod
-
-        params_df = pd.DataFrame(pd.DataFrame(params_record).unstack()).reset_index()
-        params_df.columns = ['code', 'params_id', 'cum_ret']
-        '''选取每个代码表现最优的参数'''
-        params_df['max'] = params_df.groupby('code')['cum_ret'].transform('max')
-    else:
-        pass
-    params_max = params_df[params_df['cum_ret'] == params_df['max']]
-
-    params_max = params_max[params_max['max'] >= minimum_in_sample_cumret_required]
-    params_max = params_max[params_max['max'] <= maximum_in_sample_cumret_required]
-    '''获取表现最优参数的累积收益数据'''
-    steps = 0
-    for i in range(len(params_max)):
-        code = params_max.iloc[i]['code']
-        params_id = params_max.iloc[i]['params_id']
-        filename = 'acheck_{}_{}'.format(code, params_id)
-        data = pd.read_csv(os.path.join(path, filename + '.csv'))
-        data.columns = ['date', code + ':' + params_id]
-        '''集成'''
-        if steps == 0:
-            dataall = copy.deepcopy(data)
-        else:
-            dataall = pd.merge(dataall, data, on=['date'], how='outer')
-        steps += 1
-        data = 1
-
-    dataall = dataall.sort_values(by='date').fillna(1)
-    dataall = dataall.reset_index(drop=True).set_index('date')
-
-    __matplotlib_plot(data=dataall.cumprod(),
-                         titles='None',
-                         label=dataall.columns.tolist(),
-                         if_legend=if_legend,
-                         save_path=result_save_path)
-
-    ret_table = pd.DataFrame(dataall.mean(axis=1))
-    ret_table.columns = ['strategy_return_daily']
-
-    res = _get_result(return_table=ret_table,
-                     code='全样本',
-                     params_id='annual_ret 最优参数',
-                     params=None,
-                     if_show_params=False)
-
-    _draw_based_on_result_dataframe(result=res,
-                                   save_path=result_save_path,
-                                   if_legend=False,
-                                   titles='样本内全品种annual_ret 最优参数回测结果')
-    return params_df,params_max,dataall,ret_table
+def check_result():
+    pass

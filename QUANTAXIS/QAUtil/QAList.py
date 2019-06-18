@@ -35,3 +35,16 @@ def QA_util_multi_demension_list(row_, col_=0):
 
 def QA_util_diff_list(datastruct):
     return (np.array(datastruct[1:]) - np.array(datastruct[:-1])).tolist()
+
+
+def QA_util_list_cut(listTemp, num):
+    res_list = []
+    temp = QA_util_list_cut_iteration(listTemp, num)
+    for i in temp:
+        res_list.append(i)
+    return res_list
+
+
+def QA_util_list_cut_iteration(listTemp, n):
+    for i in range(0, len(listTemp), n):
+        yield listTemp[i:i + n]
