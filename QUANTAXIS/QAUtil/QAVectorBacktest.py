@@ -210,7 +210,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
                                                                                                                               filter_optimize_params = filter_optimize_params,
                                                                                                                               weights=weights,
                                                                                                                               run_year_list = run_year_list,
-                                                                                                                              if_optimize_parameters = True,
+                                                                                                                              if_optimize_parameters = if_optimize_parameters,
                                                                                                                               if_reorder_params = True,
                                                                                                                               save_path = in_sample_path,
                                                                                                                               if_reload_save_files = if_reload_save_files,
@@ -556,6 +556,7 @@ def show_results_group_average(result = None,weights = None, by = 'sharpe',save_
     # =============================================================================
 
     result_max = _get_max_result(result,by)
+    step = 0
     for item in range(len(result_max)):
         temp_result_max = result_max.iloc[item]
         try:
@@ -564,9 +565,10 @@ def show_results_group_average(result = None,weights = None, by = 'sharpe',save_
         except:
             temp_df = pd.DataFrame(index=eval(temp_result_max['trading_date_series']),
                                    data=eval(temp_result_max['ret_series'])).rename(columns={0:temp_result_max['code']})
-        if item == 0: temp_df_all = copy.deepcopy(temp_df)
+        if step == 0: temp_df_all = copy.deepcopy(temp_df)
         else:
             temp_df_all = pd.merge(temp_df_all,temp_df,left_index = True,right_index = True,how = 'outer')
+        step+=1
     temp_df_all = temp_df_all.sort_index()
     temp_df_all = temp_df_all.fillna(1)
 
@@ -716,8 +718,8 @@ def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, sav
         data, return_table_temp = _get_return_series(data, comission,model)
         # =============================================================================
         #   存储回测结果
-        data.to_csv(os.path.join(save_path, 'acheck_data_' + code + '_' + params_id + '.csv'))
-        return_table_temp.to_csv(os.path.join(save_path, 'acheck_' + code + '_' + params_id + '.csv'))
+        if save_path != None: data.to_csv(os.path.join(save_path, 'acheck_data_' + code + '_' + params_id + '.csv'))
+        if save_path != None: return_table_temp.to_csv(os.path.join(save_path, 'acheck_' + code + '_' + params_id + '.csv'))
         result_temp = _get_result(return_table=return_table_temp, code=code, params_id=params_id, params=params)
         result = result.append(result_temp)
     return result
@@ -863,7 +865,7 @@ def QA_VectorBacktest_func_fill_signal(data = None):
 def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
                                                result_save_path=None,
                                                params_num_list=None,
-                                               future_list=None,
+                                               code_list=None,
                                                minimum_in_sample_cumret_required=0,
                                                maximum_in_sample_cumret_required=10000,
                                                if_legend=False,
@@ -883,7 +885,7 @@ def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
 
         for params_id in params_id_list:
             print(params_id)
-            for code in future_list:
+            for code in code_list:
                 filename = 'acheck_{}_{}'.format(code, params_id)
                 data = pd.read_csv(os.path.join(path, filename + '.csv'))
                 cumprod = data.set_index('date').cumprod().iloc[-1].values[0]
@@ -1075,7 +1077,7 @@ if __name__ == '__main__':
                                                                                             in_sample_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/in_sample',
                                                                                             result_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/check_result',
                                                                                             params_num_list=list(np.arange(1, 216)),
-                                                                                            future_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
+                                                                                            code_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
                                                                                             minimum_in_sample_cumret_required=0,
                                                                                             maximum_in_sample_cumret_required=10000,
                                                                                             if_legend=False,
@@ -1085,7 +1087,7 @@ if __name__ == '__main__':
                                                                                             in_sample_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/in_sample',
                                                                                             result_save_path='D:/Quant/programe/strategy_pool_adv/strategy07/backtest/backtest01/check_result',
                                                                                             params_num_list=list(np.arange(1, 216)),
-                                                                                            future_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
+                                                                                            code_list=[i for i in QA.DATABASE.future_min.distinct('code') if i not in ['IFL9', 'ICL9', 'ICL9']],
                                                                                             minimum_in_sample_cumret_required=1.2,
                                                                                             maximum_in_sample_cumret_required=10000,
                                                                                             if_legend=False,
