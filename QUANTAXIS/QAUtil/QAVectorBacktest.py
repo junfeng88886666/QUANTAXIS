@@ -203,6 +203,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
         print('样本内回测启动')
         data_start, data_end, run_year_list = _get_start_and_end(in_sample_year_list,in_sample_timeperiod)
         result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
+                                                                                                                                data_freq=data_freq,
                                                                                                                               func = func,
                                                                                                                               comission = comission,
                                                                                                                               params = params,
@@ -225,6 +226,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
         params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
         data_start, data_end, run_year_list = _get_start_and_end(out_sample_year_list, out_sample_timeperiod)
         result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
+                                                                                                                                data_freq=data_freq,
                                                                                                                               func = func,
                                                                                                                               comission = comission,
                                                                                                                               params = params_selected,
@@ -247,6 +249,7 @@ def QA_VectorBacktest_adv(backtest_id = None,
         params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
         data_start, data_end, run_year_list = _get_start_and_end(all_sample_yeal_list, all_sample_timeperiod)
         result,simple_result,params_res,res_group_average,simple_res_group_average,params_res_group_average = QA_VectorBacktest(data = data_engine(code_list,data_start,data_end,data_freq).data,
+                                                                                                                                data_freq = data_freq,
                                                                                                                               func = func,
                                                                                                                               comission = comission,
                                                                                                                               params = params_selected,
@@ -280,6 +283,7 @@ def _get_start_and_end(year_list,period):
 
 
 def QA_VectorBacktest(data = None,
+                      data_freq = None,
                       func = None, 
                       comission = 0.00025, 
                       params = None,
@@ -340,7 +344,7 @@ def QA_VectorBacktest(data = None,
             ###
             calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
             calculated_data = calculated_data.sort_values(by=['datetime','code'])
-            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model)
+            res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model,data_freq)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
         else:
@@ -371,7 +375,7 @@ def QA_VectorBacktest(data = None,
                     calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
                     calculated_data = calculated_data.sort_values(by=['datetime','code'])
 
-                    res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model)
+                    res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model,data_freq)
                     calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
                     res = res.append(res_temp)
                     temp_e = datetime.datetime.now()
@@ -699,7 +703,7 @@ def _edit_params(params,code_list):
     return params
         
 
-def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, save_path=None,model='open2close'):
+def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, save_path=None,model='open2close',data_freq='1min'):
     '''
     将日内收益转化成每日来计量的矢量式回测
     输入：multiindex:['datetime','code']
@@ -715,7 +719,7 @@ def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, sav
     for code in code_list:
         print('回测参数ID：{}, 回测代码：{}'.format(params_id, code))
         data = df[df['code'] == code]
-        data, return_table_temp = _get_return_series(data, comission,model)
+        data, return_table_temp = _get_return_series(data, comission,model,data_freq)
         # =============================================================================
         #   存储回测结果
         if save_path != None: data.to_csv(os.path.join(save_path, 'acheck_data_' + code + '_' + params_id + '.csv'))
@@ -724,12 +728,12 @@ def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, sav
         result = result.append(result_temp)
     return result
 
-def _get_result_multi_codes(df = None,code_list = None, comission = None,params_id = None,params=None, save_path = None,model='open2close'):
+def _get_result_multi_codes(df = None,code_list = None, comission = None,params_id = None,params=None, save_path = None,model='open2close',data_freq = '1min'):
     temp_res = pd.DataFrame()
     for code in code_list:
         print('回测参数ID：{}, 回测代码：{}'.format(params_id,code))
         data = df[df['code']==code]
-        data, return_table_temp = _get_return_series(data,comission,model)
+        data, return_table_temp = _get_return_series(data,comission,model,data_freq)
 # =============================================================================
 #   存储回测结果
         data.to_csv(os.path.join(save_path,'acheck_data_'+code+'_'+params_id+'.csv'))
@@ -738,23 +742,29 @@ def _get_result_multi_codes(df = None,code_list = None, comission = None,params_
         temp_res = temp_res.append(result_temp)
     return temp_res
 
-def _get_return_series(data,comission,model):
+def _get_return_series(data,comission,model,data_freq):
+    import copy
     if model == 'close2close': data['real_return'] = data['close'].pct_change().shift(-1)
+    elif model == 'open2open': data['real_return'] = data['open'].pct_change().shift(-2)
     elif model == 'open2close': data['real_return'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                                                (data['close'].shift(-1) / data['open'].shift(-1))-1,
                                                                (data['close'].shift(-1) / data['close'])-1)
     data['strategy'] = data['signal'] * data['real_return']
     data['strategy'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                 data['strategy'] - comission, data['strategy'])
-
-    return_table_temp = data.pivot(index='minute', columns='date', values='strategy')
-    return_table_temp = (return_table_temp.fillna(0) + 1).cumprod(axis=0)
-    return_table_temp = return_table_temp.T
-    return_table_temp['cum_ret_series'] = list(map(lambda x: list(x), return_table_temp.values))
-    return_table_temp = return_table_temp[['cum_ret_series']]
-    return_table_temp['strategy_return_daily'] = list(map(lambda x: x[-1], return_table_temp['cum_ret_series']))
-    del return_table_temp['cum_ret_series']
-    return data,return_table_temp
+    if data_freq[-3:] == 'min':
+        return_table_temp = data.pivot(index='minute', columns='date', values='strategy')
+        return_table_temp = (return_table_temp.fillna(0) + 1).cumprod(axis=0)
+        return_table_temp = return_table_temp.T
+        return_table_temp['cum_ret_series'] = list(map(lambda x: list(x), return_table_temp.values))
+        return_table_temp = return_table_temp[['cum_ret_series']]
+        return_table_temp['strategy_return_daily'] = list(map(lambda x: x[-1], return_table_temp['cum_ret_series']))
+        del return_table_temp['cum_ret_series']
+        return data,return_table_temp
+    else:
+        return_table_temp = copy.deepcopy(data[['date','strategy']])
+        return_table_temp.columns = ['date','strategy_return_daily']
+        return data,return_table_temp
 
 def _get_result(return_table = None, code = None, params_id = None, params = None,if_show_params = True):
     '''
@@ -1033,6 +1043,7 @@ def QA_VectorBacktest_check_results2_afterprocess(
         data_start, data_end, run_year_list = _get_start_and_end(out_sample_year_list, out_sample_timeperiod)
         result, simple_result, params_res, res_group_average, simple_res_group_average, params_res_group_average = QA_VectorBacktest(
                                                                                                                                     data=data_engine(code_list, data_start, data_end, data_freq).data,
+                                                                                                                                    data_freq = data_freq,
                                                                                                                                     func=func,
                                                                                                                                     comission=comission,
                                                                                                                                     params=params_selected,
@@ -1056,6 +1067,7 @@ def QA_VectorBacktest_check_results2_afterprocess(
         data_start, data_end, run_year_list = _get_start_and_end(all_sample_year_list, all_sample_timeperiod)
         result, simple_result, params_res, res_group_average, simple_res_group_average, params_res_group_average = QA_VectorBacktest(
                                                                                                                                     data=data_engine(code_list, data_start, data_end, data_freq).data,
+                                                                                                                                    data_freq = data_freq,
                                                                                                                                     func=func,
                                                                                                                                     comission=comission,
                                                                                                                                     params=params_selected,
