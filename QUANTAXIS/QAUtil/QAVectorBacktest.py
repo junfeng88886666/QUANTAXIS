@@ -443,13 +443,13 @@ def QA_VectorBacktest(data = None,
     '''展示9.1.2.3'''
     res_group_average = pd.DataFrame()
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'annual_return',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,weights = weights,by = 'annual_return',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'sharpe',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,weights = weights,by = 'sharpe',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,weights = weights,by = 'winrate',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,weights = weights,by = 'winrate',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
         
     simple_res_group_average = res_group_average[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','by']]
@@ -524,7 +524,7 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,i
     _draw_based_on_result_dataframe(result = result_max,save_path = save_path,titles = temp_titles,if_legend = if_legend)
 
 
-def _get_max_result(result,by):
+def _get_max_result(result,by,down = None,up = None):
     import copy
     print('####################################################################################')
     # =============================================================================
@@ -539,6 +539,8 @@ def _get_max_result(result,by):
         result['annual_ret_div_abs_drawback'] = result['annual_return'] / abs(result['max_drawback'])
         filter_list = ['annual_ret_div_abs_drawback', 'sharpe', 'annual_return', 'winrate']
 
+    if down != None: result = result[result[by] >= down]
+    if up != None: result = result[result[by] <= up]
 
     #   获取最优日收益序列
     temp_res = result.dropna()
@@ -550,7 +552,7 @@ def _get_max_result(result,by):
     result_max = result_max.drop_duplicates(subset=['code'])
     return result_max
 
-def show_results_group_average(result = None,weights = None, by = 'sharpe',save_path = None,if_legend=True):
+def show_results_group(result = None,weights = None, by = 'sharpe',save_path = None,if_legend=True):
     import copy
     # =============================================================================
     if weights == None: temp_titles = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
@@ -560,6 +562,7 @@ def show_results_group_average(result = None,weights = None, by = 'sharpe',save_
     # =============================================================================
 
     result_max = _get_max_result(result,by)
+    if save_path != None: result_max.to_csv(os.path.join(save_path,'最优参数回测结果.csv'))
     step = 0
     for item in range(len(result_max)):
         temp_result_max = result_max.iloc[item]
@@ -1002,29 +1005,37 @@ def QA_VectorBacktest_check_results2_afterprocess(
         print('此次回测的全样本回测目录:{}'.format(all_sample_path))
 
     print('''样本内组合回测开始''')
-    res = pd.read_csv(os.path.join(in_sample_save_path, '全部回测结果.csv'), encoding='gbk', index_col=0)
+
+    try:
+        res = pd.read_csv(os.path.join(in_sample_save_path, '全部回测结果.csv'), encoding='gbk', index_col=0)
+    except:
+        res = pd.read_csv('D:/Quant/programe/strategy_pool_adv/strategy_06/version1/in_sample/全部回测结果.csv',encoding='gbk', index_col=0)
+
     simple_res = res[
         ['code', 'params_id', 'winrate', 'annual_return', 'max_drawback', 'sharpe', 'yingkuibi', 'trading_freq']]
     params_res = res[['code', 'params_id', 'params']].drop_duplicates(subset=['code', 'params_id'])
 
-    code_list = list(set(res.code.tolist()))
-    params_id_list = list(set(res.params_id.tolist()))
+
 
     if if_weight_by_in_sample_performace:
-        result_max = _get_max_result(res, best_type_select)
+        result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
         weights = {}
         result_max['weight'] = result_max[best_type_select]/result_max[best_type_select].sum()
         for i in range(len(result_max)):
             temp = result_max.iloc[i]
             weights[temp['code']] = temp['weight']
             # weights[temp['code']][temp['params_id']] = temp['weight']
-    else: weights = None
-
-    res_all_1, simple_res_all_1, params_res_all_1 = show_results_group_average(result=res,
-                                                                               weights=weights,
-                                                                               by=best_type_select,
-                                                                               save_path=in_sample_path,
-                                                                               if_legend=if_legend)
+    else: 
+        result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
+        weights = None
+    code_list = list(set(result_max.code.tolist()))
+    params_id_list = list(set(result_max.params_id.tolist()))
+    
+    res_all_1, simple_res_all_1, params_res_all_1 = show_results_group(result=res[res['code'].isin(code_list)],
+                                                                       weights=weights,
+                                                                       by=best_type_select,
+                                                                       save_path=in_sample_path,
+                                                                       if_legend=if_legend)
 
     print('存储数据,存储文件夹：{}'.format(in_sample_path))
     if weights != None: pd.DataFrame(pd.Series(weights)).rename(columns={0: 'weight'}).to_csv(os.path.join(in_sample_path, '代码权重.csv'))

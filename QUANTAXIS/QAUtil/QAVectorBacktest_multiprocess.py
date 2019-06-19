@@ -376,13 +376,13 @@ def QA_VectorBacktest(data = None,
     '''展示9.1.2.3'''
     res_group_average = pd.DataFrame()
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'annual_return',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,by = 'annual_return',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'sharpe',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,by = 'sharpe',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
 
-    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group_average(result = res,by = 'winrate',save_path = save_path,if_legend=if_legend)
+    res_all_1,simple_res_all_1,params_res_all_1 = show_results_group(result = res,by = 'winrate',save_path = save_path,if_legend=if_legend)
     res_group_average = res_group_average.append(res_all_1)
         
     simple_res_group_average = res_group_average[['code','params_id','winrate','annual_return','max_drawback','sharpe','yingkuibi','trading_freq','by']]
@@ -454,7 +454,7 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,i
     _draw_based_on_result_dataframe(result = result_max,save_path = save_path,titles = temp_titles,if_legend = if_legend)
 
             
-def show_results_group_average(result = None,by = 'sharpe',save_path = None,if_legend=True):
+def show_results_group(result = None,by = 'sharpe',save_path = None,if_legend=True):
     import copy
     print('####################################################################################')
     
