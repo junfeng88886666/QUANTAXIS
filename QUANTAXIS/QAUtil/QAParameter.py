@@ -457,5 +457,11 @@ class DATASOURCE():
     '''
     TDX = 'tdx'
     COFUND = 'cofund'
-    TUSHARE = 'tushare'
+    TUSHAREPRO = 'tusharepro'
     THS = 'ths'
+
+class ERRORTYPE():
+    '''
+    报错类型
+    '''
+    DATAAGGREMENT_ERROR = 'DataAggrement Error'

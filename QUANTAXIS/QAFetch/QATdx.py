@@ -299,17 +299,11 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
     api = TdxHq_API()
     try:
         with api.connect(ip, port, time_out=0.7):
-
-            if frequence in ['day', 'd', 'D', 'DAY', 'Day']:
-                frequence = 9
-            elif frequence in ['w', 'W', 'Week', 'week']:
-                frequence = 5
-            elif frequence in ['month', 'M', 'm', 'Month']:
-                frequence = 6
-            elif frequence in ['quarter', 'Q', 'Quarter', 'q']:
-                frequence = 10
-            elif frequence in ['y', 'Y', 'year', 'Year']:
-                frequence = 11
+            if frequence in ['day', 'd', 'D', 'DAY', 'Day']: frequence = 9
+            elif frequence in ['w', 'W', 'Week', 'week']: frequence = 5
+            elif frequence in ['month', 'M', 'm', 'Month']: frequence = 6
+            elif frequence in ['quarter', 'Q', 'Quarter', 'q']: frequence = 10
+            elif frequence in ['y', 'Y', 'year', 'Year']: frequence = 11
             start_date = str(start_date)[0:10]
             today_ = datetime.date.today()
             lens = QA_util_get_trade_gap(start_date, today_)
@@ -340,6 +334,7 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
                 #     return QA_data_make_qfq(data,xdxr)
                 # elif if_fq in ['02','hfq']:
                 #     return QA_data_make_hfq(data,xdxr)
+
     except Exception as e:
         if isinstance(e, TypeError):
             print('Tushare内置的pytdx版本和QUANTAXIS使用的pytdx 版本不同, 请重新安装pytdx以解决此问题')

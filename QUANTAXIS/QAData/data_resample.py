@@ -397,6 +397,7 @@ def QA_data_min_resample(min_data, type_='5min'):
             closed='right',
             loffset=type_
         ).apply(CONVERSION)
+
         f = min_data_p['{} 13:00:00'.format(item):].resample(
             type_,
             closed='right',
