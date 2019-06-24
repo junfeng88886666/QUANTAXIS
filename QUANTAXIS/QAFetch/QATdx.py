@@ -318,7 +318,7 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
 
             data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10])),
                                code=str(code),
-                               date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))) \
+                               date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))\
                 .set_index('date', drop=False, inplace=False)
 
             end_date = str(end_date)[0:10]
