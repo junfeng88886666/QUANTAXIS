@@ -93,16 +93,16 @@ def QA_DataAggrement_Future_min(package,DataFrame,ui_log = None):
         Engine = use(package)
         data = Engine.QA_DataAggrement_Future_min(DataFrame)
 
-        data[['index',
-              'datetime',
+        data.index = data.index.astype(str)
+
+        data[['datetime',
               'tradetime',
               'code',
               'contract',
               'date',
               'type',
               'source']]\
-        = data[['index',
-                'datetime',
+        = data[['datetime',
                 'tradetime',
                 'code',
                 'contract',
@@ -131,9 +131,7 @@ def QA_DataAggrement_Future_min(package,DataFrame,ui_log = None):
                 'date_stamp',
                 'time_stamp']].astype('float64')
 
-        data = data[['index','open','high','low','close','price','position','trade','amount','datetime','tradetime','code','contract','date','date_stamp','time_stamp','type','source']]
-
-        return data.set_index('index')
+        return data[['open','high','low','close','price','position','trade','amount','datetime','tradetime','code','contract','date','date_stamp','time_stamp','type','source']]
     except:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR+', package: '+str(package), ui_log=ui_log)
         return None

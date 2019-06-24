@@ -32,8 +32,9 @@ def QA_DataAggrement_Future_min(data):
     data = data \
         .assign(tradetime=pd.to_datetime(data['datetime'].apply(QA_util_future_to_tradedatetime))) \
         .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x))) \
-        .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
-    data['index'] = data['datetime']
+        .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
+        .set_index('datetime', drop=False, inplace=False)
+
     data['source'] = DATASOURCE.COFUND
     return data
 

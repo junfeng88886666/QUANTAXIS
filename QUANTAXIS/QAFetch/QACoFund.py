@@ -350,9 +350,7 @@ def QA_fetch_get_future_min(code, start, end, frequence=FREQUENCE.ONE_MIN):
                 data['type'] = frequence
                 data['code'] = code
                 data = data.drop_duplicates(subset = ['RealDate','Time'])
-
-                data = QA_DataAggrement_Future_min('CoFund',data)
-                return data[start:end]                    
+                return QA_DataAggrement_Future_min('CoFund',data)[start:end]
             else:
                 print('当前仅支持1分钟的数据调用')
                 raise NotImplementedError
