@@ -31,6 +31,7 @@
 
 '''
 TODO: 增加B股，H股，国外市场的数据协议对应数据的整理
+TODO: 减少一些提前的set_index()计算，加快计算速度
 '''
 
 import datetime
@@ -668,6 +669,87 @@ def QA_fetch_get_stock_list(type_='stock', ip=None, port=None):
         return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LIST)(DATA_SOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
+def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
+    '实时分笔成交 包含集合竞价 buyorsell 1--sell 0--buy 2--盘前'
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    try:
+        with api.connect(ip, port):
+            data = pd.DataFrame()
+            data = pd.concat([api.to_df(api.get_transaction_data(
+                _select_market_code(str(code)), code, (2 - i) * 2000, 2000)) for i in range(3)], axis=0)
+            if 'value' in data.columns:
+                data = data.drop(['value'], axis=1)
+            data = data.dropna()
+            day = datetime.date.today()
+            data = data.assign(date=str(day)).assign(
+                datetime=pd.to_datetime(data['time'].apply(lambda x: str(day) + ' ' + str(x)))) \
+                .assign(code=str(code)).assign(order=range(len(data.index)))
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION_REALTIME)(DATA_SOURCE.TDX,data)
+    except:
+        return None
+
+@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
+def QA_fetch_get_stock_xdxr(code, ip=None, port=None):
+    '除权除息'
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    market_code = _select_market_code(code)
+    with api.connect(ip, port):
+        category = {
+            '1': '除权除息', '2': '送配股上市', '3': '非流通股上市', '4': '未知股本变动', '5': '股本变化',
+            '6': '增发新股', '7': '股份回购', '8': '增发新股上市', '9': '转配股上市', '10': '可转债上市',
+            '11': '扩缩股', '12': '非流通股缩股', '13': '送认购权证', '14': '送认沽权证'}
+        data = api.to_df(api.get_xdxr_info(market_code, code))
+        if len(data) >= 1:
+            data = data \
+                .assign(date=pd.to_datetime(data[['year', 'month', 'day']])) \
+                .drop(['year', 'month', 'day'], axis=1) \
+                .assign(category_meaning=data['category'].apply(lambda x: category[str(x)])) \
+                .assign(code=str(code)) \
+                .rename(index=str, columns={'panhouliutong': 'liquidity_after',
+                                            'panqianliutong': 'liquidity_before', 'houzongguben': 'shares_after',
+                                            'qianzongguben': 'shares_before'})
+            data = data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_XDXR)(DATA_SOURCE.TDX,data)
+        else:
+            return None
+
+@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
+def QA_fetch_get_stock_info(code, ip=None, port=None):
+    '股票基本信息'
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    market_code = _select_market_code(code)
+    with api.connect(ip, port):
+        return api.to_df(api.get_finance_info(market_code, code))
+
+@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
+def QA_fetch_get_stock_block(ip=None, port=None):
+    '板块数据'
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    with api.connect(ip, port):
+
+        data = pd.concat([api.to_df(api.get_and_parse_block_info("block_gn.dat")).assign(type='gn'),
+                          api.to_df(api.get_and_parse_block_info(
+                              "block.dat")).assign(type='yb'),
+                          api.to_df(api.get_and_parse_block_info(
+                              "block_zs.dat")).assign(type='zs'),
+                          api.to_df(api.get_and_parse_block_info("block_fg.dat")).assign(type='fg')])
+
+        if len(data) > 10:
+            return data.assign(source='tdx').drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,
+                                                                                                  inplace=False).drop_duplicates()
+        else:
+            QA_util_log_info('Wrong with fetch block ')
+
+
+
+
+
+
+@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_index_list(ip=None, port=None):
     """获取指数列表
     Keyword Arguments:
@@ -909,83 +991,6 @@ def QA_fetch_get_index_latest(code, frequence='day', ip=None, port=None):
 
 
 
-
-
-@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
-    '实时分笔成交 包含集合竞价 buyorsell 1--sell 0--buy 2--盘前'
-    ip, port = get_mainmarket_ip(ip, port)
-    api = TdxHq_API()
-    try:
-        with api.connect(ip, port):
-            data = pd.DataFrame()
-            data = pd.concat([api.to_df(api.get_transaction_data(
-                _select_market_code(str(code)), code, (2 - i) * 2000, 2000)) for i in range(3)], axis=0)
-            if 'value' in data.columns:
-                data = data.drop(['value'], axis=1)
-            data = data.dropna()
-            day = datetime.date.today()
-            return data.assign(date=str(day)).assign(
-                datetime=pd.to_datetime(data['time'].apply(lambda x: str(day) + ' ' + str(x)))) \
-                .assign(code=str(code)).assign(order=range(len(data.index))).set_index('datetime', drop=False,
-                                                                                       inplace=False)
-    except:
-        return None
-
-@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_xdxr(code, ip=None, port=None):
-    '除权除息'
-    ip, port = get_mainmarket_ip(ip, port)
-    api = TdxHq_API()
-    market_code = _select_market_code(code)
-    with api.connect(ip, port):
-        category = {
-            '1': '除权除息', '2': '送配股上市', '3': '非流通股上市', '4': '未知股本变动', '5': '股本变化',
-            '6': '增发新股', '7': '股份回购', '8': '增发新股上市', '9': '转配股上市', '10': '可转债上市',
-            '11': '扩缩股', '12': '非流通股缩股', '13': '送认购权证', '14': '送认沽权证'}
-        data = api.to_df(api.get_xdxr_info(market_code, code))
-        if len(data) >= 1:
-            data = data \
-                .assign(date=pd.to_datetime(data[['year', 'month', 'day']])) \
-                .drop(['year', 'month', 'day'], axis=1) \
-                .assign(category_meaning=data['category'].apply(lambda x: category[str(x)])) \
-                .assign(code=str(code)) \
-                .rename(index=str, columns={'panhouliutong': 'liquidity_after',
-                                            'panqianliutong': 'liquidity_before', 'houzongguben': 'shares_after',
-                                            'qianzongguben': 'shares_before'}) \
-                .set_index('date', drop=False, inplace=False)
-            return data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
-        else:
-            return None
-
-@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_info(code, ip=None, port=None):
-    '股票基本信息'
-    ip, port = get_mainmarket_ip(ip, port)
-    api = TdxHq_API()
-    market_code = _select_market_code(code)
-    with api.connect(ip, port):
-        return api.to_df(api.get_finance_info(market_code, code))
-
-@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_block(ip=None, port=None):
-    '板块数据'
-    ip, port = get_mainmarket_ip(ip, port)
-    api = TdxHq_API()
-    with api.connect(ip, port):
-
-        data = pd.concat([api.to_df(api.get_and_parse_block_info("block_gn.dat")).assign(type='gn'),
-                          api.to_df(api.get_and_parse_block_info(
-                              "block.dat")).assign(type='yb'),
-                          api.to_df(api.get_and_parse_block_info(
-                              "block_zs.dat")).assign(type='zs'),
-                          api.to_df(api.get_and_parse_block_info("block_fg.dat")).assign(type='fg')])
-
-        if len(data) > 10:
-            return data.assign(source='tdx').drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,
-                                                                                                  inplace=False).drop_duplicates()
-        else:
-            QA_util_log_info('Wrong with fetch block ')
 
 
 """

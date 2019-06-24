@@ -32,7 +32,8 @@ def select_DataAggrement(type):
     elif type == DATA_AGGREMENT_NAME.STOCK_REALTIME: return QA_DataAggrement_Stock_realtime
     elif type == DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA: return QA_DataAggrement_Stock_depth_market_data
     elif type == DATA_AGGREMENT_NAME.STOCK_LIST: return QA_DataAggrement_Stock_list
-    # elif type == DATA_AGGREMENT_NAME.STOCK_XDXR: return QA_DataAggrement_Stock_xdxr
+    elif type == DATA_AGGREMENT_NAME.STOCK_TRANSACTION_REALTIME: return QA_DataAggrement_Stock_transaction_realtime
+    elif type == DATA_AGGREMENT_NAME.STOCK_XDXR: return QA_DataAggrement_Stock_xdxr
     #
     #
     # '''指数'''
@@ -169,15 +170,15 @@ def QA_DataAggrement_Stock_transaction(package,data):
               'time',
               'source']].astype(str)
 
-        data[['price',
-              'volume']] \
-        = data[['price',
-              'volume']].astype('float64')
+        data[['price']] \
+        = data[['price']].astype('float64')
 
         data[['buyorsell',
+              'volume',
               'order']] \
         = data[['buyorsell',
-              'order']].astype('int64')
+                'volume',
+                'order']].astype('int64')
 
         data = data.set_index('datetime', drop=False, inplace=False)
         return data[['datetime','code','price','volume','buyorsell','date','time','order','source']]
@@ -289,6 +290,110 @@ def QA_DataAggrement_Stock_list(package,data):
     except:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR+', package: '+str(package))
         return None
+
+def QA_DataAggrement_Stock_transaction_realtime(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Stock_transaction_realtime(data)
+
+        data[['datetime',
+              'code',
+              'date',
+              'time',
+              'source']] \
+        = data[['datetime',
+              'code',
+              'date',
+              'time',
+              'source']].astype(str)
+
+        data[['price']] \
+        = data[['price']].astype('float64')
+
+        data[['num',
+              'buyorsell',
+              'order']] \
+        = data[['num',
+                'buyorsell',
+                'order']].astype('int64')
+
+        data = data.set_index('datetime', drop=False, inplace=False)
+        return data[['datetime','code','price','volume','num','buyorsell','date','time','order','source']]
+
+    except:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR+', package: '+str(package))
+        return None
+
+def QA_DataAggrement_Stock_xdxr(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Stock_xdxr(data)
+
+        data[['name',
+              'date',
+              'category_meaning',
+              'code',
+              'source']] \
+        = data[['name',
+              'date',
+              'category_meaning',
+              'code',
+                'source']].astype(str)
+
+        data[['fenhong',
+              'peigujia',
+              'songzhuangu',
+              'peigu',
+              'suogu',
+              'liquidity_before',
+              'liquidity_after',
+              'shares_before',
+              'shares_after',
+              'fenshu',
+              'xingquanjia']] \
+        = data[['fenhong',
+              'peigujia',
+              'songzhuangu',
+              'peigu',
+              'suogu',
+              'liquidity_before',
+              'liquidity_after',
+              'shares_before',
+              'shares_after',
+              'fenshu',
+              'xingquanjia']].astype('float64')
+
+        data[['category']] \
+        = data[['category']].astype('int64')
+
+        data = data.set_index('date',drop = False,inplace = False)
+        return data[['name',
+                     'category',
+                      'date',
+                      'category_meaning',
+                      'code',
+                      'fenhong',
+                      'peigujia',
+                      'songzhuangu',
+                      'peigu',
+                      'suogu',
+                      'liquidity_before',
+                      'liquidity_after',
+                      'shares_before',
+                      'shares_after',
+                      'fenshu',
+                      'xingquanjia',
+                     'source'
+                      ]]
+    except:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR+', package: '+str(package))
+        return None
+
+
+
+
+
+
 
 def QA_DataAggrement_Future_day(package,data):
     Engine = use(package)

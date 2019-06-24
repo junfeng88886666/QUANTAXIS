@@ -461,7 +461,9 @@ class DATA_AGGREMENT_NAME():
     STOCK_REALTIME = 'stock_realtime'
     STOCK_DEPTH_MARKET_DATA = 'stock_depth_market_data'
     STOCK_LIST = 'stock_list'
+    STOCK_TRANSACTION_REALTIME = 'stock_transaction_realtime'
     STOCK_XDXR = 'stock_xdxr'
+    STOCK_INFO = 'stock_info'
     STOCK_BLOCK = 'stock_block'
 
     INDEX_LIST = 'index_list'

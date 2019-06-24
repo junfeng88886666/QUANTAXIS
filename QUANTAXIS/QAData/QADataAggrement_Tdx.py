@@ -42,6 +42,14 @@ def QA_DataAggrement_Stock_list(data):
     data['source'] = DATA_SOURCE.TDX
     if 'sec' not in data.columns: data['sec'] = 0
     return data
+
+def QA_DataAggrement_Stock_transaction_realtime(data):
+    data['source'] = DATA_SOURCE.TDX
+    return data.rename(columns = {'vol':'volume'},inplace = False)
+
+def QA_DataAggrement_Stock_xdxr(data):
+    data['source'] = DATA_SOURCE.TDX
+    return data
 #####################################################################################
 
 def QA_DataAggrement_Future_day(data):
