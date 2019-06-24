@@ -438,20 +438,50 @@ class DATABASE_NAME():
     INDEX_MIN = 'index_min'
     # INDEX_TRANSACTION = 'index_transaction'
 
-    # FUND_LIST = 'fund_list'
-    # FUND_DAY = 'fund_day'
-    # FUND_MIN = 'fund_min'
+    FUND_LIST = 'fund_list'
+    FUND_DAY = 'fund_day'
+    FUND_MIN = 'fund_min'
     # FUND_TRANSACTION = 'fund_transaction'
 
     FUTURE_LIST = 'future_list'
     FUTURE_DAY = 'future_day'
     FUTURE_MIN = 'future_min'
-    # FUTURE_TRANSACTION = 'future_transaction'
+    FUTURE_TRANSACTION = 'future_transaction'
 
     FINANCIAL = 'financial'
 
+class DATA_AGGREMENT_NAME():
+    '''
+    数据协议名
+    '''
+    STOCK_DAY = 'stock_day'
+    STOCK_MIN = 'stock_min'
+    STOCK_TRANSACTION = 'stock_transaction'
+    STOCK_LATEST = 'stock_latest'
+    STOCK_REALTIME = 'stock_realtime'
+    STOCK_DEPTH_MARKET_DATA = 'stock_depth_market_data'
+    STOCK_LIST = 'stock_list'
+    STOCK_XDXR = 'stock_xdxr'
+    STOCK_BLOCK = 'stock_block'
 
-class DATASOURCE():
+    INDEX_LIST = 'index_list'
+    INDEX_DAY = 'index_day'
+    INDEX_MIN = 'index_min'
+    # INDEX_TRANSACTION = 'index_transaction'
+
+    FUND_LIST = 'fund_list'
+    FUND_DAY = 'fund_day'
+    FUND_MIN = 'fund_min'
+    # FUND_TRANSACTION = 'fund_transaction'
+
+    FUTURE_LIST = 'future_list'
+    FUTURE_DAY = 'future_day'
+    FUTURE_MIN = 'future_min'
+    FUTURE_TRANSACTION = 'future_transaction'
+
+    FINANCIAL = 'financial'
+
+class DATA_SOURCE():
     '''
     数据来源
     '''
@@ -465,3 +495,4 @@ class ERRORTYPE():
     报错类型
     '''
     DATAAGGREMENT_ERROR = 'DataAggrement Error'
+

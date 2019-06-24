@@ -61,7 +61,7 @@ def use(package):
     elif package in ['cofund', 'cof','CoFund','COFUND']:
         return QACoFund
 
-def QA_fetch_get_stock_day(package, code, start, end, if_fq='01', level='day', type_='pd'):
+def QA_fetch_get_stock_day(package, code, start, end, if_fq='00', level='day', type_='pd'):
     try:
         Engine = use(package)
         return Engine.QA_fetch_get_stock_day(code, start, end, if_fq, level)

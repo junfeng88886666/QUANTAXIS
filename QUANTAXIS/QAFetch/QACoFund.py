@@ -17,11 +17,9 @@ from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
                               QA_util_time_stamp, QA_util_web_ping,
                               QA_util_get_trade_range,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1)
 from QUANTAXIS.QASetting.QALocalize import log_path
-from QUANTAXIS.QAUtil.QAParameter import FREQUENCE,MARKET_TYPE
-from QUANTAXIS.QAData.QADataAggrement import (QA_DataAggrement_Future_day,
-                                              QA_DataAggrement_Future_min,
-                                              QA_DataAggrement_Future_list
-                                                )
+from QUANTAXIS.QAUtil.QAParameter import FREQUENCE,MARKET_TYPE,DATASOURCE,DATABASE_NAME
+from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
+
 ## TODO 当前只有期货日线和分钟数据的获取，没有其他的，待补充
 #%%
 cofund_data_path = {
@@ -350,7 +348,7 @@ def QA_fetch_get_future_min(code, start, end, frequence=FREQUENCE.ONE_MIN):
                 data['type'] = frequence
                 data['code'] = code
                 data = data.drop_duplicates(subset = ['RealDate','Time'])
-                return QA_DataAggrement_Future_min('CoFund',data)[start:end]
+                return select_DataAggrement(DATABASE_NAME.FUTURE_MIN)(DATASOURCE.COFUND,data)[start:end]
             else:
                 print('当前仅支持1分钟的数据调用')
                 raise NotImplementedError
