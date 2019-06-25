@@ -65,8 +65,8 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
     )
 
     try:
-        if data_type == None: ref_ = coll.find({'code': str(code)})
-        else: ref_ = coll.find({'code': str(code), 'type': data_type})
+        if data_type == None: ref_ = coll.find({'code': code})
+        else: ref_ = coll.find({'code': code, 'type': data_type})
 
         if time_type == 'datetime': end_time = str(now_time())[0:19]
         elif time_type == 'date': end_time = str(now_time())[0:10]
@@ -78,6 +78,17 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
             if data_type == None:
                 QA_util_log_info(
                     '##JOB03.Trying updating {} from {} to {}, package: {}'.format(
+                                                                                            str(code),
+                                                                                            str(start_time),
+                                                                                            str(end_time),
+                                                                                            str(package)
+                                                                                            ),
+                    ui_log=ui_log
+                )
+            else:
+                QA_util_log_info(
+                    '##JOB03.Trying updating {} from {} to {} =={}, package: {}'.format(
+                                                                                                str(data_type),
                                                                                                 str(code),
                                                                                                 str(start_time),
                                                                                                 str(end_time),
@@ -85,25 +96,9 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
                                                                                                 ),
                     ui_log=ui_log
                 )
-            else:
-                QA_util_log_info(
-                    '##JOB03.Trying updating {} from {} to {} =={}, package: {}'.format(
-                                                                                                    str(data_type),
-                                                                                                    str(code),
-                                                                                                    str(start_time),
-                                                                                                    str(end_time),
-                                                                                                    str(package)
-                                                                                                    ),
-                    ui_log=ui_log
-                )
             if start_time != end_time:
-                predata = QA_fetch_get_stock_min(
-                    package,
-                    str(code),
-                    start_time,
-                    end_time,
-                    type
-                )
+                if data_type == None: predata = func(package,code,start_time,end_time)
+                else: predata = func(package,code,start_time,end_time,data_type)
 
                 update_start_time = copy.deepcopy(start_time)
                 data_getted_start_time = predata.datetime.min()
