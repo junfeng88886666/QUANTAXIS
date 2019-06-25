@@ -49,98 +49,9 @@ def now_time():
            ' 17:00:00' if datetime.datetime.now().hour < 15 else str(QA_util_get_real_date(
         str(datetime.date.today()), trade_date_sse, -1)) + ' 15:00:00'
 
-def __saving_work(func, code, coll, ui_log):
-    QA_util_log_info(
-        '##JOB03 Now Saving STOCK_MIN ==== {}'.format(str(code)),
-        ui_log = ui_log
-    )
-    try:
-        for type in ['1min', '5min', '15min', '30min', '60min']:
-            ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-            end_time = str(now_time())[0:19]
-            if ref_.count() > 0:
-                start_time = ref_[ref_.count() - 1]['datetime']
-
-                QA_util_log_info(
-                    '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                        ['1min',
-                         '5min',
-                         '15min',
-                         '30min',
-                         '60min'].index(type),
-                        str(code),
-                        start_time,
-                        end_time,
-                        type,
-                        package
-                    ),
-                    ui_log=ui_log
-                )
-                if start_time != end_time:
-                    predata = QA_fetch_get_stock_min(
-                        package,
-                        str(code),
-                        start_time,
-                        end_time,
-                        type
-                    )
-
-                    update_start_time = copy.deepcopy(start_time)
-                    data_getted_start_time = predata.datetime.min()
-                    if data_getted_start_time == update_start_time:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(predata[predata['datetime'] > start_time])
-                        )
-                    else:
-                        QA_util_log_info(
-                            'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                                .format(code,
-                                        start_time,
-                                        end_time,
-                                        package,
-                                        data_getted_start_time,
-                                        update_start_time
-                                        ),
-                            ui_log
-                        )
-                        err.append(str(code))
-            else:
-                start_time = '2010-01-01'
-                QA_util_log_info(
-                    '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                        ['1min',
-                         '5min',
-                         '15min',
-                         '30min',
-                         '60min'].index(type),
-                        str(code),
-                        start_time,
-                        end_time,
-                        type,
-                        package
-                    ),
-                    ui_log=ui_log
-                )
-                predata = QA_fetch_get_stock_min(
-                    package,
-                    str(code),
-                    start_time,
-                    end_time,
-                    type
-                )
-
-                coll.insert_many(
-                    QA_util_to_json_from_pandas(predata)
-                )
-
-    except Exception as e:
-        QA_util_log_info(e, ui_log=ui_log)
-        err.append(code)
-        QA_util_log_info(err, ui_log=ui_log)
-
 def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     '''
-     save stock_day
+    save stock_day
     保存日线数据
     :param client:
     :param ui_log:  给GUI qt 界面使用

@@ -17,9 +17,11 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.INDEX_DAY:'tdx',
                             # DATABASE_NAME.INDEX_MIN:'tdx',
 
-                            DATABASE_NAME.FUTURE_LIST:'cof',
-                            # DATABASE_NAME.FUTURE_DAY:'cof',
-                            DATABASE_NAME.FUTURE_MIN:'cof'
+                            DATABASE_NAME.FUTURE_LIST:'tdx',
+                            # DATABASE_NAME.FUTURE_DAY:'tdx',
+                            DATABASE_NAME.FUTURE_MIN:'tdx',
+                            DATABASE_NAME.FUTURE_TRANSACTION: 'tdx',
+
                             # DATABASE_NAME.FINANCIAL:None
                             }):
 
@@ -42,7 +44,7 @@ def QA_Update(update_dict = {
         save_adv.QA_SU_save_stock_min(package = update_dict[DATABASE_NAME.STOCK_MIN])
 
     if DATABASE_NAME.STOCK_TRANSACTION in update_dict.keys():
-        save_adv.QA_SU_save_stock_transaction(package = update_dict[STOCK_TRANSACTION.STOCK_LIST])
+        save_adv.QA_SU_save_stock_transaction(package = update_dict[DATABASE_NAME.STOCK_TRANSACTION])
 
     if DATABASE_NAME.STOCK_XDXR in update_dict.keys():
         save_adv.QA_SU_save_stock_xdxr(package = update_dict[DATABASE_NAME.STOCK_XDXR])
