@@ -752,6 +752,12 @@ def _get_return_series(data,comission,model,data_freq):
     elif model == 'open2close': data['real_return'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                                                (data['close'].shift(-1) / data['open'].shift(-1))-1,
                                                                (data['close'].shift(-1) / data['close'])-1)
+    elif model == 'next_1bar_mean':
+        data['ohlc_mean'] = (data['open'] + data['high'] + data['low'] + data['close'])/4
+        data['ohlc_mean_next'] = data['ohlc_mean'].shift(-1)
+        data['real_return'] = data['ohlc_mean_next'].shift(-1)/data['ohlc_mean_next'] - 1
+
+
     data['strategy'] = data['signal'] * data['real_return']
     data['strategy'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                 data['strategy'] - comission, data['strategy'])
