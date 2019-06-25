@@ -722,7 +722,9 @@ def QA_fetch_get_stock_info(code, ip=None, port=None):
     api = TdxHq_API()
     market_code = _select_market_code(code)
     with api.connect(ip, port):
-        return api.to_df(api.get_finance_info(market_code, code))
+        data = api.to_df(api.get_finance_info(market_code, code))
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_INFO)(DATA_SOURCE.TDX,data)
+
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_block(ip=None, port=None):
@@ -739,15 +741,10 @@ def QA_fetch_get_stock_block(ip=None, port=None):
                           api.to_df(api.get_and_parse_block_info("block_fg.dat")).assign(type='fg')])
 
         if len(data) > 10:
-            return data.assign(source='tdx').drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,
-                                                                                                  inplace=False).drop_duplicates()
+            data = data.drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,inplace=False).drop_duplicates()
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_BLOCK)(DATA_SOURCE.TDX,data)
         else:
             QA_util_log_info('Wrong with fetch block ')
-
-
-
-
-
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_index_list(ip=None, port=None):
@@ -1867,8 +1864,9 @@ def QA_fetch_get_future_day(code, start_date, end_date, frequence='day', ip=None
             print(exp.__str__)
             return None
 
-        return data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(
+        data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(
             date=data['date'].apply(lambda x: str(x)[0:10]))
+        return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_DAY)(DATA_SOURCE.TDX,data)
 
 
 def QA_fetch_get_future_min(code, start, end, frequence='1min', ip=None, port=None):
@@ -1918,8 +1916,8 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', ip=None, port=No
             .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x))) \
             .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
             .assign(type=type_).set_index('datetime', drop=False, inplace=False)
-        return data.assign(datetime=data['datetime'].apply(lambda x: str(x)))[start:end].sort_index()
-
+        data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)))[start:end].sort_index()
+        return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATA_SOURCE.TDX,data)
 
 def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
     batch_size = 1800  # 800 or 2000 ? 2000 maybe also works
