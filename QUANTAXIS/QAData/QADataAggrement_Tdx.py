@@ -73,5 +73,11 @@ def QA_DataAggrement_Future_min(data):
     data['source'] = DATA_SOURCE.TDX
     return data
 
+def QA_DataAggrement_Future_transaction(data):
+    del data['natrue_name']
+    if 'contract' not in data.columns: data['contract'] = 'undefined'
+    data['source'] = DATA_SOURCE.TDX
+    return data
+
 def QA_DataAggrement_Future_list(data):
     raise NotImplementedError

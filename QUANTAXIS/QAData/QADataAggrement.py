@@ -61,7 +61,7 @@ def select_DataAggrement(type):
     ############ 期货
     elif type == DATA_AGGREMENT_NAME.FUTURE_DAY: return QA_DataAggrement_Future_day
     elif type == DATA_AGGREMENT_NAME.FUTURE_MIN: return QA_DataAggrement_Future_min
-    # elif type == DATA_AGGREMENT_NAME.FUTURE_TRANSACTION: return QA_DataAggrement_Future_transaction
+    elif type == DATA_AGGREMENT_NAME.FUTURE_TRANSACTION: return QA_DataAggrement_Future_transaction
     # elif type == DATA_AGGREMENT_NAME.FUTURE_LIST: return QA_DataAggrement_Future_list
 
 def QA_DataAggrement_Stock_day(package,data):
@@ -665,6 +665,64 @@ def QA_DataAggrement_Future_min(package,data):
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
         QA_util_log_info(e)
         return None
+
+def QA_DataAggrement_Future_transaction(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Future_min(data)
+
+        data[['datetime',
+              'date',
+              'nature_name',
+              'code',
+              'contract',
+              'source']]\
+        = data[['datetime',
+              'date',
+              'nature_name',
+              'code',
+              'contract',
+              'source']].astype(str)
+
+        data[['price']] \
+        = data[['price']].astype('float64')
+
+        data[['hour',
+              'minute',
+              'volume',
+              'zengcang',
+              'direction',
+              'nature',
+              'order']]\
+        = data[['hour',
+              'minute',
+              'volume',
+              'zengcang',
+              'direction',
+              'nature',
+              'order']].astype('int64')
+
+        data = data.set_index('datetime',drop = False,inplace = False)
+        return data[['datetime',
+                      'date',
+                      'nature_name',
+                      'code',
+                      'price',
+                      'hour',
+                      'minute',
+                      'volume',
+                      'zengcang',
+                      'direction',
+                      'nature',
+                      'order',
+                      'contract',
+                      'source']]
+
+    except Exception as e:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
+        QA_util_log_info(e)
+        return None
+
 
 def QA_DataAggrement_Future_list(package,data):
     Engine = use(package)
