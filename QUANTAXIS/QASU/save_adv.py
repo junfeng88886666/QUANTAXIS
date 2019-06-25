@@ -49,33 +49,53 @@ def now_time():
            ' 17:00:00' if datetime.datetime.now().hour < 15 else str(QA_util_get_real_date(
         str(datetime.date.today()), trade_date_sse, -1)) + ' 15:00:00'
 
-def __saving_work_ForDataWithDatetime_SpecialCode(func = None, package = None, code = None, start = None, coll = None, err = None, ui_log = None):
+def __saving_work_ForDataWithTime_SpecialCode(func = None,
+                                              package = None,
+                                              code = None,
+                                              start = None,
+                                              coll = None,
+                                              time_type = None,
+                                              data_type = None,
+                                              message_type = None,
+                                              err = None,
+                                              ui_log = None):
     QA_util_log_info(
-        '##JOB03 Now Saving STOCK_MIN ==== {}'.format(str(code)),
+        '##JOB03 Now Saving {} ==== {}'.format(str(message_type),str(code)),
         ui_log = ui_log
     )
 
     try:
-        ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-        end_time = str(now_time())[0:19]
-        if ref_.count() > 0:
-            start_time = ref_[ref_.count() - 1]['datetime']
+        if data_type == None: ref_ = coll.find({'code': str(code)})
+        else: ref_ = coll.find({'code': str(code), 'type': data_type})
 
-            QA_util_log_info(
-                '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                    ['1min',
-                     '5min',
-                     '15min',
-                     '30min',
-                     '60min'].index(type),
-                    str(code),
-                    start_time,
-                    end_time,
-                    type,
-                    package
-                ),
-                ui_log=ui_log
-            )
+        if time_type == 'datetime': end_time = str(now_time())[0:19]
+        elif time_type == 'date': end_time = str(now_time())[0:10]
+
+        if ref_.count() > 0:
+            if time_type == 'datetime': start_time = str(ref_[ref_.count() - 1]['datetime'])[0:19]
+            elif time_type == 'date': start_time = str(ref_[ref_.count() - 1]['datetime'])[0:10]
+
+            if data_type == None:
+                QA_util_log_info(
+                    '##JOB03.Trying updating {} from {} to {}, package: {}'.format(
+                                                                                                str(code),
+                                                                                                str(start_time),
+                                                                                                str(end_time),
+                                                                                                str(package)
+                                                                                                ),
+                    ui_log=ui_log
+                )
+            else:
+                QA_util_log_info(
+                    '##JOB03.Trying updating {} from {} to {} =={}, package: {}'.format(
+                                                                                                    str(data_type),
+                                                                                                    str(code),
+                                                                                                    str(start_time),
+                                                                                                    str(end_time),
+                                                                                                    str(package)
+                                                                                                    ),
+                    ui_log=ui_log
+                )
             if start_time != end_time:
                 predata = QA_fetch_get_stock_min(
                     package,
