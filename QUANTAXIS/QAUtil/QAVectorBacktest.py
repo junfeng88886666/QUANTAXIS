@@ -525,6 +525,7 @@ def show_results_max(result = None, on = 'code',by = 'sharpe',save_path = None,i
 
 
 def _get_max_result(result,by,down = None,up = None):
+    print('开启最大值选取样本模式')
     import copy
     print('####################################################################################')
     # =============================================================================
@@ -552,7 +553,38 @@ def _get_max_result(result,by,down = None,up = None):
     result_max = result_max.drop_duplicates(subset=['code'])
     return result_max
 
-def show_results_group(result = None,weights = None, by = 'sharpe',save_path = None,if_legend=True):
+def _get_quantile_result(result,by = 'sharpe',percentile = 100,down = None,up = None):
+    print('开启分位数选取样本模式')
+    if by == 'sharpe':
+        filter_list = ['sharpe', 'annual_return', 'winrate']
+    elif by == 'annual_return':
+        filter_list = ['annual_return', 'sharpe', 'winrate']
+    elif by == 'winrate':
+        filter_list = ['winrate', 'sharpe', 'annual_return']
+    elif by == 'annual_ret_div_abs_drawback':
+        result['annual_ret_div_abs_drawback'] = result['annual_return'] / abs(result['max_drawback'])
+        filter_list = ['annual_ret_div_abs_drawback', 'sharpe', 'annual_return', 'winrate']
+        
+    if down != None: result = result[result[by] >= down]
+    if up != None: result = result[result[by] <= up]
+    temp_res = result.dropna()
+    temp_res['percentile'] = np.nan
+    code_list = list(set(temp_res.code.tolist()))
+    for code in code_list:
+        temp_res['percentile'][temp_res['code']==code] = np.percentile(temp_res[by][temp_res['code']==code],percentile)
+    temp_res['abs_distance_to_percentile'] = abs(temp_res[by]-temp_res['percentile'])
+    for j, i in enumerate(filter_list):
+        if j == 0:            
+            result_max = temp_res.groupby('code', as_index=False).apply(lambda t: t[t['abs_distance_to_percentile'] == t['abs_distance_to_percentile'].min()])
+        else:
+            result_max = result_max.groupby('code', as_index=False).apply(lambda t: t[t[i] == t[i].max()])
+    result_max = result_max.drop_duplicates(subset=['code'])
+    return result_max
+
+
+    
+    
+def show_results_group(result = None,percentile = None,weights = None, by = 'sharpe',save_path = None,if_legend=True):
     import copy
     # =============================================================================
     if weights == None: temp_titles = '全品种最优参数平均分配资金, 最优衡量标准为：{}最优'.format(by)
@@ -560,8 +592,8 @@ def show_results_group(result = None,weights = None, by = 'sharpe',save_path = N
 
     print(temp_titles)
     # =============================================================================
-
-    result_max = _get_max_result(result,by)
+    if percentile == None: result_max = _get_max_result(result,by)
+    else: result_max = _get_quantile_result(result,by,percentile)
     if save_path != None: result_max.to_csv(os.path.join(save_path,'最优参数回测结果.csv'))
     step = 0
     for item in range(len(result_max)):
@@ -578,14 +610,15 @@ def show_results_group(result = None,weights = None, by = 'sharpe',save_path = N
         step+=1
     temp_df_all = temp_df_all.sort_index()
     temp_df_all = temp_df_all.fillna(1)
+    temp_df_all = temp_df_all.cumprod()
 
     if weights != None:
         for code in temp_df_all.columns:
             weight = weights[code]
             temp_df_all[code]*=weight
         temp_df_all = temp_df_all.sum(axis=1)
-    else: temp_df_all = temp_df_all.sum(axis=1) / temp_df_all.shape[1]
-    temp_df_all = pd.DataFrame(temp_df_all)
+    else: temp_df_all = temp_df_all.sum(axis=1)
+    temp_df_all = (pd.DataFrame(temp_df_all).pct_change()+1).fillna(1)
     temp_df_all.columns = ['strategy_return_daily']
     
 # =============================================================================
@@ -646,7 +679,11 @@ def _draw_based_on_result_dataframe(result = None,save_path = None,titles = None
     for item in range(len(result)):
         '''分参数绘制曲线'''
         temp_result = result.iloc[item]
-        temp_draw_series = pd.Series(index = temp_result['trading_date_series'],data = temp_result['ret_series'])
+        try:
+            temp_draw_series = pd.Series(index = temp_result['trading_date_series'],data = temp_result['ret_series'])
+        except:
+            temp_draw_series = pd.Series(index = eval(temp_result['trading_date_series']),data = eval(temp_result['ret_series']))
+
         temp_draw_series = pd.DataFrame(temp_draw_series)
         temp_draw_series.columns=[temp_result.code+' && '+temp_result.params_id]
         __save_all = pd.merge(__save_all,temp_draw_series,left_index=True,right_index=True,how='outer')
@@ -672,7 +709,8 @@ def __matplotlib_plot(data = None,texts = None, titles = None, label = None,figs
     fig = plt.figure(figsize=figsize)
     figp = fig.subplots(1,1)
     if if_reset_xaxis_MultipleLocator: figp.xaxis.set_major_locator(ticker.MultipleLocator(int(len(data)/10)))
-    figp.plot(data,label = label)
+    if label!=None: figp.plot(data,label = label)
+    else: figp.plot(data)
     if texts != None: figp.text(texts[0], texts[1], texts[2])
     if titles != None: figp.set_title(titles)
     if if_legend: figp.legend()
@@ -756,8 +794,7 @@ def _get_return_series(data,comission,model,data_freq):
         data['ohlc_mean'] = (data['open'] + data['high'] + data['low'] + data['close'])/4
         data['ohlc_mean_next'] = data['ohlc_mean'].shift(-1)
         data['real_return'] = data['ohlc_mean_next'].shift(-1)/data['ohlc_mean_next'] - 1
-
-
+        
     data['strategy'] = data['signal'] * data['real_return']
     data['strategy'] = np.where((data['signal'] != 0) & (data['signal'].shift(1) != data['signal']),
                                 data['strategy'] - comission, data['strategy'])
@@ -968,9 +1005,11 @@ def QA_VectorBacktest_check_results2_afterprocess(
         result_save_path=None,
         data_engine=None,
         data_freq = None,
+        initial_code_list = None,
         func=None,
         comission=None,
         best_type_select='annual_ret_div_abs_drawback',
+        percentile = None,
         if_weight_by_in_sample_performace = False,
         minimum_in_sample_select_required=0.1,
         maximum_in_sample_select_required=1000,
@@ -1012,19 +1051,18 @@ def QA_VectorBacktest_check_results2_afterprocess(
 
     print('''样本内组合回测开始''')
 
-    try:
-        res = pd.read_csv(os.path.join(in_sample_save_path, '全部回测结果.csv'), encoding='gbk', index_col=0)
-    except:
-        res = pd.read_csv('D:/Quant/programe/strategy_pool_adv/strategy_06/version1/in_sample/全部回测结果.csv',encoding='gbk', index_col=0)
+    res = pd.read_csv(os.path.join(in_sample_save_path, '全部回测结果.csv'), encoding='gbk', index_col=0)
 
+
+
+    if initial_code_list != None: res = res[res['code'].isin(initial_code_list)]
     simple_res = res[
         ['code', 'params_id', 'winrate', 'annual_return', 'max_drawback', 'sharpe', 'yingkuibi', 'trading_freq']]
     params_res = res[['code', 'params_id', 'params']].drop_duplicates(subset=['code', 'params_id'])
 
-
-
     if if_weight_by_in_sample_performace:
-        result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
+        if percentile == None: result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
+        else: result_max = _get_quantile_result(res, best_type_select,percentile,minimum_in_sample_select_required,maximum_in_sample_select_required)
         weights = {}
         result_max['weight'] = result_max[best_type_select]/result_max[best_type_select].sum()
         for i in range(len(result_max)):
@@ -1032,16 +1070,22 @@ def QA_VectorBacktest_check_results2_afterprocess(
             weights[temp['code']] = temp['weight']
             # weights[temp['code']][temp['params_id']] = temp['weight']
     else: 
-        result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
+        if percentile == None: result_max = _get_max_result(res, best_type_select,minimum_in_sample_select_required,maximum_in_sample_select_required)
+        else: result_max = _get_quantile_result(res, best_type_select,percentile,minimum_in_sample_select_required,maximum_in_sample_select_required)
         weights = None
+
+        
     code_list = list(set(result_max.code.tolist()))
     params_id_list = list(set(result_max.params_id.tolist()))
     
     res_all_1, simple_res_all_1, params_res_all_1 = show_results_group(result=res[res['code'].isin(code_list)],
+                                                                       percentile = percentile,
                                                                        weights=weights,
                                                                        by=best_type_select,
                                                                        save_path=in_sample_path,
                                                                        if_legend=if_legend)
+
+    _draw_based_on_result_dataframe(result = result_max,save_path = in_sample_path,titles = '所有单一回测结果',if_legend=if_legend)
 
     print('存储数据,存储文件夹：{}'.format(in_sample_path))
     if weights != None: pd.DataFrame(pd.Series(weights)).rename(columns={0: 'weight'}).to_csv(os.path.join(in_sample_path, '代码权重.csv'))
@@ -1058,6 +1102,7 @@ def QA_VectorBacktest_check_results2_afterprocess(
         params_selected = eval(params_res_group_average[params_res_group_average['by'] == best_type_select]['params'].values[0])
         for item in params_selected: params_selected[item] = eval(params_selected[item])
         data_start, data_end, run_year_list = _get_start_and_end(out_sample_year_list, out_sample_timeperiod)
+
         result, simple_result, params_res, res_group_average, simple_res_group_average, params_res_group_average = QA_VectorBacktest(
                                                                                                                                     data=data_engine(code_list, data_start, data_end, data_freq).data,
                                                                                                                                     data_freq = data_freq,
