@@ -24,14 +24,12 @@ def generate_path(name):
 def make_dir(path, exist_ok=True):
     os.makedirs(path, exist_ok=exist_ok)
 
-
 setting_path = generate_path('setting')
 cache_path = generate_path('cache')
 log_path = generate_path('log')
 download_path = generate_path('downloads')
 strategy_path = generate_path('strategy')
 bin_path = generate_path('bin')  #给一些dll文件存储用
-
 
 make_dir(qa_path, exist_ok=True)
 make_dir(setting_path, exist_ok=True)
