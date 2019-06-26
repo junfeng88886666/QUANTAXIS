@@ -44,18 +44,25 @@ from QUANTAXIS.QAUtil.QASetting import QA_Setting
 """2019-01-03  升级到warning级别 不然大量别的代码的log会批量输出出来
 """
 try:
-    _name = '{}{}quantaxis_{}-{}-.log'.format(
-        QA_Setting().get_config('LOG','path', log_path),
-        os.sep,
-        os.path.basename(sys.argv[0]).split('.py')[0],
-        str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-    )
+    _name = os.path.join(os.path.abspath(QA_Setting().get_config('LOG','path', log_path)),
+                         'quantaxis_{}-{}-.log'.format(os.path.basename(sys.argv[0]).split('.py')[0],
+                                                        str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))))
+    
+#    _name = '{}{}quantaxis_{}-{}-.log'.format(
+#        QA_Setting().get_config('LOG','path', log_path),
+#        os.sep,
+#        os.path.basename(sys.argv[0]).split('.py')[0],
+#        str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+#    )
 except:
-    _name = '{}{}quantaxis-{}-.log'.format(
-        QA_Setting().get_config('LOG','path', log_path),
-        os.sep,
-        str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-    )
+    _name = os.path.join(os.path.abspath(QA_Setting().get_config('LOG','path', log_path)),
+                         'quantaxis-{}-.log'.format(str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))))    
+    
+#    _name = '{}{}quantaxis-{}-.log'.format(
+#        QA_Setting().get_config('LOG','path', log_path),
+#        os.sep,
+#        str(datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+#    )
 
 logging.basicConfig(
     level=logging.WARNING,

@@ -862,7 +862,6 @@ def _get_result(return_table = None, code = None, params_id = None, params = Non
     return result_temp    
     
 
-
 def _get_all_optimize_info(params_optimize_dict):
     '''
     params_optimize_dict = {'fac1':['1','2','3'],
