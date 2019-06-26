@@ -5,6 +5,12 @@ from QUANTAXIS import __version__ as QAVERSION
 
 DATABASE_NAAME_ALL = [i for i in vars(DATABASE_NAME).values() if type(i)==str][2:]
 
+current_supported_update = {
+    DATABASE_NAME.STOCK_DAY:['tdx']
+
+}
+
+
 def QA_Update(update_dict = {
                             # DATABASE_NAME.STOCK_LIST:'tdx',
                             # DATABASE_NAME.STOCK_DAY:'tdx',
@@ -34,6 +40,8 @@ def QA_Update(update_dict = {
     print('QUANTAXIS {} 的数据存储当前包含: {}'.format(QAVERSION,DATABASE_NAAME_ALL))
     print('此次更新的数据库: {}'.format(update_dict))
 
+
+def QA_SU_update_single(database_name = None,package = None)
     if DATABASE_NAME.STOCK_LIST in update_dict.keys():
         save_adv.QA_SU_save_stock_list(package = update_dict[DATABASE_NAME.STOCK_LIST])
 

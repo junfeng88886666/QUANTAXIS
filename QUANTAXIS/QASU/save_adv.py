@@ -49,7 +49,7 @@ def now_time():
            ' 17:00:00' if datetime.datetime.now().hour < 15 else str(QA_util_get_real_date(
         str(datetime.date.today()), trade_date_sse, -1)) + ' 15:00:00'
 
-def __saving_work_ForDataWithTime_SpecialCode(func = None,
+def _saving_work_ForDataWithTime_SpecialCode(func = None,
                                               package = None,
                                               code = None,
                                               initial_start = None,
@@ -89,10 +89,10 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
             else:
                 QA_util_log_info(
                     '# Trying updating {} from {} to {} =={}, package: {}'.format(
-                                                                                        (data_type),
                                                                                         (code),
                                                                                         (start_time),
                                                                                         (end_time),
+                                                                                        (data_type),
                                                                                         (package)
                                                                                         ),
                     ui_log=ui_log
@@ -116,6 +116,7 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
                                 .format(code, save_data.datetime.min(),save_data.datetime.max()),
                             ui_log
                         )
+                        return err
                     elif time_type == 'date':
                         save_data = predata[predata['date'] > start_time]
                         coll.insert_many(
@@ -126,14 +127,22 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
                                 .format(code, save_data.date.min(),save_data.date.max()),
                             ui_log
                         )
+                        return err
                 else:
                     QA_util_log_info(
-                        '# Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                            .format(data_getted_start_time,update_start_time),
+                        '# Data Error: code: {}, reason: start time does not match, start time: {}, database calculated start time: {}'
+                            .format(code,data_getted_start_time,update_start_time),
                         ui_log
                     )
                     err.append(code)
                     return err
+            else:
+                QA_util_log_info(
+                    '# No Update, reason: the update time = the historical end time',
+                    ui_log
+                )
+
+                return err
 
         else:
             start_time = initial_start
@@ -173,17 +182,20 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
                         .format(code, start_time, end_time),
                     ui_log
                 )
+                return err
             else:
                 QA_util_log_info(
                     '# Data Error: reason: No Data',
                     ui_log
                 )
                 err.append(code)
+                return err
 
     except Exception as e:
         QA_util_log_info(e, ui_log=ui_log)
         err.append(code)
         QA_util_log_info(err, ui_log=ui_log)
+        return err
 
 def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     '''
@@ -203,84 +215,6 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
     )
     err = []
 
-    def __saving_work(code, coll):
-        try:
-            QA_util_log_info(
-                '##JOB01 Now Saving STOCK_DAY==== {}'.format(str(code)),
-                ui_log
-            )
-
-            # 首选查找数据库 是否 有 这个代码的数据
-            ref = coll.find({'code': str(code)[0:6]})
-            end_date = str(now_time())[0:10]
-
-            # 当前数据库已经包含了这个代码的数据， 继续增量更新
-            # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
-            if ref.count() > 0:
-                # 接着上次获取的日期继续更新
-                start_date = ref[ref.count() - 1]['date']
-                
-                QA_util_log_info(
-                    'UPDATE_STOCK_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                if start_date != end_date:
-                    update_start_date = QA_util_get_next_day(start_date)
-                    predata = QA_fetch_get_stock_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    '00'
-                                                    )
-                    data_getted_start_date = predata.date.min()
-                    if data_getted_start_date == update_start_date:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(predata)
-                        )
-                    else: 
-                        QA_util_log_info(
-                            'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
-                            .format(code,
-                                    start_date,
-                                    end_date,
-                                    package,
-                                    data_getted_start_date,
-                                    update_start_date
-                                    ),
-                            ui_log
-                        )
-                        err.append(str(code))
-            # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
-            else:
-                start_date = '1990-01-01'
-                QA_util_log_info(
-                    'UPDATE_STOCK_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                    
-                predata = QA_fetch_get_stock_day(
-                                                package,
-                                                str(code),
-                                                start_date,
-                                                end_date,
-                                                '00'
-                                                )
-                coll.insert_many(
-                    QA_util_to_json_from_pandas(predata)
-                )                   
-        except Exception as error0:
-            print(error0)
-            err.append(str(code))
-
     for item in range(len(stock_list)):
         QA_util_log_info('The {} of Total {}'.format(item, len(stock_list)))
 
@@ -296,7 +230,16 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
             ui_progress_int_value=intProgressToLog
         )
 
-        __saving_work(stock_list[item], coll)
+        err = _saving_work_ForDataWithTime_SpecialCode(func=QA_fetch_get_stock_day,
+                                                        package=package,
+                                                        code=str(stock_list[item]),
+                                                        initial_start='1990-01-01',
+                                                        coll=coll,
+                                                        time_type='date',
+                                                        data_type=None,
+                                                        message_type='STOCK_DAY',
+                                                        err=err,
+                                                        ui_log=ui_log)
 
     if len(err) < 1:
         QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
@@ -305,7 +248,7 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
         QA_util_log_info(err, ui_log)
 
 # def gen_param(codelist, start_date=None, end_date=None, if_fq='00', frequence='day', IPList=[]):
-#     # 生成QA.QAFetch.QATdx.QQA_fetch_get_stock_day多进程处理的参数
+#     # 生成QA.QAFetch.QATdx.QA_fetch_get_stock_day多进程处理的参数
 #     count = len(IPList)
 #     my_iterator = iter(range(len(codelist)))
 #     start_date = str(start_date)[0:10]
@@ -345,7 +288,7 @@ def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progr
 
     def __saving_work(code, coll):
         QA_util_log_info(
-            '##JOB02 Now Saving XDXR INFO ==== {}'.format(str(code)),
+            '## Now Saving XDXR INFO ==== {}'.format(str(code)),
             ui_log=ui_log
         )
         try:
