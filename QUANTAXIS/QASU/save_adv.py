@@ -52,15 +52,16 @@ def now_time():
 def __saving_work_ForDataWithTime_SpecialCode(func = None,
                                               package = None,
                                               code = None,
-                                              start = None,
+                                              initial_start = None,
                                               coll = None,
                                               time_type = None,
                                               data_type = None,
                                               message_type = None,
                                               err = None,
                                               ui_log = None):
+
     QA_util_log_info(
-        '##JOB03 Now Saving {} ==== {}'.format(str(message_type),str(code)),
+        '## Now Saving {} ==== {}'.format(str(message_type),str(code)),
         ui_log = ui_log
     )
 
@@ -73,27 +74,27 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
 
         if ref_.count() > 0:
             if time_type == 'datetime': start_time = str(ref_[ref_.count() - 1]['datetime'])[0:19]
-            elif time_type == 'date': start_time = str(ref_[ref_.count() - 1]['datetime'])[0:10]
+            elif time_type == 'date': start_time = str(ref_[ref_.count() - 1]['date'])[0:10]
 
             if data_type == None:
                 QA_util_log_info(
-                    '##JOB03.Trying updating {} from {} to {}, package: {}'.format(
-                                                                                            str(code),
-                                                                                            str(start_time),
-                                                                                            str(end_time),
-                                                                                            str(package)
-                                                                                            ),
-                    ui_log=ui_log
+                    '# Trying updating {} from {} to {}, package: {}'.format(
+                                                                                  (code),
+                                                                                  (start_time),
+                                                                                  (end_time),
+                                                                                  (package)
+                                                                                  ),
+                    ui_log = ui_log
                 )
             else:
                 QA_util_log_info(
-                    '##JOB03.Trying updating {} from {} to {} =={}, package: {}'.format(
-                                                                                                str(data_type),
-                                                                                                str(code),
-                                                                                                str(start_time),
-                                                                                                str(end_time),
-                                                                                                str(package)
-                                                                                                ),
+                    '# Trying updating {} from {} to {} =={}, package: {}'.format(
+                                                                                        (data_type),
+                                                                                        (code),
+                                                                                        (start_time),
+                                                                                        (end_time),
+                                                                                        (package)
+                                                                                        ),
                     ui_log=ui_log
                 )
             if start_time != end_time:
@@ -101,52 +102,84 @@ def __saving_work_ForDataWithTime_SpecialCode(func = None,
                 else: predata = func(package,code,start_time,end_time,data_type)
 
                 update_start_time = copy.deepcopy(start_time)
-                data_getted_start_time = predata.datetime.min()
+                if time_type == 'datetime': data_getted_start_time = predata.datetime.min()
+                elif time_type == 'date': data_getted_start_time = predata.date.min()
+
                 if data_getted_start_time == update_start_time:
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata[predata['datetime'] > start_time])
-                    )
+                    if time_type == 'datetime':
+                        save_data = predata[predata['datetime'] > start_time]
+                        coll.insert_many(
+                            QA_util_to_json_from_pandas(save_data)
+                        )
+                        QA_util_log_info(
+                            '# Saving success: code: {}, start time: {},end time: {}'
+                                .format(code, save_data.datetime.min(),save_data.datetime.max()),
+                            ui_log
+                        )
+                    elif time_type == 'date':
+                        save_data = predata[predata['date'] > start_time]
+                        coll.insert_many(
+                            QA_util_to_json_from_pandas(save_data)
+                        )
+                        QA_util_log_info(
+                            '# Saving success: code: {}, start time: {},end time: {}'
+                                .format(code, save_data.date.min(),save_data.date.max()),
+                            ui_log
+                        )
                 else:
                     QA_util_log_info(
-                        'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                            .format(code,
-                                    start_time,
-                                    end_time,
-                                    package,
-                                    data_getted_start_time,
-                                    update_start_time
-                                    ),
+                        '# Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
+                            .format(data_getted_start_time,update_start_time),
                         ui_log
                     )
-                    err.append(str(code))
-        else:
-            start_time = '2010-01-01'
-            QA_util_log_info(
-                '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                    ['1min',
-                     '5min',
-                     '15min',
-                     '30min',
-                     '60min'].index(type),
-                    str(code),
-                    start_time,
-                    end_time,
-                    type,
-                    package
-                ),
-                ui_log=ui_log
-            )
-            predata = QA_fetch_get_stock_min(
-                package,
-                str(code),
-                start_time,
-                end_time,
-                type
-            )
+                    err.append(code)
+                    return err
 
-            coll.insert_many(
-                QA_util_to_json_from_pandas(predata)
-            )
+        else:
+            start_time = initial_start
+
+            if time_type == 'datetime': start_time = str(initial_start)[0:19]
+            elif time_type == 'date': start_time = str(initial_start)[0:10]
+
+            if data_type == None:
+                QA_util_log_info(
+                    '# Trying updating {} from {} to {}, package: {}'.format(
+                                                                                  (code),
+                                                                                  (start_time),
+                                                                                  (end_time),
+                                                                                  (package)
+                                                                                  ),
+                    ui_log = ui_log
+                )
+                save_data = func(package, code, start_time, end_time)
+            else:
+                QA_util_log_info(
+                    '# Trying updating {} from {} to {} =={}, package: {}'.format(
+                                                                                        (data_type),
+                                                                                        (code),
+                                                                                        (start_time),
+                                                                                        (end_time),
+                                                                                        (package)
+                                                                                        ),
+                    ui_log=ui_log
+                )
+                save_data = func(package, code, start_time, end_time, data_type)
+            if save_data != None:
+                coll.insert_many(
+                    QA_util_to_json_from_pandas(save_data)
+                )
+                QA_util_log_info(
+                    '# Saving success: code: {}, start time: {},end time: {}'
+                        .format(code, start_time, end_time),
+                    ui_log
+                )
+            else:
+                QA_util_log_info(
+                    '# Data Error: reason: No Data',
+                    ui_log
+                )
+                err.append(code)
+
     except Exception as e:
         QA_util_log_info(e, ui_log=ui_log)
         err.append(code)
