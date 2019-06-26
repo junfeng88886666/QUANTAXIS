@@ -313,8 +313,8 @@ def QA_VectorBacktest(data = None,
         if not os.path.exists(save_path):os.makedirs(save_path)
         ''''''
         print('矢量回测开始，开始时间：{}'.format(str(s)))
-        print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['open','close',......][float]")
-        print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','open','close','signal'][str,str,float,float,float],signal为[float]")
+        print("注意：输入的data格式应为dataframe,MultiIndex:['datetime','code'][datetime,str], columns: ['open','high','low','close',......][float]")
+        print("func 的输入格式应和data相同，输出格式应为dataframe(切记是datetime而不是tradetime),reset_index,columns: ['datetime','code','open','high','low','close','signal'][str,str,float,float,float],signal为[float]")
         if code_list!= None: data = data.loc[(slice(None), code_list), :]
 
         code_list = list(set(data.reset_index()['code']))
