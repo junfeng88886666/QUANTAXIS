@@ -434,12 +434,14 @@ def QA_VectorBacktest(data = None,
         show_results_max(result = res, on = 'code',by = 'sharpe',save_path = save_path,if_legend=if_legend)
         '''展示5'''
         show_results_max(result = res, on = 'code',by = 'winrate',save_path = save_path,if_legend=if_legend)
-        '''展示6'''
-        show_results_max(result = res, on = 'params',by = 'annual_return',save_path = save_path,if_legend=if_legend)
-        '''展示7'''
-        show_results_max(result = res, on = 'params',by = 'sharpe',save_path = save_path,if_legend=if_legend)
-        '''展示8'''
-        show_results_max(result = res, on = 'params',by = 'winrate',save_path = save_path,if_legend=if_legend)
+        if len(optimize_dict)>=100: pass
+        else:
+            '''展示6'''
+            show_results_max(result = res, on = 'params',by = 'annual_return',save_path = save_path,if_legend=if_legend)
+            '''展示7'''
+            show_results_max(result = res, on = 'params',by = 'sharpe',save_path = save_path,if_legend=if_legend)
+            '''展示8'''
+            show_results_max(result = res, on = 'params',by = 'winrate',save_path = save_path,if_legend=if_legend)
     '''展示9.1.2.3'''
     res_group_average = pd.DataFrame()
 

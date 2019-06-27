@@ -35,6 +35,10 @@ class QAError_no_data_in_database(RuntimeError):
     def __init__(self, res):
         RuntimeError.__init__(self, 'QA FETCH NO DATA ERROR', res)
 
+class QAError_DataAggrement(RuntimeError):
+    def __init__(self, res):
+        RuntimeError.__init__(self, 'QA DataAggrement ERROR', res)
+
 
 class QAError_crawl_data_web(RuntimeError):
     def __init__(self, res):

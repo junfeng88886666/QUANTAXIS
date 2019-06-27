@@ -37,7 +37,7 @@ from QUANTAXIS.QAUtil import Parallelism
 from QUANTAXIS.QAFetch.QATdx import ping, get_ip_list_by_multi_process_ping, stock_ip_list
 from multiprocessing import cpu_count
 
-
+default_max_workers = 100
 # ip=select_best_ip()
 
 
@@ -57,8 +57,8 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                                               time_type = None,
                                               data_type = None,
                                               message_type = None,
-                                              err = None,
                                               ui_log = None):
+    err = []
 
     QA_util_log_info(
         '## Now Saving {} ==== {}'.format(str(message_type),str(code)),
@@ -79,22 +79,22 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
             if data_type == None:
                 QA_util_log_info(
                     '# Trying updating {} from {} to {}, package: {}'.format(
-                                                                                  (code),
-                                                                                  (start_time),
-                                                                                  (end_time),
-                                                                                  (package)
-                                                                                  ),
+                                                                              (code),
+                                                                              (start_time),
+                                                                              (end_time),
+                                                                              (package)
+                                                                              ),
                     ui_log = ui_log
                 )
             else:
                 QA_util_log_info(
                     '# Trying updating {} from {} to {} =={}, package: {}'.format(
-                                                                                        (code),
-                                                                                        (start_time),
-                                                                                        (end_time),
-                                                                                        (data_type),
-                                                                                        (package)
-                                                                                        ),
+                                                                                    (code),
+                                                                                    (start_time),
+                                                                                    (end_time),
+                                                                                    (data_type),
+                                                                                    (package)
+                                                                                    ),
                     ui_log=ui_log
                 )
             if start_time != end_time:
@@ -116,7 +116,6 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                                 .format(code, save_data.datetime.min(),save_data.datetime.max()),
                             ui_log
                         )
-                        return err
                     elif time_type == 'date':
                         save_data = predata[predata['date'] > start_time]
                         coll.insert_many(
@@ -127,7 +126,6 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                                 .format(code, save_data.date.min(),save_data.date.max()),
                             ui_log
                         )
-                        return err
                 else:
                     QA_util_log_info(
                         '# Data Error: code: {}, reason: start time does not match, start time: {}, database calculated start time: {}'
@@ -135,14 +133,11 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                         ui_log
                     )
                     err.append(code)
-                    return err
             else:
                 QA_util_log_info(
                     '# No Update, reason: the update time = the historical end time',
                     ui_log
                 )
-
-                return err
 
         else:
             start_time = initial_start
@@ -153,27 +148,28 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
             if data_type == None:
                 QA_util_log_info(
                     '# Trying updating {} from {} to {}, package: {}'.format(
-                                                                                  (code),
-                                                                                  (start_time),
-                                                                                  (end_time),
-                                                                                  (package)
-                                                                                  ),
+                                                                          (code),
+                                                                          (start_time),
+                                                                          (end_time),
+                                                                          (package)
+                                                                          ),
                     ui_log = ui_log
                 )
                 save_data = func(package, code, start_time, end_time)
             else:
                 QA_util_log_info(
                     '# Trying updating {} from {} to {} =={}, package: {}'.format(
-                                                                                        (data_type),
-                                                                                        (code),
-                                                                                        (start_time),
-                                                                                        (end_time),
-                                                                                        (package)
-                                                                                        ),
+                                                                                (code),
+                                                                                (start_time),
+                                                                                (end_time),
+                                                                                (data_type),
+                                                                                (package)
+                                                                                ),
                     ui_log=ui_log
                 )
                 save_data = func(package, code, start_time, end_time, data_type)
-            if save_data != None:
+
+            if type(save_data) != type(None):
                 coll.insert_many(
                     QA_util_to_json_from_pandas(save_data)
                 )
@@ -182,20 +178,49 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                         .format(code, start_time, end_time),
                     ui_log
                 )
-                return err
             else:
                 QA_util_log_info(
                     '# Data Error: reason: No Data',
                     ui_log
                 )
                 err.append(code)
-                return err
 
     except Exception as e:
         QA_util_log_info(e, ui_log=ui_log)
         err.append(code)
         QA_util_log_info(err, ui_log=ui_log)
-        return err
+
+
+def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+    """save stock_list
+
+    Keyword Arguments:
+        client {[type]} -- [description] (default: {DATABASE})
+    """
+    client.drop_collection('stock_list')
+    coll = client.stock_list
+    coll.create_index('code')
+
+    try:
+        QA_util_log_info(
+            '## Now Saving STOCK_LIST ====, package: {}'.format(package),
+            ui_log=ui_log,
+            ui_progress=ui_progress,
+            ui_progress_int_value=5000
+        )
+        stock_list_from_package = QA_fetch_get_stock_list(package = package)
+        pandas_data = QA_util_to_json_from_pandas(stock_list_from_package)
+        coll.insert_many(pandas_data)
+        QA_util_log_info(
+            "完成股票列表获取",
+            ui_log=ui_log,
+            ui_progress=ui_progress,
+            ui_progress_int_value=10000
+        )
+    except Exception as e:
+        QA_util_log_info(e, ui_log=ui_log)
+        print(" Error save_tdx.QA_SU_save_stock_list exception!")
+        pass
 
 def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     '''
@@ -215,37 +240,80 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
     )
     err = []
 
-    for item in range(len(stock_list)):
-        QA_util_log_info('The {} of Total {}'.format(item, len(stock_list)))
+    # for item in range(len(stock_list)):
+    #     QA_util_log_info('The {} of Total {}'.format(item, len(stock_list)))
+    #
+    #     strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
+    #         str(float(item / len(stock_list) * 100))[0:4] + '%',
+    #         ui_log
+    #     )
+    #     intProgressToLog = int(float(item / len(stock_list) * 100))
+    #     QA_util_log_info(
+    #         strProgressToLog,
+    #         ui_log=ui_log,
+    #         ui_progress=ui_progress,
+    #         ui_progress_int_value=intProgressToLog
+    #     )
+    #
+    #     err = _saving_work_ForDataWithTime_SpecialCode(func=QA_fetch_get_stock_day,
+    #                                                     package=package,
+    #                                                     code=str(stock_list[item]),
+    #                                                     initial_start='1990-01-01',
+    #                                                     coll=coll,
+    #                                                     time_type='date',
+    #                                                     data_type=None,
+    #                                                     message_type='STOCK_DAY',
+    #                                                     err=err,
+    #                                                     ui_log=ui_log)
+    #
+    # if len(err) < 1:
+    #     QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
+    # else:
+    #     QA_util_log_info('ERROR CODE \n ', ui_log)
+    #     QA_util_log_info(err, ui_log)
 
-        strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
-            str(float(item / len(stock_list) * 100))[0:4] + '%',
-            ui_log
-        )
-        intProgressToLog = int(float(item / len(stock_list) * 100))
+
+    ########################
+    executor = ThreadPoolExecutor(max_workers=default_max_workers)
+    res = {
+        executor.submit(_saving_work_ForDataWithTime_SpecialCode,
+                        QA_fetch_get_stock_day,
+                        package,
+                        stock_list[i_],
+                        '1990-01-01',
+                        coll,
+                        'date',
+                        None,
+                        'STOCK_DAY',
+                        ui_log)
+        for i_ in range(len(stock_list))
+    }
+    count = 0
+    for i_ in concurrent.futures.as_completed(res):
         QA_util_log_info(
-            strProgressToLog,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intProgressToLog
+            'The {} of Total {}'.format(count,
+                                        len(stock_list)),
+            ui_log=ui_log
         )
 
-        err = _saving_work_ForDataWithTime_SpecialCode(func=QA_fetch_get_stock_day,
-                                                        package=package,
-                                                        code=str(stock_list[item]),
-                                                        initial_start='1990-01-01',
-                                                        coll=coll,
-                                                        time_type='date',
-                                                        data_type=None,
-                                                        message_type='STOCK_DAY',
-                                                        err=err,
-                                                        ui_log=ui_log)
+        strProgress = 'DOWNLOAD PROGRESS {} '.format(
+            str(float(count / len(stock_list) * 100))[0:4] + '%'
+        )
+        intProgress = int(count / len(stock_list) * 10000.0)
+        QA_util_log_info(
+            strProgress,
+            ui_log,
+            ui_progress=ui_progress,
+            ui_progress_int_value=intProgress
+        )
+        count = count + 1
 
     if len(err) < 1:
         QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
     else:
         QA_util_log_info('ERROR CODE \n ', ui_log)
         QA_util_log_info(err, ui_log)
+    #########################
 
 # def gen_param(codelist, start_date=None, end_date=None, if_fq='00', frequence='day', IPList=[]):
 #     # 生成QA.QAFetch.QATdx.QA_fetch_get_stock_day多进程处理的参数
@@ -256,77 +324,13 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
 #     return [(code, start_date, end_date, if_fq, frequence, IPList[i % count]['ip'], IPList[i % count]['port'])
 #             for code, i in [(code, next(my_iterator) % count) for code in codelist]]
 
-def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progress=None):
-    """[summary]
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
-    # client.drop_collection('stock_xdxr')
-    try:
-
-        coll = client.stock_xdxr
-        coll.create_index(
-            [('code',
-              pymongo.ASCENDING),
-             ('date',
-              pymongo.ASCENDING)],
-            unique=True
-        )
-    except:
-        client.drop_collection('stock_xdxr')
-        coll = client.stock_xdxr
-        coll.create_index(
-            [('code',
-              pymongo.ASCENDING),
-             ('date',
-              pymongo.ASCENDING)],
-            unique=True
-        )
-    err = []
-
-    def __saving_work(code, coll):
-        QA_util_log_info(
-            '## Now Saving XDXR INFO ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            coll.insert_many(
-                QA_util_to_json_from_pandas(QA_fetch_get_stock_xdxr(package,str(code))),
-                ordered=False
-            )
-
-        except:
-
-            err.append(str(code))
-
-    for i_ in range(len(stock_list)):
-        QA_util_log_info(
-            'The {} of Total {}'.format(i_,
-                                        len(stock_list)),
-            ui_log=ui_log
-        )
-        strLogInfo = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(i_ / len(stock_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(i_ / len(stock_list) * 100))
-        QA_util_log_info(
-            strLogInfo,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        __saving_work(stock_list[i_], coll)
-
-
-def QA_SU_save_stock_min(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_stock_min(package = None,data_type = None, client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_min
 
     Keyword Arguments:
         client {[type]} -- [description] (default: {DATABASE})
     """
-
+    if data_type == None: data_type = '1min'
     stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
     coll = client.stock_min
     coll.create_index(
@@ -464,6 +468,69 @@ def QA_SU_save_stock_min(package = None,client=DATABASE, ui_log=None, ui_progres
         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
         QA_util_log_info(err, ui_log=ui_log)
 
+
+def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progress=None):
+    """[summary]
+
+    Keyword Arguments:
+        client {[type]} -- [description] (default: {DATABASE})
+    """
+    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+    # client.drop_collection('stock_xdxr')
+    try:
+
+        coll = client.stock_xdxr
+        coll.create_index(
+            [('code',
+              pymongo.ASCENDING),
+             ('date',
+              pymongo.ASCENDING)],
+            unique=True
+        )
+    except:
+        client.drop_collection('stock_xdxr')
+        coll = client.stock_xdxr
+        coll.create_index(
+            [('code',
+              pymongo.ASCENDING),
+             ('date',
+              pymongo.ASCENDING)],
+            unique=True
+        )
+    err = []
+
+    def __saving_work(code, coll):
+        QA_util_log_info(
+            '## Now Saving XDXR INFO ==== {}'.format(str(code)),
+            ui_log=ui_log
+        )
+        try:
+            coll.insert_many(
+                QA_util_to_json_from_pandas(QA_fetch_get_stock_xdxr(package,str(code))),
+                ordered=False
+            )
+
+        except:
+
+            err.append(str(code))
+
+    for i_ in range(len(stock_list)):
+        QA_util_log_info(
+            'The {} of Total {}'.format(i_,
+                                        len(stock_list)),
+            ui_log=ui_log
+        )
+        strLogInfo = 'DOWNLOAD PROGRESS {} '.format(
+            str(float(i_ / len(stock_list) * 100))[0:4] + '%'
+        )
+        intLogProgress = int(float(i_ / len(stock_list) * 100))
+        QA_util_log_info(
+            strLogInfo,
+            ui_log=ui_log,
+            ui_progress=ui_progress,
+            ui_progress_int_value=intLogProgress
+        )
+        __saving_work(stock_list[i_], coll)
 
 def QA_SU_save_index_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     """save index_day
@@ -725,38 +792,6 @@ def QA_SU_save_index_min(package = None, client=DATABASE, ui_log=None, ui_progre
         QA_util_log_info(err, ui_log=ui_log)
 
 
-def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progress=None):
-    """save stock_list
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-    client.drop_collection('stock_list')
-    coll = client.stock_list
-    coll.create_index('code')
-
-    try:
-        # 🛠todo 这个应该是第一个任务 JOB01， 先更新股票列表！！
-        QA_util_log_info(
-            '##JOB08 Now Saving STOCK_LIST ====, package: {}'.format(package),
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=5000
-        )
-        stock_list_from_package = QA_fetch_get_stock_list(package = package)
-        pandas_data = QA_util_to_json_from_pandas(stock_list_from_package)
-        coll.insert_many(pandas_data)
-        QA_util_log_info(
-            "完成股票列表获取",
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=10000
-        )
-    except Exception as e:
-        QA_util_log_info(e, ui_log=ui_log)
-        print(" Error save_tdx.QA_SU_save_stock_list exception!")
-
-        pass
 
 
 def QA_SU_save_stock_info(package = None,client=DATABASE, ui_log=None, ui_progress=None):
