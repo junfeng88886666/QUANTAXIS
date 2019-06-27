@@ -4,58 +4,37 @@ Created on Thu Jun 27 13:22:14 2019
 
 @author: Administrator
 """
-
+import numpy as np
 import QUANTAXIS as QA
-data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-02-01','2019-02-03')
-data['2019-02-01 09:25:00':'2019-02-01 15:00:00']
-data['2019-02-01':'2019-02-01']
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-06-23 01:01:00','2019-06-27 02:01:00')
-QA.QAFetch
 
-import time
-def QA_util_date_valid(date):
-    """
-    判断字符串是否是 1982-05-11 这种格式
-    :param date: date 字符串str -- 格式 字符串长度10
-    :return: boolean -- 格式是否正确
-    """
+
+last_order = 500
+data['order'] = np.arange(last_order+1,len(data)+last_order+1)
+
+
+
+from QUANTAXIS.QAUtil.QAParameter import DATABASE_NAME
+
+
+current_supported_update = {
+    DATABASE_NAME.STOCK_DAY:{'tdx':{'data_type':[None]}},
+    DATABASE_NAME.STOCK_MIN:{'tdx':{'data_type':['1min','5min','15min','30min','60min']}},
+    DATABASE_NAME.STOCK_XDXR:{'tdx':{'data_type':[None]}},
+}
+
+database_name = DATABASE_NAME.STOCK_DAY
+package = 'tdx'
+data_type = None
+current_supported_update[database_name][package]['data_type'] == None
+
+
+def check(database_name = None, package = None, data_type = None):
     try:
-        print(time.strptime(date, "%Y-%m-%d %H:%M:%S"))
-        return True
+        if data_type in current_supported_update[database_name][package]['data_type']:
+            return True
+        else:
+            return False
     except:
         return False
-    
-    
-QA_util_date_valid('2019-01-01 00:01:00')
-
-
-def QA_util_date_valid(date):
-    """
-    判断字符串是否是 1982-05-11 这种格式
-    :param date: date 字符串str -- 格式 字符串长度10
-    :return: boolean -- 格式是否正确
-    """
-    try:
-        time.strptime(date, "%Y-%m-%d")
-        return True
-    except:
-        return False
-def QA_util_datetime_valid(t):
-    """
-    判断字符串是否是 1982-05-11 01:01:01 这种格式
-    :param date: date 字符串str -- 格式 字符串长度10
-    :return: boolean -- 格式是否正确
-    """
-    try:
-        time.strptime(t, "%Y-%m-%d %H:%M:%S")
-        return True
-    except:
-        return False
-
-def QA_tuil_dateordatetime_valid(t):
-    if QA_util_date_valid(t)|QA_util_datetime_valid(t): return True
-    else: return False
-    
-assert QA_tuil_dateordatetime_valid('2019-01-01 '),print('日期输入错误')
-from QUANTAXIS import QA_util_get_real_datelist
-QA_util_get_real_datelist('2019-02-01 01:00:00','2019-04-30 21:00:00')

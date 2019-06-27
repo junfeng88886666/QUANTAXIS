@@ -446,7 +446,20 @@ def QA_fetch_get_stock_day(code, start, end, if_fq='00', frequence='day', ip=Non
             print(e)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_min(code, start, end, frequence='1min', ip=None, port=None):
+def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, ip=None, port=None):
+    '''
+    对于之前没有的数据，依次使用以下方式补充：
+    方式1：从数据库调用tick数据，resample之后补充, 使用开关 fill_data_with_tick_database 控制，开关默认关闭
+    方式2：在数据库的tick数据无法满足数据需求的时候，在线调取tick数据来补充，使用开关 fill_data_with_tick_online 控制，开关默认关闭
+
+    :param code:
+    :param start:
+    :param end:
+    :param frequence:
+    :param ip:
+    :param port:
+    :return:
+    '''
     assert QA_tuil_dateordatetime_valid(start), 'start input format error'
     assert QA_tuil_dateordatetime_valid(end), 'end input format error'
     start_date = str(start)[0:10]
@@ -488,7 +501,11 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', ip=None, port=Non
                 lambda x: QA_util_time_stamp(x)),
                 type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
         data =  data.assign(datetime=data['datetime'].apply(lambda x: str(x)))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATA_SOURCE.TDX,data)
+        data.to_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
+        assert False
+    '''若开关1：fill_data_with_tick_database 处于打开状态，从tick数据库resample来获取分钟数据'''
+    '''若开关2：fill_data_with_tick_online 处于打开状态，在线获取tick数据然后resample来获取分钟数据'''
+    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATA_SOURCE.TDX,data)
 
 def __QA_fetch_get_stock_transaction(code, day, retry, api):
     batch_size = 2000  # 800 or 2000 ? 2000 maybe also works
