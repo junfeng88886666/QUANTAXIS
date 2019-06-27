@@ -7,6 +7,7 @@ import json
 import pandas as pd
 import pymongo
 import copy
+import numpy as np
 from QUANTAXIS.QAFetch import (
                                 QA_fetch_get_option_day,
                                 QA_fetch_get_option_min,
@@ -111,6 +112,8 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                 if data_getted_start_time == update_start_time:
                     if time_type == 'datetime':
                         save_data = predata[predata['datetime'] > start_time]
+                        if any(name in message_type for name in ['TRANSACTION', 'transaction','Transaction']):
+                            save_data['order'] = np.arange(last_order+1,len(save_data)+last_order+1)
                         coll.insert_many(
                             QA_util_to_json_from_pandas(save_data)
                         )
@@ -121,6 +124,8 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                         )
                     elif time_type == 'date':
                         save_data = predata[predata['date'] > start_time]
+                        if any(name in message_type for name in ['TRANSACTION', 'transaction', 'Transaction']):
+                            save_data['order'] = np.arange(last_order + 1, len(save_data) + last_order + 1)
                         coll.insert_many(
                             QA_util_to_json_from_pandas(save_data)
                         )
@@ -322,56 +327,21 @@ def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = Non
     coll = client.stock_transaction
     coll.create_index(
         [("code",pymongo.ASCENDING),
-         ("time_stamp",pymongo.ASCENDING)]
+         ("time_stamp",pymongo.ASCENDING),
+         ("order",pymongo.ASCENDING)],
+        unique=True
     )
 
-
-
-    def __saving_work(code):
-        QA_util_log_info(
-            '##JOB11 Now Saving STOCK_TRANSACTION ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            coll.insert_many(
-                QA_util_to_json_from_pandas(
-                    # 🛠todo  str(stock_list[code]) 参数不对？
-                    QA_fetch_get_stock_transaction(
-                        package,
-                        str(code),
-                        '1990-01-01',
-                        str(now_time())[0:10]
-                    )
-                )
-            )
-        except:
-            err.append(str(code))
-
-    for i_ in range(len(stock_list)):
-        # __saving_work('000001')
-        QA_util_log_info(
-            'The {} of Total {}'.format(i_,
-                                        len(stock_list)),
-            ui_log=ui_log
-        )
-
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(i_ / len(stock_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(i_ / len(stock_list) * 10000.0))
-
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        __saving_work(stock_list[i_])
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
+    _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_stock_transaction,
+                                                      package = package,
+                                                      code_list = stock_list,
+                                                      initial_start = '2010-01-01',
+                                                      coll = coll,
+                                                      time_type = 'date',
+                                                      data_type = None,
+                                                      message_type = 'STOCK_TRANSACTION',
+                                                      ui_log = ui_log,
+                                                      ui_progress = ui_progress)
 
 def QA_SU_save_stock_min(package = None,data_type = None, client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_min

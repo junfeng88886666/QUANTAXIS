@@ -20,8 +20,8 @@ def QA_Update(update_dict = {
 
                             DATABASE_NAME.STOCK_LIST:{'tdx':None},
                             DATABASE_NAME.STOCK_DAY:{'tdx':None},
+                            DATABASE_NAME.STOCK_TRANSACTION:{'tdx':None},
                             # DATABASE_NAME.STOCK_MIN:'tdx',
-                            # DATABASE_NAME.STOCK_TRANSACTION:'tdx',
                             # DATABASE_NAME.STOCK_XDXR:'tdx',
                             # DATABASE_NAME.STOCK_BLOCK: 'tdx',
                             #
