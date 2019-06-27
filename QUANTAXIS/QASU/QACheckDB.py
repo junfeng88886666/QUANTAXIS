@@ -57,7 +57,7 @@ def load_csv_data(file_source = 'cofund',file_path = None,database_name = None,c
     if file_source == 'cofund': return load_csv_cofund_future(file_path = file_path,database_name = database_name,code = code)
 
 
-def QA_CheckDB(new_data_source = None,
+def QA_CheckDB(new_DATASOURCE = None,
                database_name = None):
     '''
     TODO: 当前只支持价量数据：日线，分钟线,transaction的合并，不涉及其他的合并，未来可以兼容更多

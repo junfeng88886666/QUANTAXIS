@@ -5,14 +5,14 @@ import pandas as pd
 
 from QUANTAXIS.QAData import (QADataAggrement_CoFund,QADataAggrement_Tdx)
 from QUANTAXIS.QAUtil import DATABASE, QA_util_log_info
-from QUANTAXIS.QAUtil.QAParameter import ERRORTYPE,DATA_SOURCE,DATA_AGGREMENT_NAME
+from QUANTAXIS.QAUtil.QAParameter import ERRORTYPE,DATASOURCE,DATA_AGGREMENT_NAME,DATA_QUERY_INDEX_COLUMNS_UNIQUE
 
 # TODO 当前只有COFund期货列表，日线和分钟线的数据协议
 
 def use(package):
-    if package in ['cof','CoFund','COFUND',DATA_SOURCE.COFUND]:
+    if package in ['cof','CoFund','COFUND',DATASOURCE.COFUND]:
         return QADataAggrement_CoFund
-    elif package in ['TDX','Tdx','pytdx',DATA_SOURCE.TDX]:
+    elif package in ['TDX','Tdx','pytdx',DATASOURCE.TDX]:
         return QADataAggrement_Tdx
     else: raise NotImplementedError
 
@@ -104,7 +104,11 @@ def QA_DataAggrement_Stock_day(package,data):
         data[['date_stamp','volume']] \
         = data[['date_stamp','volume']].astype('int64')
 
-        data = data.set_index('date', drop=False, inplace=False)
+        '''为了保证这里的数据和QAQuery结果的一致性'''
+        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY
+        data = data.set_index(__check[0], drop=False, inplace=False)
+        data = data.drop_duplicates((__check[2]))
+        assert set(__check[1]).issubset(data.columns.tolist())
 
         return data[['code','open','high','low','close','volume','amount','date','date_stamp','source']]
     except Exception as e:
@@ -160,7 +164,11 @@ def QA_DataAggrement_Stock_min(package,data):
         = data[['date_stamp',
                 'time_stamp']].astype('int64')
 
-        data = data.set_index('datetime', drop=False, inplace=False)
+        '''为了保证这里的数据和QAQuery结果的一致性'''
+        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN
+        data = data.set_index(__check[0], drop=False, inplace=False)
+        data = data.drop_duplicates((__check[2]))
+        assert set(__check[1]).issubset(data.columns.tolist())
 
         return data[['code','open','high','low','close','volume','amount','date','date_stamp','date_stamp','time_stamp','type','source']]
     except Exception as e:
@@ -195,7 +203,12 @@ def QA_DataAggrement_Stock_transaction(package,data):
                 'order',
                 'time_stamp']].astype('int64')
 
-        data = data.set_index('datetime', drop=False, inplace=False)
+        '''为了保证这里的数据和QAQuery结果的一致性'''
+        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION
+        data = data.set_index(__check[0], drop=False, inplace=False)
+        data = data.drop_duplicates((__check[2]))
+        assert set(__check[1]).issubset(data.columns.tolist())
+
         return data[['datetime','code','price','volume','buyorsell','date','time','order','time_stamp','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))

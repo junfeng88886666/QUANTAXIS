@@ -372,6 +372,7 @@ class DATASOURCE():
     EASTMONEY = 'eastmoney'  # 东方财富网
     CHOICE = 'choice'  # choice金融终端
     CCXT = 'ccxt'  # github/ccxt 虚拟货币
+    COFUND = 'cofund'
     LOCALFILE = 'localfile'  # 本地文件
 
 
@@ -483,14 +484,11 @@ class DATA_AGGREMENT_NAME():
 
     FINANCIAL = 'financial'
 
-class DATA_SOURCE():
-    '''
-    数据来源
-    '''
-    TDX = 'tdx'
-    COFUND = 'cofund'
-    TUSHAREPRO = 'tusharepro'
-    THS = 'ths'
+class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
+    STOCK_DAY = ('date',['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date'],['date','code'])
+    STOCK_MIN = ('datetime',,['datetime','code'])
+    STOCK_TRANSACTION = ('datetime',,['datetime','code','order'])
+
 
 class ERRORTYPE():
     '''

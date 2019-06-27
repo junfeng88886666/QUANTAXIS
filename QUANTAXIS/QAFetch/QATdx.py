@@ -55,7 +55,7 @@ from QUANTAXIS.QAUtil.QASetting import QASETTING
 from QUANTAXIS.QASetting.QALocalize import log_path
 from QUANTAXIS.QAUtil import Parallelism
 from QUANTAXIS.QAUtil.QACache import QA_util_cache
-from QUANTAXIS.QAUtil.QAParameter import DATA_SOURCE,DATA_AGGREMENT_NAME
+from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
 
 def init_fetcher():
@@ -427,7 +427,7 @@ def QA_fetch_get_stock_day(code, start, end, if_fq='00', frequence='day', ip=Non
             data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[
                 start_date:end_date]
             if if_fq in ['00', 'bfq']:
-                return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DAY)(DATA_SOURCE.TDX,data)
+                return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DAY)(DATASOURCE.TDX,data)
             else:
                 print('CURRENTLY NOT SUPPORT REALTIME FUQUAN')
                 return None
@@ -508,7 +508,7 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
     '''若开关1：fill_data_with_tick_database 处于打开状态，从tick数据库resample来获取分钟数据'''
     '''若开关2：fill_data_with_tick_online 处于打开状态，在线获取tick数据然后resample来获取分钟数据'''
     #################################################################
-    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATA_SOURCE.TDX,data)
+    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATASOURCE.TDX,data)
 
 def __QA_fetch_get_stock_transaction(code, day, retry, api):
     batch_size = 2000  # 800 or 2000 ? 2000 maybe also works
@@ -578,7 +578,7 @@ def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None
             elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
             elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
             data = data.assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATASOURCE.TDX,data)
         else:
             return None
 
@@ -618,7 +618,7 @@ def QA_fetch_get_stock_latest(code, frequence='day', ip=None, port=None):
                     .apply(lambda x: QA_util_date_stamp(str(x[0:10])))) \
             .set_index('date', drop=False) \
             .drop(['year', 'month', 'day', 'hour','minute','datetime'], axis=1)
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LATEST)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LATEST)(DATASOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
@@ -646,7 +646,7 @@ def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
              's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
              'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
              'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_depth_market_data(code=['000001', '000002'], ip=None, port=None):
@@ -665,7 +665,7 @@ def QA_fetch_depth_market_data(code=['000001', '000002'], ip=None, port=None):
         #                's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
         #                'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
         #                'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_list(type_='stock', ip=None, port=None):
@@ -703,7 +703,7 @@ def QA_fetch_get_stock_list(type_='stock', ip=None, port=None):
                 name=data['name'].apply(lambda x: str(x)[0:6]))
             # .assign(szm=data['name'].apply(lambda x: ''.join([y[0] for y in lazy_pinyin(x)])))\
             #    .assign(quanpin=data['name'].apply(lambda x: ''.join(lazy_pinyin(x))))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LIST)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LIST)(DATASOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
@@ -722,7 +722,7 @@ def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
             data = data.assign(date=str(day)).assign(
                 datetime=pd.to_datetime(data['time'].apply(lambda x: str(day) + ' ' + str(x)))) \
                 .assign(code=str(code)).assign(order=range(len(data.index)))
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION_REALTIME)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION_REALTIME)(DATASOURCE.TDX,data)
     except:
         return None
 
@@ -748,7 +748,7 @@ def QA_fetch_get_stock_xdxr(code, ip=None, port=None):
                                             'panqianliutong': 'liquidity_before', 'houzongguben': 'shares_after',
                                             'qianzongguben': 'shares_before'})
             data = data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_XDXR)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_XDXR)(DATASOURCE.TDX,data)
         else:
             return None
 
@@ -760,7 +760,7 @@ def QA_fetch_get_stock_info(code, ip=None, port=None):
     market_code = _select_market_code(code)
     with api.connect(ip, port):
         data = api.to_df(api.get_finance_info(market_code, code))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_INFO)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_INFO)(DATASOURCE.TDX,data)
 
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
@@ -779,7 +779,7 @@ def QA_fetch_get_stock_block(ip=None, port=None):
 
         if len(data) > 10:
             data = data.drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,inplace=False).drop_duplicates()
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_BLOCK)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_BLOCK)(DATASOURCE.TDX,data)
         else:
             QA_util_log_info('Wrong with fetch block ')
 
@@ -1903,7 +1903,7 @@ def QA_fetch_get_future_day(code, start_date, end_date, frequence='day', ip=None
 
         data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(
             date=data['date'].apply(lambda x: str(x)[0:10]))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_DAY)(DATA_SOURCE.TDX,data)
+        return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_DAY)(DATASOURCE.TDX,data)
 
 
 def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = False, ip=None, port=None):
@@ -1955,7 +1955,7 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = 
                 .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
                 .assign(type=type_).set_index('datetime', drop=False, inplace=False)
             data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)))[start:end].sort_index()
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATASOURCE.TDX,data)
     else:
         '''
        TODO: 开发这个板块 
@@ -1997,12 +1997,12 @@ def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
             import time
             time.sleep(0.1)
             data = __QA_fetch_get_stock_transaction(code, day, 0, apix)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
         else:
             data = data_.assign(datetime=pd.to_datetime(data_['date'])).assign(date=str(day)) \
                 .assign(code=str(code)).assign(order=range(len(data_.index))).set_index('datetime', drop=False,
                                                                                         inplace=False)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATA_SOURCE.TDX,data)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
 
 
 def QA_fetch_get_future_transaction(code, start, end, retry=4, ip=None, port=None):

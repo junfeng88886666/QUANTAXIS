@@ -1,17 +1,17 @@
 # coding:utf-8
 from QUANTAXIS.QASU import save_adv
-from QUANTAXIS.QAUtil.QAParameter import DATABASE_NAME,DATA_SOURCE
+from QUANTAXIS.QAUtil.QAParameter import DATABASE_NAME,DATASOURCE
 from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 from QUANTAXIS import __version__ as QAVERSION
 
 DATABASE_NAME_ALL = [i for i in vars(DATABASE_NAME).values() if type(i)==str][2:]
 
 current_supported_update = {
-    DATABASE_NAME.STOCK_LIST: {DATA_SOURCE.TDX:{'data_type':[None]}},
-    DATABASE_NAME.STOCK_DAY:{DATA_SOURCE.TDX:{'data_type':[None]}},
-    DATABASE_NAME.STOCK_MIN:{DATA_SOURCE.TDX:{'data_type':['1min','5min','15min','30min','60min']}},
-    DATABASE_NAME.STOCK_TRANSACTION:{DATA_SOURCE.TDX:{'data_type':[None]}},
-    DATABASE_NAME.STOCK_XDXR:{DATA_SOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_LIST: {DATASOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_MIN:{DATASOURCE.TDX:{'data_type':['1min','5min','15min','30min','60min']}},
+    DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:{'data_type':[None]}},
 }
 
 
@@ -31,9 +31,9 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.FUTURE_TRANSACTION: {'tdx':None},
                             # DATABASE_NAME.FUTURE_MIN: {'tdx':{'data_type':['1min','5min','15min','30min','60min']}},
 
-                            DATABASE_NAME.STOCK_LIST:{DATA_SOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_LIST:{DATASOURCE.TDX:None},
                             # DATABASE_NAME.STOCK_DAY:{'tdx':None},
-                            DATABASE_NAME.STOCK_TRANSACTION:{DATA_SOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:None},
                             # DATABASE_NAME.STOCK_MIN:'tdx',
                             # DATABASE_NAME.STOCK_XDXR:'tdx',
                             # DATABASE_NAME.STOCK_BLOCK: 'tdx',

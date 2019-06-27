@@ -275,7 +275,7 @@ class Test_DataFrame_0(unittest.TestCase):
         pass
 
     def test_data_reader(self):
-        # PG = wb.DataReader('PG', data_source = 'quandl', start="1995-1-1")
+        # PG = wb.DataReader('PG', DATASOURCE = 'quandl', start="1995-1-1")
         # head0 = PG.head()
         # tail0 = PG.tail()
         # print(head0)

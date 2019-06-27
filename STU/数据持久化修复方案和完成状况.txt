@@ -1,4 +1,9 @@
 QA_Query保留从数据库取的原生数据，且不增加新的列，保留重要列，这样可以保证可以使用DataStruct到online数据和database上
+DataStruct默认选取QAParameter.DATA_QUERY_INDEX_COLUMNS_UNIQUE的重要列，去索引,去重，然后进行struct整理
+
+TODO: 
+DATA_QUERY_INDEX_COLUMNS_UNIQUE, QAQuery, QADataAggrement的同步
+QATDX, save_adv和update_adv的同步完善，先解决分钟数据的增量问题
 ################################
 QATDX
 QA_fetch_get_stock_day

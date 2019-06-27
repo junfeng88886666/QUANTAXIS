@@ -35,6 +35,7 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
                               trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas)
+from QUANTAXIS.QAUtil.QAParameter import DATA_QUERY_INDEX_COLUMNS_UNIQUE
 from QUANTAXIS.QAData.financial_mean import financial_dict
 
 """
@@ -72,8 +73,9 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         res = pd.DataFrame([item for item in cursor])
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
         try:
-            res = res.drop_duplicates((['date', 'code'])).query('volume>1').set_index('date', drop=False)
-            res = res.ix[:, ['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date']]
+            res = res.drop_duplicates((DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[2])).query('volume>1')\
+                    .set_index(DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[0], drop=False)
+            res = res.ix[:, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[1]]
         except:
             res = None
         '''数据格式整理'''
