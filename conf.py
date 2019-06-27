@@ -18,7 +18,6 @@ import sys
 import QUANTAXIS as QA
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- Project information -----------------------------------------------------
 sys.path.insert(0, os.path.abspath('QUANTAXIS'))
 project = 'QUANTAXIS'
@@ -29,7 +28,6 @@ author = 'yutiansut'
 version = QA.__version__
 # The full version, including alpha/beta/rc tags
 release = QA.__version__
-
 
 # -- General configuration ---------------------------------------------------
 
