@@ -18,7 +18,7 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.FUTURE_TRANSACTION: {'tdx':None},
                             # DATABASE_NAME.FUTURE_MIN: {'tdx':{'data_type':['1min','5min','15min','30min','60min']}},
 
-                            # DATABASE_NAME.STOCK_LIST:'tdx',
+                            DATABASE_NAME.STOCK_LIST:{'tdx':None},
                             DATABASE_NAME.STOCK_DAY:{'tdx':None},
                             # DATABASE_NAME.STOCK_MIN:'tdx',
                             # DATABASE_NAME.STOCK_TRANSACTION:'tdx',
@@ -53,7 +53,9 @@ def QA_Update(update_dict = {
 def QA_SU_update_single(database_name = None,package = None,data_type = None):
     if database_name == DATABASE_NAME.STOCK_LIST: save_adv.QA_SU_save_stock_list(package = package)
     elif database_name == DATABASE_NAME.STOCK_DAY: save_adv.QA_SU_save_stock_day(package = package)
-    elif database_name == DATABASE_NAME.STOCK_MIN: save_adv.QA_SU_save_stock_min(package = package,data_type = data_type)
+    elif database_name == DATABASE_NAME.STOCK_TRANSACTION: save_adv.QA_SU_save_stock_transaction(package = package)
+
+    # elif database_name == DATABASE_NAME.STOCK_MIN: save_adv.QA_SU_save_stock_min(package = package,data_type = data_type)
 
 
 

@@ -44,7 +44,7 @@ from QUANTAXIS.QAUtil.QACsv import QA_util_save_csv
 # date
 from QUANTAXIS.QAUtil.QADate import (QA_util_calc_time, QA_util_date_int2str,
                                      QA_util_date_stamp, QA_util_date_str2int,
-                                     QA_util_date_today, QA_util_date_valid,
+                                     QA_util_date_today, QA_util_date_valid,QA_util_datetime_valid,
                                      QA_util_datetime_to_strdate,
                                      QA_util_get_date_index,
                                      QA_util_get_index_date, QA_util_id2date,
@@ -53,7 +53,7 @@ from QUANTAXIS.QAUtil.QADate import (QA_util_calc_time, QA_util_date_int2str,
                                      QA_util_select_min, QA_util_time_delay,
                                      QA_util_time_now, QA_util_time_stamp,
                                      QA_util_to_datetime, QA_util_today_str,
-                                     QATZInfo_CN,QA_util_datetime_fixstr1)
+                                     QATZInfo_CN,QA_util_datetime_fixstr1,QA_tuil_dateordatetime_valid)
 # trade date
 from QUANTAXIS.QAUtil.QADate_trade import (QA_util_date_gap,
                                            QA_util_format_date2str,

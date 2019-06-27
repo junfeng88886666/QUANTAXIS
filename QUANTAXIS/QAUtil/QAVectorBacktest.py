@@ -945,7 +945,9 @@ def QA_VectorBacktest_check_results1_onprocess(in_sample_save_path=None,
             for code in code_list:
                 filename = 'acheck_{}_{}'.format(code, params_id)
                 data = pd.read_csv(os.path.join(path, filename + '.csv'))
-                cumprod = data.set_index('date').cumprod().iloc[-1].values[0]
+                cumprod_data = data.set_index('date').cumprod()
+                cumprod = cumprod_data.iloc[-1].values[0]
+                # cumprod_data.plot()
                 if code not in params_record.keys(): params_record[code] = {}
                 params_record[code][params_id] = cumprod
 

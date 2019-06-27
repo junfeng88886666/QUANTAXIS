@@ -39,7 +39,7 @@ from multiprocessing import cpu_count
 
 default_max_workers = 100
 # ip=select_best_ip()
-
+err = []
 
 def now_time():
     '''
@@ -58,8 +58,6 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                                               data_type = None,
                                               message_type = None,
                                               ui_log = None):
-    err = []
-
     QA_util_log_info(
         '## Now Saving {} ==== {}'.format(str(message_type),str(code)),
         ui_log = ui_log
@@ -73,8 +71,13 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
         elif time_type == 'date': end_time = str(now_time())[0:10]
 
         if ref_.count() > 0:
-            if time_type == 'datetime': start_time = str(ref_[ref_.count() - 1]['datetime'])[0:19]
-            elif time_type == 'date': start_time = str(ref_[ref_.count() - 1]['date'])[0:10]
+            if time_type == 'datetime':
+                start_time = str(ref_[ref_.count() - 1]['datetime'])[0:19]
+            elif time_type == 'date':
+                start_time = str(ref_[ref_.count() - 1]['date'])[0:10]
+            if any(name in message_type for name in ['TRANSACTION', 'transaction','Transaction']):
+                '''若存储的是tick数据，需要同时对order进行增量，这里获取最后的一个order'''
+                last_order = int(ref_[ref_.count() - 1]['order'])
 
             if data_type == None:
                 QA_util_log_info(
@@ -180,7 +183,7 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
                 )
             else:
                 QA_util_log_info(
-                    '# Data Error: reason: No Data',
+                    '# Data Error: code: {}, start time: {},end time: {}, reason: No Data'.format(code, start_time, end_time),
                     ui_log
                 )
                 err.append(code)
@@ -190,6 +193,55 @@ def _saving_work_ForDataWithTime_SpecialCode(func = None,
         err.append(code)
         QA_util_log_info(err, ui_log=ui_log)
 
+def _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = None,
+                                                          package = None,
+                                                          code_list = None,
+                                                          initial_start = None,
+                                                          coll = None,
+                                                          time_type = None,
+                                                          data_type = None,
+                                                          message_type = None,
+                                                          ui_log = None,
+                                                          ui_progress = None):
+    executor = ThreadPoolExecutor(max_workers=default_max_workers)
+    res = {
+        executor.submit(_saving_work_ForDataWithTime_SpecialCode,
+                        func,
+                        package,
+                        code_list[i_],
+                        initial_start,
+                        coll,
+                        time_type,
+                        data_type,
+                        message_type,
+                        ui_log)
+        for i_ in range(len(code_list))
+    }
+    count = 0
+    for i_ in concurrent.futures.as_completed(res):
+        QA_util_log_info(
+            'The {} of Total {}'.format(count,
+                                        len(code_list)),
+            ui_log=ui_log
+        )
+
+        strProgress = 'DOWNLOAD PROGRESS {} '.format(
+            str(float(count / len(code_list) * 100))[0:4] + '%'
+        )
+        intProgress = int(count / len(code_list) * 10000.0)
+        QA_util_log_info(
+            strProgress,
+            ui_log,
+            ui_progress=ui_progress,
+            ui_progress_int_value=intProgress
+        )
+        count = count + 1
+
+    if len(err) < 1:
+        QA_util_log_info('SUCCESS save {} ^_^'.format(message_type), ui_log)
+    else:
+        QA_util_log_info('ERROR CODE \n ', ui_log)
+        QA_util_log_info(err, ui_log)
 
 def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_list
@@ -197,6 +249,9 @@ def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progre
     Keyword Arguments:
         client {[type]} -- [description] (default: {DATABASE})
     """
+    global err
+    err = []
+
     client.drop_collection('stock_list')
     coll = client.stock_list
     coll.create_index('code')
@@ -225,12 +280,15 @@ def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progre
 def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     '''
      save stock_day
-    保存日线数据
+    多进程保存日线数据
     :param client:
     :param ui_log:  给GUI qt 界面使用
     :param ui_progress: 给GUI qt 界面使用
     :param ui_progress_int_value: 给GUI qt 界面使用
     '''
+    global err
+    err = []
+
     stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
     coll = client.stock_day
     coll.create_index(
@@ -238,91 +296,82 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
          ("date_stamp",pymongo.ASCENDING)],
           unique = True
     )
+
+    _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_stock_day,
+                                                      package = package,
+                                                      code_list = stock_list,
+                                                      initial_start = '1990-01-01',
+                                                      coll = coll,
+                                                      time_type = 'date',
+                                                      data_type = None,
+                                                      message_type = 'STOCK_DAY',
+                                                      ui_log = ui_log,
+                                                      ui_progress = ui_progress)
+
+def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = None, ui_progress = None):
+    """save stock_transaction
+    注：1, transaction数据库索引均不唯一，因为其对应的时间戳有相同时间，入库的时候还需要对order进行增量。
+       2, transaction数据库使用日级别增量更新
+    Keyword Arguments:
+        client {[type]} -- [description] (default: {DATABASE})
+    """
+    global err
     err = []
 
-    # for item in range(len(stock_list)):
-    #     QA_util_log_info('The {} of Total {}'.format(item, len(stock_list)))
-    #
-    #     strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
-    #         str(float(item / len(stock_list) * 100))[0:4] + '%',
-    #         ui_log
-    #     )
-    #     intProgressToLog = int(float(item / len(stock_list) * 100))
-    #     QA_util_log_info(
-    #         strProgressToLog,
-    #         ui_log=ui_log,
-    #         ui_progress=ui_progress,
-    #         ui_progress_int_value=intProgressToLog
-    #     )
-    #
-    #     err = _saving_work_ForDataWithTime_SpecialCode(func=QA_fetch_get_stock_day,
-    #                                                     package=package,
-    #                                                     code=str(stock_list[item]),
-    #                                                     initial_start='1990-01-01',
-    #                                                     coll=coll,
-    #                                                     time_type='date',
-    #                                                     data_type=None,
-    #                                                     message_type='STOCK_DAY',
-    #                                                     err=err,
-    #                                                     ui_log=ui_log)
-    #
-    # if len(err) < 1:
-    #     QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
-    # else:
-    #     QA_util_log_info('ERROR CODE \n ', ui_log)
-    #     QA_util_log_info(err, ui_log)
+    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+    coll = client.stock_transaction
+    coll.create_index(
+        [("code",pymongo.ASCENDING),
+         ("time_stamp",pymongo.ASCENDING)]
+    )
 
 
-    ########################
-    executor = ThreadPoolExecutor(max_workers=default_max_workers)
-    res = {
-        executor.submit(_saving_work_ForDataWithTime_SpecialCode,
-                        QA_fetch_get_stock_day,
-                        package,
-                        stock_list[i_],
-                        '1990-01-01',
-                        coll,
-                        'date',
-                        None,
-                        'STOCK_DAY',
-                        ui_log)
-        for i_ in range(len(stock_list))
-    }
-    count = 0
-    for i_ in concurrent.futures.as_completed(res):
+
+    def __saving_work(code):
         QA_util_log_info(
-            'The {} of Total {}'.format(count,
+            '##JOB11 Now Saving STOCK_TRANSACTION ==== {}'.format(str(code)),
+            ui_log=ui_log
+        )
+        try:
+            coll.insert_many(
+                QA_util_to_json_from_pandas(
+                    # 🛠todo  str(stock_list[code]) 参数不对？
+                    QA_fetch_get_stock_transaction(
+                        package,
+                        str(code),
+                        '1990-01-01',
+                        str(now_time())[0:10]
+                    )
+                )
+            )
+        except:
+            err.append(str(code))
+
+    for i_ in range(len(stock_list)):
+        # __saving_work('000001')
+        QA_util_log_info(
+            'The {} of Total {}'.format(i_,
                                         len(stock_list)),
             ui_log=ui_log
         )
 
-        strProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(count / len(stock_list) * 100))[0:4] + '%'
+        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
+            str(float(i_ / len(stock_list) * 100))[0:4] + '%'
         )
-        intProgress = int(count / len(stock_list) * 10000.0)
+        intLogProgress = int(float(i_ / len(stock_list) * 10000.0))
+
         QA_util_log_info(
-            strProgress,
-            ui_log,
+            strLogProgress,
+            ui_log=ui_log,
             ui_progress=ui_progress,
-            ui_progress_int_value=intProgress
+            ui_progress_int_value=intLogProgress
         )
-        count = count + 1
-
+        __saving_work(stock_list[i_])
     if len(err) < 1:
-        QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
+        QA_util_log_info('SUCCESS', ui_log=ui_log)
     else:
-        QA_util_log_info('ERROR CODE \n ', ui_log)
-        QA_util_log_info(err, ui_log)
-    #########################
-
-# def gen_param(codelist, start_date=None, end_date=None, if_fq='00', frequence='day', IPList=[]):
-#     # 生成QA.QAFetch.QATdx.QA_fetch_get_stock_day多进程处理的参数
-#     count = len(IPList)
-#     my_iterator = iter(range(len(codelist)))
-#     start_date = str(start_date)[0:10]
-#     end_date = str(end_date)[0:10]
-#     return [(code, start_date, end_date, if_fq, frequence, IPList[i % count]['ip'], IPList[i % count]['port'])
-#             for code, i in [(code, next(my_iterator) % count) for code in codelist]]
+        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
+        QA_util_log_info(err, ui_log=ui_log)
 
 def QA_SU_save_stock_min(package = None,data_type = None, client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_min
@@ -842,69 +891,6 @@ def QA_SU_save_stock_info(package = None,client=DATABASE, ui_log=None, ui_progre
         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
         QA_util_log_info(err, ui_log=ui_log)
 
-
-def QA_SU_save_stock_transaction(
-        package = None,
-        client=DATABASE,
-        ui_log=None,
-        ui_progress=None
-):
-    """save stock_transaction
-    TODO 增加数据是否连续的检查
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-
-    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
-    coll = client.stock_transaction
-    coll.create_index('code')
-    err = []
-
-    def __saving_work(code):
-        QA_util_log_info(
-            '##JOB11 Now Saving STOCK_TRANSACTION ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            coll.insert_many(
-                QA_util_to_json_from_pandas(
-                    # 🛠todo  str(stock_list[code]) 参数不对？
-                    QA_fetch_get_stock_transaction(
-                        package,
-                        str(code),
-                        '1990-01-01',
-                        str(now_time())[0:10]
-                    )
-                )
-            )
-        except:
-            err.append(str(code))
-
-    for i_ in range(len(stock_list)):
-        # __saving_work('000001')
-        QA_util_log_info(
-            'The {} of Total {}'.format(i_,
-                                        len(stock_list)),
-            ui_log=ui_log
-        )
-
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(i_ / len(stock_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(i_ / len(stock_list) * 10000.0))
-
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        __saving_work(stock_list[i_])
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
 
 
 ########################################################################################################
@@ -1477,6 +1463,74 @@ def QA_SU_save_future_min_all(package = None, client=DATABASE, ui_log=None, ui_p
         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
         QA_util_log_info(err, ui_log=ui_log)
 
+# def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+#     '''
+#      save stock_day
+#     多进程保存日线数据
+#     :param client:
+#     :param ui_log:  给GUI qt 界面使用
+#     :param ui_progress: 给GUI qt 界面使用
+#     :param ui_progress_int_value: 给GUI qt 界面使用
+#     '''
+#     global err
+#     err = []
+#
+#     stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+#     coll = client.stock_day
+#     coll.create_index(
+#         [("code",pymongo.ASCENDING),
+#          ("date_stamp",pymongo.ASCENDING)],
+#           unique = True
+#     )
+#
+#     executor = ThreadPoolExecutor(max_workers=default_max_workers)
+#     res = {
+#         executor.submit(_saving_work_ForDataWithTime_SpecialCode,
+#                         QA_fetch_get_stock_day,
+#                         package,
+#                         stock_list[i_],
+#                         '1990-01-01',
+#                         coll,
+#                         'date',
+#                         None,
+#                         'STOCK_DAY',
+#                         ui_log)
+#         for i_ in range(len(stock_list))
+#     }
+#     count = 0
+#     for i_ in concurrent.futures.as_completed(res):
+#         QA_util_log_info(
+#             'The {} of Total {}'.format(count,
+#                                         len(stock_list)),
+#             ui_log=ui_log
+#         )
+#
+#         strProgress = 'DOWNLOAD PROGRESS {} '.format(
+#             str(float(count / len(stock_list) * 100))[0:4] + '%'
+#         )
+#         intProgress = int(count / len(stock_list) * 10000.0)
+#         QA_util_log_info(
+#             strProgress,
+#             ui_log,
+#             ui_progress=ui_progress,
+#             ui_progress_int_value=intProgress
+#         )
+#         count = count + 1
+#
+#     if len(err) < 1:
+#         QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
+#     else:
+#         QA_util_log_info('ERROR CODE \n ', ui_log)
+#         QA_util_log_info(err, ui_log)
+
+# def gen_param(codelist, start_date=None, end_date=None, if_fq='00', frequence='day', IPList=[]):
+#     # 生成QA.QAFetch.QATdx.QA_fetch_get_stock_day多进程处理的参数
+#     count = len(IPList)
+#     my_iterator = iter(range(len(codelist)))
+#     start_date = str(start_date)[0:10]
+#     end_date = str(end_date)[0:10]
+#     return [(code, start_date, end_date, if_fq, frequence, IPList[i % count]['ip'], IPList[i % count]['port'])
+#             for code, i in [(code, next(my_iterator) % count) for code in codelist]]
 
 if __name__ == '__main__':
     pass

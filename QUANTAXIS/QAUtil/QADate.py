@@ -220,6 +220,22 @@ def QA_util_date_valid(date):
         return True
     except:
         return False
+def QA_util_datetime_valid(t):
+    """
+    判断字符串是否是 1982-05-11 01:01:01 这种格式
+    :param date: date 字符串str -- 格式 字符串长度10
+    :return: boolean -- 格式是否正确
+    """
+    try:
+        time.strptime(t, "%Y-%m-%d %H:%M:%S")
+        return True
+    except:
+        return False
+
+def QA_tuil_dateordatetime_valid(t):
+    if QA_util_date_valid(t)|QA_util_datetime_valid(t): return True
+    else: return False
+
 
 
 def QA_util_realtime(strtime, client):

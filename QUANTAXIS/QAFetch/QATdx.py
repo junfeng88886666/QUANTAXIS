@@ -50,7 +50,7 @@ from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
                               QA_util_get_trade_gap, QA_util_log_info,
                               QA_util_time_stamp, QA_util_web_ping,
                               exclude_from_stock_ip_list, future_ip_list,
-                              stock_ip_list, trade_date_sse)
+                              stock_ip_list, trade_date_sse,QA_tuil_dateordatetime_valid)
 from QUANTAXIS.QAUtil.QASetting import QASETTING
 from QUANTAXIS.QASetting.QALocalize import log_path
 from QUANTAXIS.QAUtil import Parallelism
@@ -377,7 +377,7 @@ def QA_fetch_get_security_bars(code, _type, lens, ip=None, port=None):
             return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='day', ip=None, port=None):
+def QA_fetch_get_stock_day(code, start, end, if_fq='00', frequence='day', ip=None, port=None):
     """获取日线及以上级别的数据
     Arguments:
         code {str:6} -- code 是一个单独的code 6位长度的str
@@ -393,6 +393,11 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
     Exception:
         如果出现网络问题/服务器拒绝, 会出现socket:time out 尝试再次获取/更换ip即可, 本函数不做处理
     """
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    start_date = str(start)[0:10]
+    end_date = str(end)[0:10]
+
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
     try:
@@ -402,7 +407,7 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
             elif frequence in ['month', 'M', 'm', 'Month']: frequence = 6
             elif frequence in ['quarter', 'Q', 'Quarter', 'q']: frequence = 10
             elif frequence in ['y', 'Y', 'year', 'Year']: frequence = 11
-            start_date = str(start_date)[0:10]
+
             today_ = datetime.date.today()
             lens = QA_util_get_trade_gap(start_date, today_)
 
@@ -419,7 +424,6 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
                                date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))\
                 .set_index('date', drop=False, inplace=False)
 
-            end_date = str(end_date)[0:10]
             data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[
                 start_date:end_date]
             if if_fq in ['00', 'bfq']:
@@ -443,10 +447,14 @@ def QA_fetch_get_stock_day(code, start_date, end_date, if_fq='00', frequence='da
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_min(code, start, end, frequence='1min', ip=None, port=None):
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    start_date = str(start)[0:10]
+    end_date = str(end)[0:10]
+
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
     type_ = ''
-    start_date = str(start)[0:10]
     today_ = datetime.date.today()
     lens = QA_util_get_trade_gap(start_date, today_)
     if str(frequence) in ['5', '5m', '5min', 'five']:
@@ -516,6 +524,9 @@ def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None
     :return:
     '''
     '历史分笔成交 buyorsell 1--sell 0--buy 2--盘前'
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
 
@@ -541,6 +552,12 @@ def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None
                 data = data.append(data_)
         if len(data) > 0:
             data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)[0:19]))
+            '''返回对应的时间的tick数据'''
+            if (len(start)==19)&(len(end)==19): data = data[(data['datetime']>=start)&(data['datetime']<=end)]
+            elif (len(start)==10)&(len(end)==10): data = data[(data['date']>=start)&(data['date']<=end)]
+            elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
+            elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
+
             return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATA_SOURCE.TDX,data)
         else:
             return None
