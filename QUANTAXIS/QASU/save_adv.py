@@ -335,7 +335,7 @@ def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = Non
     _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_stock_transaction,
                                                       package = package,
                                                       code_list = stock_list,
-                                                      initial_start = '2015-01-01',
+                                                      initial_start = '2019-01-01',
                                                       coll = coll,
                                                       time_type = 'date',
                                                       data_type = None,

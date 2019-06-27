@@ -105,6 +105,7 @@ def QA_DataAggrement_Stock_day(package,data):
         = data[['date_stamp','volume']].astype('int64')
 
         data = data.set_index('date', drop=False, inplace=False)
+
         return data[['code','open','high','low','close','volume','amount','date','date_stamp','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
@@ -187,13 +188,15 @@ def QA_DataAggrement_Stock_transaction(package,data):
 
         data[['buyorsell',
               'volume',
-              'order']] \
+              'order',
+              'time_stamp']] \
         = data[['buyorsell',
                 'volume',
-                'order']].astype('int64')
+                'order',
+                'time_stamp']].astype('int64')
 
         data = data.set_index('datetime', drop=False, inplace=False)
-        return data[['datetime','code','price','volume','buyorsell','date','time','order','source']]
+        return data[['datetime','code','price','volume','buyorsell','date','time','order','time_stamp','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
         QA_util_log_info(e)

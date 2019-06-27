@@ -34,7 +34,7 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_log_info, QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
-                              trade_date_sse)
+                              trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas)
 from QUANTAXIS.QAData.financial_mean import financial_dict
 
 """
@@ -55,9 +55,48 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
 
     """
+    if (QA_tuil_dateordatetime_valid(start))&(QA_tuil_dateordatetime_valid(end)):
+        '''数据获取'''
+        start_date = str(start)[0:10]
+        end_date = str(end)[0:10]
+        #code= [code] if isinstance(code,str) else code
 
-    start = str(start)[0:10]
-    end = str(end)[0:10]
+        # code checking
+        code = QA_util_code_tolist(code)
+
+        cursor = collections.find({
+            'code': {'$in': code}, "date_stamp": {
+                "$lte": QA_util_date_stamp(end_date),
+                "$gte": QA_util_date_stamp(start_date)}}, {"_id": 0}, batch_size=10000)
+        #res=[QA_util_dict_remove_key(data, '_id') for data in cursor]
+        res = pd.DataFrame([item for item in cursor])
+        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
+        try:
+            res = res.drop_duplicates((['date', 'code'])).query('volume>1').set_index('date', drop=False)
+            res = res.ix[:, ['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date']]
+        except:
+            res = None
+        '''数据格式整理'''
+        return QA_util_to_anyformat_from_pandas(data = res,format = format)
+    else:
+        QA_util_log_info(
+            'QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+
+def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence=None, collections=DATABASE.stock_transaction):
+    """'获取股票tick结果'
+    frequence 提供resample功能
+    Returns:
+        [type] -- [description]
+
+        感谢@几何大佬的提示
+        https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
+
+    """
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+
+    start_date = str(start)[0:10]
+    end_date = str(end)[0:10]
     #code= [code] if isinstance(code,str) else code
 
     # code checking

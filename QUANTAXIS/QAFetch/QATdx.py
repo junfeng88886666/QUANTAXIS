@@ -502,9 +502,12 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
                 type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
         data =  data.assign(datetime=data['datetime'].apply(lambda x: str(x)))
         data.to_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
+    #################################################################
+    ### TODO 增加数据补充开关功能
         assert False
     '''若开关1：fill_data_with_tick_database 处于打开状态，从tick数据库resample来获取分钟数据'''
     '''若开关2：fill_data_with_tick_online 处于打开状态，在线获取tick数据然后resample来获取分钟数据'''
+    #################################################################
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATA_SOURCE.TDX,data)
 
 def __QA_fetch_get_stock_transaction(code, day, retry, api):
@@ -574,7 +577,7 @@ def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None
             elif (len(start)==10)&(len(end)==10): data = data[(data['date']>=start)&(data['date']<=end)]
             elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
             elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
-
+            data = data.assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
             return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATA_SOURCE.TDX,data)
         else:
             return None

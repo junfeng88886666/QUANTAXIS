@@ -7,8 +7,10 @@ from QUANTAXIS import __version__ as QAVERSION
 DATABASE_NAME_ALL = [i for i in vars(DATABASE_NAME).values() if type(i)==str][2:]
 
 current_supported_update = {
+    DATABASE_NAME.STOCK_LIST: {DATA_SOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_DAY:{DATA_SOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_MIN:{DATA_SOURCE.TDX:{'data_type':['1min','5min','15min','30min','60min']}},
+    DATABASE_NAME.STOCK_TRANSACTION:{DATA_SOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_XDXR:{DATA_SOURCE.TDX:{'data_type':[None]}},
 }
 

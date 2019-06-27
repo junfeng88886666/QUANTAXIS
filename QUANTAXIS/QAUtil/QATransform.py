@@ -65,3 +65,18 @@ def QA_util_to_pandas_from_json(data):
 def QA_util_to_pandas_from_list(data):
     if isinstance(data, list):
         return pd.DataFrame(data=data)
+
+def QA_util_to_anyformat_from_pandas(data = None,format = None):
+    if format in ['P', 'p', 'pandas', 'pd']:
+        return data
+    elif format in ['json', 'dict']:
+        return QA_util_to_json_from_pandas(data)
+    # 多种数据格式
+    elif format in ['n', 'N', 'numpy','array','ndarray']:
+        return np.asarray(data)
+    elif format in ['list', 'l', 'L']:
+        return np.asarray(data).tolist()
+    else:
+        QA_util_log_info(
+            "QA Error format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" " % format)
+        return None
