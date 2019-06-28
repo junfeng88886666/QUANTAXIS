@@ -21,7 +21,7 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_info('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 
 data = QA.QAFetch.QATdx.QA_fetch_get_future_list()
-data = QA.QAFetch.QATdx.QA_fetch_get_future_day('RBL8','2018-06-26','2019-06-27')
+data = QA.QAFetch.QATdx.QA_fetch_get_future_day('AGL8','2018-06-26','2019-06-27')
 
 
 #%%
@@ -33,6 +33,10 @@ data = QA.QAFetch.QAQuery.QA_fetch_stock_list()
 data = QA.QAFetch.QAQuery.QA_fetch_stock_xdxr('000002')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
+
+data = QA.QAFetch.QAQuery.QA_fetch_future_list()
+data = QA.QAFetch.QAQuery.QA_fetch_future_day('BBL8','2018-06-26','2019-06-27','pd')
+
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000007','2019-06-01 10:30:00','2019-06-10 10:30:00','1min')
 data = pd.read_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')

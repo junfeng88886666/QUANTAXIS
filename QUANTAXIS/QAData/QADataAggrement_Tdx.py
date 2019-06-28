@@ -72,6 +72,7 @@ def QA_DataAggrement_Future_list(data):
 
 def QA_DataAggrement_Future_day(data):
     if 'contract' not in data.columns: data['contract'] = 'undefined'
+    data['trade']*=100
     data['source'] = DATASOURCE.TDX
     return data
 
