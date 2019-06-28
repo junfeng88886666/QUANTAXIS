@@ -98,10 +98,10 @@ def QA_fetch_get_stock_day(package, code, start, end, if_fq='00', level='day', t
     except:
         return 'Unsupport packages'
 
-def QA_fetch_get_stock_min(package, code, start, end, level='1min'):
+def QA_fetch_get_stock_min(package, code, start, end,level='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False):
     try:
         Engine = use(package)
-        return Engine.QA_fetch_get_stock_min(code, start, end, level)
+        return Engine.QA_fetch_get_stock_min(code, start, end, level, fill_data_with_tick_database, fill_data_with_tick_online)
     except:
         return 'Unsupport packages'
 
@@ -163,6 +163,20 @@ def QA_fetch_get_future_list(package,):
     try:
         Engine = use(package)
         return Engine.QA_fetch_get_future_list()
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_future_day(package, code, start, end, frequence='day'):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_future_day(code, start, end, frequence = frequence)
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_future_min(package, code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_future_min(code, start, end, frequence, fill_data_with_tick_database, fill_data_with_tick_online)
     except:
         return 'Unsupport packages'
 
@@ -285,21 +299,6 @@ def QA_fetch_get_future_realtime(package, code):
     try:
         Engine = use(package)
         return Engine.QA_fetch_get_future_realtime(code)
-    except:
-        return 'Unsupport packages'
-
-def QA_fetch_get_future_day(package, code, start, end, frequence='day'):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_future_day(code, start, end, frequence=frequence)
-    except:
-        return 'Unsupport packages'
-
-
-def QA_fetch_get_future_min(package, code, start, end, frequence='1min'):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_future_min(code, start, end, frequence=frequence)
     except:
         return 'Unsupport packages'
 

@@ -653,6 +653,8 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
     :param ui_progress_int_value: 给GUI qt 界面使用
     :return:
     '''
+    global err
+    err = []
     future_list = [
         item for item in QA_fetch_get_future_list(package = package).code.unique().tolist()
         if str(item)[-2:] in ['L8',
@@ -665,109 +667,18 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
          ("date_stamp",
           pymongo.ASCENDING)]
     )
-    err = []
 
-    def __saving_work(code, coll):
-        try:
-            QA_util_log_info(
-                '##JOB12 Now Saving Future_DAY==== {}'.format(str(code)),
-                ui_log
-            )
+    _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_future_day,
+                                                          package = package,
+                                                          code_list = future_list,
+                                                          initial_start = '1990-01-01',
+                                                          coll = coll,
+                                                          time_type = 'date',
+                                                          data_type = None,
+                                                          message_type = 'FUTURE_DAY',
+                                                          ui_log = ui_log,
+                                                          ui_progress = ui_progress)
 
-            # 首选查找数据库 是否 有 这个代码的数据
-            ref = coll.find({'code': str(code)[0:4]})
-            end_date = str(now_time())[0:10]
-
-            # 当前数据库已经包含了这个代码的数据， 继续增量更新
-            # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
-            if ref.count() > 0:
-                # 接着上次获取的日期继续更新
-                start_date = ref[ref.count() - 1]['date']
-
-                QA_util_log_info(
-                    'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                if start_date != end_date:
-                    update_start_date = QA_util_get_next_day(start_date)
-                    predata = QA_fetch_get_future_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    'day'
-                                                    )
-                    data_getted_start_date = predata.date.min()
-                    if data_getted_start_date == update_start_date:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(predata)
-                        )
-                    else:
-                        QA_util_log_info(
-                            'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
-                            .format(code,
-                                    start_date,
-                                    end_date,
-                                    package,
-                                    data_getted_start_date,
-                                    update_start_date
-                                    ),
-                            ui_log
-                        )
-                        err.append(str(code))
-                # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
-                else:
-                    start_date = '1990-01-01'
-                    QA_util_log_info(
-                        'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
-                        .format(code,
-                                start_date,
-                                end_date,
-                                package),
-                        ui_log
-                    )
-                    predata = QA_fetch_get_future_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    'day'
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-
-        except Exception as error0:
-            print(error0)
-            err.append(str(code))
-
-    for item in range(len(future_list)):
-        QA_util_log_info('The {} of Total {}'.format(item, len(future_list)))
-
-        strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
-            str(float(item / len(future_list) * 100))[0:4] + '%',
-            ui_log
-        )
-        intProgressToLog = int(float(item / len(future_list) * 100))
-        QA_util_log_info(
-            strProgressToLog,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intProgressToLog
-        )
-
-        __saving_work(future_list[item], coll)
-
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS save future day ^_^', ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log)
-        QA_util_log_info(err, ui_log)
 
 #
 # def QA_SU_save_index_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):

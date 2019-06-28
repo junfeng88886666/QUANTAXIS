@@ -593,6 +593,7 @@ def QA_DataAggrement_Future_day(package,data):
 
         data['position'][data['position'] < 1] = 0
         data['trade'][data['trade'] < 1] = 0
+        data['price'] = data['price'].apply(lambda x:round(x,2))
 
         data[['date',
               'code',

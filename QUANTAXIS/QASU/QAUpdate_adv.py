@@ -16,6 +16,8 @@ current_supported_update = {
     DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: {'data_type': [None]}},
 
     DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX: {'data_type': [None]}},
+    DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX: {'data_type': [None]}},
+
 }
 
 
@@ -84,6 +86,7 @@ def QA_SU_update_single(database_name = None,package = None,data_type = None, ui
         elif database_name == DATABASE_NAME.STOCK_BLOCK: save_engine.QA_SU_save_stock_block(package = package)
 
         elif database_name == DATABASE_NAME.FUTURE_LIST: save_engine.QA_SU_save_future_list(package = package)
+        elif database_name == DATABASE_NAME.FUTURE_DAY: save_engine.QA_SU_save_future_day(package = package)
 
     else:
         QA_util_log_info('Error: DataBase: {}, package: {}, data type: {}; is not supported currently'.format(database_name,package,str(data_type)), ui_log)
