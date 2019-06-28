@@ -25,11 +25,13 @@
 from datetime import time
 
 import pandas as pd
+from QUANTAXIS.QAUtil.QADate import QA_util_date_stamp,QA_util_time_stamp
+from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
+from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
 
-
-def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
+def QA_data_stocktick_resample_1min(tick, type_='1min', source = 'tick_resample',if_drop=True):
     """
-    tick 采样为 分钟数据
+    tick 采样为 分钟数据(标准QA数据协议格式)
     1. 仅使用将 tick 采样为 1 分钟数据
     2. 仅测试过，与通达信 1 分钟数据达成一致
     3. 经测试，可以匹配 QA.QA_fetch_get_stock_transaction 得到的数据，其他类型数据未测试
@@ -37,10 +39,11 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
     df = QA.QA_fetch_get_stock_transaction(package='tdx', code='000001',
                                            start='2018-08-01 09:25:00',
                                            end='2018-08-03 15:00:00')
-    df_min = QA_data_tick_resample_1min(df)
+    df_min = QA_data_stocktick_resample_1min(df)
     """
-    tick = tick.assign(amount=tick.price * tick.vol)
+    tick = tick.assign(amount=tick.price * tick.volume)
     resx = pd.DataFrame()
+    tick.index=pd.to_datetime(tick.datetime)
     _dates = set(tick.date)
 
     for date in sorted(list(_dates)):
@@ -56,7 +59,7 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
                                      ).apply(
                                          {
                                              'price': 'ohlc',
-                                             'vol': 'sum',
+                                             'volume': 'sum',
                                              'code': 'last',
                                              'amount': 'sum'
                                          }
@@ -89,10 +92,10 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
             _data1.loc[time(9,
                             31):time(9,
                                      31),
-                       'vol'] = _data1.loc[time(9,
+                       'volume'] = _data1.loc[time(9,
                                                 26):time(9,
                                                          31),
-                                           'vol'].sum()
+                                           'volume'].sum()
             _data1.loc[time(9,
                             31):time(9,
                                      31),
@@ -126,10 +129,10 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
             _data1.loc[time(11,
                             30):time(11,
                                      30),
-                       'vol'] = _data1.loc[time(11,
+                       'volume'] = _data1.loc[time(11,
                                                 30):time(11,
                                                          31),
-                                           'vol'].sum()
+                                           'volume'].sum()
             _data1.loc[time(11,
                             30):time(11,
                                      30),
@@ -150,7 +153,7 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
                                     ).apply(
                                         {
                                             'price': 'ohlc',
-                                            'vol': 'sum',
+                                            'volume': 'sum',
                                             'code': 'last',
                                             'amount': 'sum'
                                         }
@@ -193,12 +196,23 @@ def QA_data_tick_resample_1min(tick, type_='1min', if_drop=True):
                                                                       1)].values
         _data2 = _data2.loc[time(13, 1):time(15, 0)]
         resx = resx.append(_data1).append(_data2)
-    resx['vol'] = resx['vol'] * 100.0
-    resx['volume'] = resx['vol']
-    resx['type'] = '1min'
+    resx['volume'] = resx['volume'] * 100.0
+
     if if_drop:
         resx = resx.dropna()
-    return resx.reset_index().drop_duplicates().set_index(['datetime', 'code'])
+
+    '''整理数据格式到STOCK_MIN格式'''
+    resx['datetime'] = resx.index
+    resx = resx \
+               .assign(date=resx['datetime'].apply(lambda x: str(x)[0:10]),
+                       date_stamp=resx['datetime'].apply(
+                           lambda x: QA_util_date_stamp(x)),
+                       time_stamp=resx['datetime'].apply(
+                           lambda x: QA_util_time_stamp(x)),
+                       type=type_)
+    resx['source'] = source
+    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
+    # return resx.reset_index().drop_duplicates().set_index(['datetime', 'code'])
 
 
 def QA_data_tick_resample(tick, type_='1min'):
@@ -210,8 +224,11 @@ def QA_data_tick_resample(tick, type_='1min'):
     Returns:
         [type] -- [description]
     """
-    tick = tick.assign(amount=tick.price * tick.vol)
+
+    tick = tick.assign(amount=tick.price * tick.volume)
     resx = pd.DataFrame()
+    __type_index = type(tick.index[0])
+    tick.index = pd.to_datetime(tick.index)
     _temp = set(tick.index.date)
 
     for item in _temp:
@@ -226,7 +243,7 @@ def QA_data_tick_resample(tick, type_='1min'):
                                      ).apply(
                                          {
                                              'price': 'ohlc',
-                                             'vol': 'sum',
+                                             'volume': 'sum',
                                              'code': 'last',
                                              'amount': 'sum'
                                          }
@@ -241,7 +258,7 @@ def QA_data_tick_resample(tick, type_='1min'):
                                     ).apply(
                                         {
                                             'price': 'ohlc',
-                                            'vol': 'sum',
+                                            'volume': 'sum',
                                             'code': 'last',
                                             'amount': 'sum'
                                         }
@@ -249,7 +266,8 @@ def QA_data_tick_resample(tick, type_='1min'):
 
         resx = resx.append(_data1).append(_data2)
     resx.columns = resx.columns.droplevel(0)
-    return resx.reset_index().drop_duplicates().set_index(['datetime', 'code'])
+    return resx
+    # return resx.reset_index().drop_duplicates().set_index(['datetime', 'code'])
 
 
 def QA_data_ctptick_resample(tick, type_='1min'):
@@ -345,7 +363,7 @@ def QA_data_ctptick_resample(tick, type_='1min'):
 
 
 def QA_data_min_resample(min_data, type_='5min'):
-    """分钟线采样成大周期
+    """分钟线采样成大周期（标准QA数据协议格式）
 
 
     分钟线采样成子级别的分钟线

@@ -27,7 +27,7 @@ import json
 
 import numpy as np
 import pandas as pd
-
+from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 
 def QA_util_to_json_from_pandas(data):
     """需要对于datetime 和date 进行转换, 以免直接被变成了时间戳"""

@@ -57,6 +57,7 @@ from QUANTAXIS.QAUtil import Parallelism
 from QUANTAXIS.QAUtil.QACache import QA_util_cache
 from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
+from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock
 
 def init_fetcher():
     """初始化获取
@@ -500,12 +501,19 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
                 time_stamp=data['datetime'].apply(
                 lambda x: QA_util_time_stamp(x)),
                 type=type_).set_index('datetime', drop=False, inplace=False)[start:end]
-        data =  data.assign(datetime=data['datetime'].apply(lambda x: str(x)))
-        data.to_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
+
+        data = select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATASOURCE.TDX,data)
+        # data.to_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
     #################################################################
     ### TODO 增加数据补充开关功能
-        assert False
+        # assert False
     '''若开关1：fill_data_with_tick_database 处于打开状态，从tick数据库resample来获取分钟数据'''
+    if fill_data_with_tick_database:
+        __data1 = QA_data_stocktick_resample_1min(QA_fetch_get_stock_transaction(code, '2019-06-26', '2019-06-27'), '1min')
+
+    QA_data_stocktick_resample_1min, QA_data_min_resample_stock
+
+
     '''若开关2：fill_data_with_tick_online 处于打开状态，在线获取tick数据然后resample来获取分钟数据'''
     #################################################################
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(DATASOURCE.TDX,data)
@@ -533,7 +541,7 @@ def __QA_fetch_get_stock_transaction(code, day, retry, api):
                 .assign(code=str(code)).assign(order=range(len(data_.index))).set_index('datetime', drop=False,inplace=False)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None):
+def QA_fetch_get_stock_transaction(code, start, end, frequence = None,retry=2, ip=None, port=None):
     '''
     :param code: 股票代码
     :param start: 开始日期
@@ -578,7 +586,16 @@ def QA_fetch_get_stock_transaction(code, start, end, retry=2, ip=None, port=None
             elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
             elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
             data = data.assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATASOURCE.TDX,data)
+            '''数据协议处理数据到标准格式'''
+            data = select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATASOURCE.TDX,data)
+            '''若frequence开关开启: 整理tick数据为分钟数据'''
+            if frequence == None: pass
+            elif frequence == '1min':
+                data = QA_data_stocktick_resample_1min(data,'1min','tdx_tick_resample',True)
+            elif frequence in ['5min','15min','30min','60min']:
+
+
+            return data
         else:
             return None
 

@@ -486,9 +486,8 @@ class DATA_AGGREMENT_NAME():
 
 class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
     STOCK_DAY = ('date',['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date'],['date','code'])
-    STOCK_MIN = ('datetime',1,['datetime','code'])
-    STOCK_TRANSACTION = ('datetime',1,['datetime','code','order'])
-
+    STOCK_TRANSACTION = ('datetime',['datetime','code','price','volume','buyorsell','date','time','order'],['datetime','code','order'])
+    STOCK_MIN = ('datetime',[],['datetime','code'])
 
 class ERRORTYPE():
     '''

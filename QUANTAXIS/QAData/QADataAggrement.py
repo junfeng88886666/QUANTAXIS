@@ -80,8 +80,10 @@ def QA_DataAggrement_Stock_day(package,data):
     :return: 经过数据协议调整格式后的国内期货分钟数据数据集
     '''
     try:
-        Engine = use(package)
-        data = Engine.QA_DataAggrement_Stock_day(data)
+        if package == None: pass
+        else:
+            Engine = use(package)
+            data = Engine.QA_DataAggrement_Stock_day(data)
 
         data[['code',
               'date',
@@ -132,8 +134,13 @@ def QA_DataAggrement_Stock_min(package,data):
     :return: 经过数据协议调整格式后的国内期货分钟数据数据集
     '''
     try:
-        Engine = use(package)
-        data = Engine.QA_DataAggrement_Stock_min(data)
+        if package == None: pass
+        else:
+            Engine = use(package)
+            data = Engine.QA_DataAggrement_Stock_min(data)
+
+        data['volume'][data['volume'] < 1] = 0
+        data['amount'][data['amount'] < 1] = 0
 
         data[['code',
               'datetime',
@@ -167,13 +174,11 @@ def QA_DataAggrement_Stock_min(package,data):
         '''为了保证这里的数据和QAQuery结果的一致性'''
         __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN
         data = data.set_index(__check[0], drop=False, inplace=False)
-        data = data.drop_duplicates((__check[2]))
+        data = data.drop_duplicates(__check[2])
         assert set(__check[1]).issubset(data.columns.tolist())
-
-        return data[['code','open','high','low','close','volume','amount','date','date_stamp','date_stamp','time_stamp','type','source']]
+        return data[['code','open','high','low','close','volume','amount','datetime','date','date_stamp','time_stamp','type','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_transaction(package,data):

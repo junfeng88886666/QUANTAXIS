@@ -34,9 +34,12 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_log_info, QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
-                              trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas)
-from QUANTAXIS.QAUtil.QAParameter import DATA_QUERY_INDEX_COLUMNS_UNIQUE
+                              trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
+                              QA_util_get_last_day, QA_util_get_next_day, QA_util_get_real_date)
+from QUANTAXIS.QAUtil.QAParameter import DATA_QUERY_INDEX_COLUMNS_UNIQUE,DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.financial_mean import financial_dict
+from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
+from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock
 
 """
 按要求从数据库取数据，并转换成numpy结构
@@ -54,12 +57,12 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
 
         感谢@几何大佬的提示
         https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
-
     """
     if (QA_tuil_dateordatetime_valid(start))&(QA_tuil_dateordatetime_valid(end)):
         '''数据获取'''
         start_date = str(start)[0:10]
         end_date = str(end)[0:10]
+
         #code= [code] if isinstance(code,str) else code
 
         # code checking
@@ -71,6 +74,7 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
                 "$gte": QA_util_date_stamp(start_date)}}, {"_id": 0}, batch_size=10000)
         #res=[QA_util_dict_remove_key(data, '_id') for data in cursor]
         res = pd.DataFrame([item for item in cursor])
+
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
         try:
             res = res.drop_duplicates((DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[2])).query('volume>1')\
@@ -78,13 +82,14 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
             res = res.ix[:, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[1]]
         except:
             res = None
+
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data = res,format = format)
     else:
         QA_util_log_info(
             'QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
 
-def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence=None, collections=DATABASE.stock_transaction):
+def QA_fetch_stock_transaction(code, start, end, frequence = None, format='numpy', collections=DATABASE.stock_transaction):
     """'获取股票tick结果'
     frequence 提供resample功能
     Returns:
@@ -92,49 +97,36 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence=None,
 
         感谢@几何大佬的提示
         https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
-
     """
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
-
-    start_date = str(start)[0:10]
-    end_date = str(end)[0:10]
-    #code= [code] if isinstance(code,str) else code
-
-    # code checking
-    code = QA_util_code_tolist(code)
-
-    if QA_util_date_valid(end):
+    if (QA_tuil_dateordatetime_valid(start)) & (QA_tuil_dateordatetime_valid(end)):
+        '''数据获取'''
+        code = QA_util_code_tolist(code)
 
         cursor = collections.find({
-            'code': {'$in': code}, "date_stamp": {
-                "$lte": QA_util_date_stamp(end),
-                "$gte": QA_util_date_stamp(start)}}, {"_id": 0}, batch_size=10000)
-        #res=[QA_util_dict_remove_key(data, '_id') for data in cursor]
+            'code': {'$in': code}, "time_stamp": {
+                "$lte": QA_util_time_stamp(end),
+                "$gte": QA_util_time_stamp(start)}}, {"_id": 0}, batch_size=10000)
 
         res = pd.DataFrame([item for item in cursor])
+        '''若frequence开关开启: 整理tick数据为分钟数据'''
+        if frequence == None:
+            pass
+        elif frequence == '1min':
+            res = QA_data_stocktick_resample_1min(res, '1min', 'database_tick_resample', True)
+
+        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
         try:
-            res = res.assign(volume=res.vol, date=pd.to_datetime(
-                res.date)).drop_duplicates((['date', 'code'])).query('volume>1').set_index('date', drop=False)
-            res = res.ix[:, ['code', 'open', 'high', 'low',
-                             'close', 'volume', 'amount', 'date']]
+            res = res.drop_duplicates((DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[2])).query('volume>1')\
+                    .set_index(DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[0], drop=False)
+            res = res.ix[:, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[1]]
         except:
             res = None
-        if format in ['P', 'p', 'pandas', 'pd']:
-            return res
-        elif format in ['json', 'dict']:
-            return QA_util_to_json_from_pandas(res)
-        # 多种数据格式
-        elif format in ['n', 'N', 'numpy']:
-            return numpy.asarray(res)
-        elif format in ['list', 'l', 'L']:
-            return numpy.asarray(res).tolist()
-        else:
-            print("QA Error QA_fetch_stock_day format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" " % format)
-            return None
+
+        '''数据格式整理'''
+        return QA_util_to_anyformat_from_pandas(data=res, format=format)
     else:
         QA_util_log_info(
-            'QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+            'QA Error QA_fetch_stock_transaction data parameter start=%s end=%s is not right' % (start, end))
 
 
 def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', collections=DATABASE.stock_min):

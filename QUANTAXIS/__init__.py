@@ -60,7 +60,7 @@ from QUANTAXIS.QAData import (
     QA_data_min_resample,
     QA_data_stock_to_fq,
     QA_data_tick_resample,
-    QA_data_tick_resample_1min,
+    QA_data_stocktick_resample_1min,
     QA_DataStruct_Day,
     QA_DataStruct_Financial,
     QA_DataStruct_Future_day,
@@ -179,7 +179,8 @@ from QUANTAXIS.QAFetch.QAQuery import (
     QA_fetch_stock_min,
     QA_fetch_stock_name,
     QA_fetch_stock_xdxr,
-    QA_fetch_trade_date
+    QA_fetch_trade_date,
+    QA_fetch_stock_transaction
 )
 from QUANTAXIS.QAFetch.QAQuery_Advance import *
 from QUANTAXIS.QAIndicator import *
