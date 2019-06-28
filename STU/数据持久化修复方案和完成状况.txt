@@ -47,6 +47,8 @@ QA_DataAggrement_Stock_realtime(实时，单独）
 QA_DataAggrement_depth_market_data(实时，单独）
 QA_DataAggrement_stock_transaction_realtime(实时，单独）
 
+QA_DataAggrement_future_list
+
 #################################
 QAQuery
 QA_fetch_stock_day
@@ -56,6 +58,8 @@ QA_fetch_stock_list
 QA_fetch_stock_xdxr
 QA_fetch_stock_info
 QA_fetch_stock_block
+
+QA_fetch_future_list
 
 #################################
 QASU
@@ -77,6 +81,7 @@ STOCK_XDXR
 STOCK_INFO
 STOCK_BLOCK
 
+FUTURE_LIST
 ##################################
 DATABASE_NAME
 STOCK_DAY
@@ -86,3 +91,5 @@ STOCK_LIST
 STOCK_XDXR
 STOCK_INFO
 STOCK_BLOCK
+
+FUTURE_LIST

@@ -61,10 +61,47 @@ def use(package):
     elif package in ['cofund', 'cof','CoFund','COFUND']:
         return QACoFund
 
+def QA_fetch_get_security_bars(package,code, _type, lens):
+    '''目前仅仅有通达信数据有'''
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_security_bars(code, _type, lens)
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_trade_date(package, end, exchange):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_trade_date(end, exchange)
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_stock_indicator(package, code, start, end):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_indicator(code, start, end)
+    except:
+        return 'Unsupport packages'
+
+#%% STOCK_CN_PART
+def QA_fetch_get_stock_list(package, type_='stock'):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_list(type_)
+    except:
+        return 'Unsupport packages'
+
 def QA_fetch_get_stock_day(package, code, start, end, if_fq='00', level='day', type_='pd'):
     try:
         Engine = use(package)
         return Engine.QA_fetch_get_stock_day(code, start, end, if_fq, level)
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_stock_min(package, code, start, end, level='1min'):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_stock_min(code, start, end, level)
     except:
         return 'Unsupport packages'
 
@@ -79,27 +116,6 @@ def QA_fetch_get_stock_latest(package,code,frequence = 'day'):
     try:
         Engine = use(package)
         return Engine.QA_fetch_get_stock_latest(code,frequence)
-    except:
-        return 'Unsupport packages'
-
-def QA_fetch_get_stock_indicator(package, code, start, end):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_stock_indicator(code, start, end)
-    except:
-        return 'Unsupport packages'
-
-def QA_fetch_get_trade_date(package, end, exchange):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_trade_date(end, exchange)
-    except:
-        return 'Unsupport packages'
-
-def QA_fetch_get_stock_min(package, code, start, end, level='1min'):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_stock_min(code, start, end, level)
     except:
         return 'Unsupport packages'
 
@@ -127,22 +143,6 @@ def QA_fetch_get_stock_xdxr(package, code):
     except:
         return 'Unsupport packages'
 
-
-def QA_fetch_get_index_day(package, code, start, end, level='day'):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_index_day(code, start, end, level)
-    except:
-        return 'Unsupport packages'
-
-
-def QA_fetch_get_index_min(package, code, start, end, level='1min'):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_index_min(code, start, end, level)
-    except:
-        return 'Unsupport packages'
-
 def QA_fetch_get_stock_block(package):
     try:
         Engine = use(package)
@@ -158,13 +158,25 @@ def QA_fetch_get_stock_info(package, code):
     except:
         return 'Unsupport packages'
 
-# LIST
-
-
-def QA_fetch_get_stock_list(package, type_='stock'):
+#%% FUTURE_CN_PART
+def QA_fetch_get_future_list(package,):
     try:
         Engine = use(package)
-        return Engine.QA_fetch_get_stock_list(type_)
+        return Engine.QA_fetch_get_future_list()
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_index_day(package, code, start, end, level='day'):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_index_day(code, start, end, level)
+    except:
+        return 'Unsupport packages'
+
+def QA_fetch_get_index_min(package, code, start, end, level='1min'):
+    try:
+        Engine = use(package)
+        return Engine.QA_fetch_get_index_min(code, start, end, level)
     except:
         return 'Unsupport packages'
 
@@ -181,14 +193,6 @@ def QA_fetch_get_index_list(package):
         return Engine.QA_fetch_get_index_list()
     except:
         return 'Unsupport packages'
-
-def QA_fetch_get_future_list(package,):
-    try:
-        Engine = use(package)
-        return Engine.QA_fetch_get_future_list()
-    except:
-        return 'Unsupport packages'
-
 
 def QA_fetch_get_option_list(package,):
     try:
@@ -259,10 +263,6 @@ def QA_fetch_get_exchangerate_list(package,):
 
 
 #######################
-
-def QA_fetch_get_security_bars(package,code, _type, lens):
-    return QATdx.QA_fetch_get_security_bars(code, _type, lens)
-
 
 def QA_fetch_get_future_transaction(package, code, start, end):
     try:

@@ -64,6 +64,8 @@ def QA_fetch_trade_date():
     '获取交易日期'
     return trade_date_sse
 
+
+#%% STOCK_CN_PART
 def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collections=DATABASE.stock_day):
     """'获取股票日线'
 
@@ -218,6 +220,13 @@ def QA_fetch_stock_block(code=None, format='pd', collections=DATABASE.stock_bloc
         data = pd.DataFrame(
             [item for item in collections.find()]).drop(['_id'], axis=1)
         return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK, query=None)
+
+#%% FUTURE_CN_PART
+def QA_fetch_future_list(collections=DATABASE.future_list):
+    '获取期货列表'
+    data = pd.DataFrame([item for item in collections.find()]).drop('_id', axis=1, inplace=False).set_index('code', drop=False)
+    return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_LIST, query=None)
+
 
 def QA_fetch_etf_list(collections=DATABASE.etf_list):
     '获取ETF列表'
@@ -411,29 +420,16 @@ def QA_fetch_future_day(code, start, end, format='numpy', collections=DATABASE.f
             'code': {'$in': code}, "date_stamp": {
                 "$lte": QA_util_date_stamp(end),
                 "$gte": QA_util_date_stamp(start)}}, {"_id": 0}, batch_size=10000)
-        if format in ['dict', 'json']:
-            return [data for data in cursor]
-        for item in cursor:
+        res = pd.DataFrame([item for item in cursor])
 
-            __data.append([str(item['code']), float(item['open']), float(item['high']), float(
-                item['low']), float(item['close']), float(item['position']), float(item['price']), float(item['trade']), item['date']])
+        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
+        res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_DAY, query=None)
 
-        # 多种数据格式
-        if format in ['n', 'N', 'numpy']:
-            __data = numpy.asarray(__data)
-        elif format in ['list', 'l', 'L']:
-            __data = __data
-        elif format in ['P', 'p', 'pandas', 'pd']:
-            __data = DataFrame(
-                __data, columns=['code', 'open', 'high', 'low', 'close', 'position', 'price', 'trade', 'date']).drop_duplicates()
-            __data['date'] = pd.to_datetime(__data['date'])
-            __data = __data.set_index('date', drop=False)
-        else:
-            print("QA Error QA_fetch_future_day format parameter %s is none of  \"P, p, pandas, pd , n, N, numpy !\" " % format)
-        return __data
+        '''数据格式整理'''
+        return QA_util_to_anyformat_from_pandas(data = res,format = format)
     else:
-        QA_util_log_info('QA something wrong with date')
-
+        QA_util_log_info('QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+        return None
 
 def QA_fetch_future_min(
         code,
@@ -479,12 +475,6 @@ def QA_fetch_future_min(
         return numpy.asarray(__data).tolist()
     elif format in ['P', 'p', 'pandas', 'pd']:
         return __data
-
-
-def QA_fetch_future_list(collections=DATABASE.future_list):
-    '获取期货列表'
-    return pd.DataFrame([item for item in collections.find()]).drop('_id', axis=1, inplace=False).set_index('code', drop=False)
-
 
 def QA_fetch_future_tick():
     raise NotImplementedError

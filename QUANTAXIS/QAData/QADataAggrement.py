@@ -47,22 +47,21 @@ def select_DataAggrement(type):
     elif type == DATA_AGGREMENT_NAME.STOCK_BLOCK: return QA_DataAggrement_Stock_block
 
 
-
     # '''指数'''
+    # elif type == DATA_AGGREMENT_NAME.INDEX_LSIST: return QA_DataAggrement_Index_list
     # elif type == DATA_AGGREMENT_NAME.INDEX_DAY: return QA_DataAggrement_Index_day
     # elif typSe == DATA_AGGREMENT_NAME.INDEX_MIN: return QA_DataAggrement_Index_min
-    # elif type == DATA_AGGREMENT_NAME.INDEX_LSIST: return QA_DataAggrement_Index_list
     #
     # '''基金'''
+    # elif type == DATA_AGGREMENT_NAME.FUND_LIST: return QA_DataAggrement_Fund_list
     # elif type == DATA_AGGREMENT_NAME.FUND_DAY: return QA_DataAggrement_Fund_day
     # elif type == DATA_AGGREMENT_NAME.FUND_MIN: return QA_DataAggrement_Fund_min
-    # elif type == DATA_AGGREMENT_NAME.FUND_LIST: return QA_DataAggrement_Fund_list
     #
     ############ 期货
+    elif type == DATA_AGGREMENT_NAME.FUTURE_LIST: return QA_DataAggrement_Future_list
     elif type == DATA_AGGREMENT_NAME.FUTURE_DAY: return QA_DataAggrement_Future_day
     elif type == DATA_AGGREMENT_NAME.FUTURE_MIN: return QA_DataAggrement_Future_min
     elif type == DATA_AGGREMENT_NAME.FUTURE_TRANSACTION: return QA_DataAggrement_Future_transaction
-    # elif type == DATA_AGGREMENT_NAME.FUTURE_LIST: return QA_DataAggrement_Future_list
 
 def __QA_DataAggrement_check_QAQuery(data,index_columns_unique):
     __check = index_columns_unique
@@ -73,6 +72,8 @@ def __QA_DataAggrement_check_QAQuery(data,index_columns_unique):
     data = data.sort_values(by=__check[2])
     assert set(__check[1]).issubset(data.columns.tolist())
     return data
+
+#%% STOCK_CN_PART
 
 def QA_DataAggrement_Stock_day(package,data):
     '''
@@ -553,8 +554,7 @@ def QA_DataAggrement_Stock_info(package,data):
                      'source']]
 
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR+', package: '+str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_block(package,data):
@@ -567,14 +567,32 @@ def QA_DataAggrement_Stock_block(package,data):
         data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK)
         return data[['blockname','code','type','enter_date','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
+        return None
+
+#%% FUTURE_CN_PART
+def QA_DataAggrement_Future_list(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Future_list(data)
+
+        data[['code','name','desc','source']] = data[['code','name','desc','source']].astype(str)
+        data[['category','market']] = data[['category','market']].astype('int64')
+
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_LIST)
+        return data[['code','name','category','market','desc','source']]
+
+    except Exception as e:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Future_day(package,data):
     try:
         Engine = use(package)
         data = Engine.QA_DataAggrement_Future_day(data)
+
+        data['position'][data['position'] < 1] = 0
+        data['trade'][data['trade'] < 1] = 0
 
         data[['date',
               'code',
@@ -602,7 +620,8 @@ def QA_DataAggrement_Future_day(package,data):
         = data[['position',
               'trade',
               'date_stamp']].astype('int64')
-        data = data.set_index('date',drop = False,inplace = False)
+
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_DAY)
         return data[['date',
                       'code',
                       'open',
@@ -615,9 +634,9 @@ def QA_DataAggrement_Future_day(package,data):
                       'date_stamp',
                       'contract',
                       'source']]
+
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Future_min(package,data):
@@ -685,8 +704,7 @@ def QA_DataAggrement_Future_min(package,data):
         data = data.set_index('datetime',drop = False,inplace = False)
         return data[['open','high','low','close','price','position','trade','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Future_transaction(package,data):
@@ -742,11 +760,8 @@ def QA_DataAggrement_Future_transaction(package,data):
                       'source']]
 
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 
-def QA_DataAggrement_Future_list(package,data):
-    Engine = use(package)
-    return Engine.QA_DataAggrement_Future_list(data)
+

@@ -14,6 +14,8 @@ from QUANTAXIS.QAUtil.QAParameter import DATASOURCE
 from QUANTAXIS.QAUtil import DATABASE, QA_util_log_info
 # TODO 当前只有期货列表，日线和分钟线的数据协议
 
+#%% STOCK_CN_PART
+
 def QA_DataAggrement_Stock_day(data):
     data['source'] = DATASOURCE.TDX
     return data.rename(columns = {'vol':'volume'},inplace = False)
@@ -62,6 +64,11 @@ def QA_DataAggrement_Stock_block(data):
     data['source'] = DATASOURCE.TDX
     return data
 #####################################################################################
+#%% FUTURE_CN_PART
+
+def QA_DataAggrement_Future_list(data):
+    data['source'] = DATASOURCE.TDX
+    return data
 
 def QA_DataAggrement_Future_day(data):
     if 'contract' not in data.columns: data['contract'] = 'undefined'
@@ -79,5 +86,3 @@ def QA_DataAggrement_Future_transaction(data):
     data['source'] = DATASOURCE.TDX
     return data
 
-def QA_DataAggrement_Future_list(data):
-    raise NotImplementedError

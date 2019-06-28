@@ -9,21 +9,21 @@ import pymongo
 import copy
 import numpy as np
 from QUANTAXIS.QAFetch import (
-                                QA_fetch_get_option_day,
-                                QA_fetch_get_option_min,
-                                QA_fetch_get_index_day,
-                                QA_fetch_get_index_min,
                                 QA_fetch_get_stock_day,
                                 QA_fetch_get_stock_info,
                                 QA_fetch_get_stock_list,
+                                QA_fetch_get_stock_min,
+                                QA_fetch_get_stock_transaction,
+                                QA_fetch_get_stock_xdxr,
+                                QA_fetch_get_stock_block,
                                 QA_fetch_get_future_list,
                                 QA_fetch_get_index_list,
                                 QA_fetch_get_future_day,
                                 QA_fetch_get_future_min,
-                                QA_fetch_get_stock_min,
-                                QA_fetch_get_stock_transaction,
-                                QA_fetch_get_stock_xdxr,
-                                QA_fetch_get_stock_block
+                                QA_fetch_get_option_day,
+                                QA_fetch_get_option_min,
+                                QA_fetch_get_index_day,
+                                QA_fetch_get_index_min
                             )
 
 from QUANTAXIS.QAUtil import (
@@ -316,9 +316,6 @@ def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progre
     Keyword Arguments:
         client {[type]} -- [description] (default: {DATABASE})
     """
-    global err
-    err = []
-
     client.drop_collection('stock_list')
     coll = client.stock_list
     coll.create_index('code')
@@ -624,306 +621,27 @@ def QA_SU_save_stock_block(package = None,client=DATABASE, ui_log=None, ui_progr
 
         coll.insert_many(
             QA_util_to_json_from_pandas(QA_fetch_get_stock_block(package)),
-            ordered=False
-        )
+            ordered=False)
 
         QA_util_log_info('SUCCESS save {} ^_^'.format('STOCK_BLOCK'), ui_log)
     except:
         QA_util_log_info('ERROR: SAVE {}'.format('STOCK_BLOCK'), ui_log)
 
-
-
-
-def QA_SU_save_index_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
-    """save index_day
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-
-    __index_list = QA_fetch_get_index_list(package = package)
-    coll = client.index_day
-    coll.create_index(
-        [('code',
-          pymongo.ASCENDING),
-         ('date_stamp',
-          pymongo.ASCENDING)],
-          unique = True
-    )
-    err = []
-
-    def __saving_work(code, coll):
-        QA_util_log_info(
-            '##JOB03 Now Saving INDEX_DAY ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            ref = coll.find({'code': str(code)[0:6]})
-            end_date = str(now_time())[0:10]
-            if ref.count() > 0:
-                # 接着上次获取的日期继续更新
-                start_date = ref[ref.count() - 1]['date']
-
-                QA_util_log_info(
-                    'UPDATE_INDEX_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                if start_date != end_date:
-                    update_start_date = QA_util_get_next_day(start_date)
-                    predata = QA_fetch_get_index_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    'day'
-                                                    )
-                    data_getted_start_date = predata.date.min()
-                    if data_getted_start_date == update_start_date:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(predata)
-                        )
-                    else:
-                        QA_util_log_info(
-                            'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
-                            .format(code,
-                                    start_date,
-                                    end_date,
-                                    package,
-                                    data_getted_start_date,
-                                    update_start_date
-                                    ),
-                            ui_log
-                        )
-                        err.append(str(code))
-            # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
-            else:
-                start_date = '1990-01-01'
-                QA_util_log_info(
-                    'UPDATE_INDEX_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                predata = QA_fetch_get_index_day(
-                                                package,
-                                                str(code),
-                                                update_start_date,
-                                                end_date,
-                                                'day'
-                                                )
-
-                coll.insert_many(
-                    QA_util_to_json_from_pandas(predata)
-                )
-
-        except Exception as e:
-            QA_util_log_info(e, ui_log=ui_log)
-            err.append(str(code))
-            QA_util_log_info(err, ui_log=ui_log)
-
-    for i_ in range(len(__index_list)):
-        # __saving_work('000001')
-        QA_util_log_info(
-            'The {} of Total {}'.format(i_,
-                                        len(__index_list)),
-            ui_log=ui_log
-        )
-
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(i_ / len(__index_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(i_ / len(__index_list) * 10000.0))
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        __saving_work(__index_list.index[i_][0], coll)
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
-
-
-def QA_SU_save_index_min(package = None, client=DATABASE, ui_log=None, ui_progress=None):
-    """save index_min
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-
-    __index_list = QA_fetch_get_index_list(package = package)
-    coll = client.index_min
-    coll.create_index(
-        [
-            ('code',
-             pymongo.ASCENDING),
-            ('time_stamp',
-             pymongo.ASCENDING),
-            ('date_stamp',
-             pymongo.ASCENDING)
-        ]
-    )
-    err = []
-
-    def __saving_work(code, coll):
-        QA_util_log_info(
-            '##JOB05 Now Saving Index_MIN ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            for type in ['1min', '5min', '15min', '30min', '60min']:
-                ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-                end_time = str(now_time())[0:19]
-                if ref_.count() > 0:
-                    start_time = ref_[ref_.count() - 1]['datetime']
-
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    if start_time != end_time:
-                        predata = QA_fetch_get_index_min(
-                                                        package,
-                                                        str(code),
-                                                        start_time,
-                                                        end_time,
-                                                        type
-                                                        )
-
-                        update_start_time = copy.deepcopy(start_time)
-                        data_getted_start_time = predata.datetime.min()
-                        if data_getted_start_time == update_start_time:
-                            coll.insert_many(
-                                QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
-                            )
-                        else:
-                            QA_util_log_info(
-                                'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                                .format(code,
-                                        start_time,
-                                        end_time,
-                                        package,
-                                        data_getted_start_time,
-                                        update_start_time
-                                        ),
-                                ui_log
-                            )
-                            err.append(str(code))
-                else:
-                    start_time = '2010-01-01'
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    predata = QA_fetch_get_index_min(
-                                                    package,
-                                                    str(code),
-                                                    start_time,
-                                                    end_time,
-                                                    type
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-
-        except:
-            err.append(code)
-
-    executor = ThreadPoolExecutor(max_workers=4)
-
-    res = {
-        executor.submit(__saving_work,
-                        __index_list.index[i_][0],
-                        coll)
-        for i_ in range(len(__index_list))
-    }  # multi index ./.
-    count = 0
-    for i_ in concurrent.futures.as_completed(res):
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(count / len(__index_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(count / len(__index_list) * 10000.0))
-        QA_util_log_info(
-            'The {} of Total {}'.format(count,
-                                        len(__index_list)),
-            ui_log=ui_log
-        )
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        count = count + 1
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
-
-
-
-########################################################################################################
-
-
+#%% FUTURE_CN_PART
 def QA_SU_save_future_list(package = None, client=DATABASE, ui_log=None, ui_progress=None):
+    client.drop_collection('future_list')
     future_list = QA_fetch_get_future_list(package = package)
     coll_future_list = client.future_list
     coll_future_list.create_index("code", unique=True)
+
     try:
         coll_future_list.insert_many(
             QA_util_to_json_from_pandas(future_list),
-            ordered=False
-        )
+            ordered=False)
+
+        QA_util_log_info('SUCCESS save {} ^_^'.format('FUTURE_LIST'), ui_log)
     except:
-        pass
-
-
-def QA_SU_save_index_list(package = None, client=DATABASE, ui_log=None, ui_progress=None):
-    index_list = QA_fetch_get_index_list(package = package)
-    coll_index_list = client.index_list
-    coll_index_list.create_index("code", unique=True)
-
-    try:
-        coll_index_list.insert_many(
-            QA_util_to_json_from_pandas(index_list),
-            ordered=False
-        )
-    except:
-        pass
-
+        QA_util_log_info('ERROR: SAVE {}'.format('FUTURE_LIST'), ui_log)
 
 def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
     '''
@@ -1051,479 +769,703 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
         QA_util_log_info(' ERROR CODE \n ', ui_log)
         QA_util_log_info(err, ui_log)
 
+#
+# def QA_SU_save_index_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+#     """save index_day
+#
+#     Keyword Arguments:
+#         client {[type]} -- [description] (default: {DATABASE})
+#     """
+#
+#     __index_list = QA_fetch_get_index_list(package = package)
+#     coll = client.index_day
+#     coll.create_index(
+#         [('code',
+#           pymongo.ASCENDING),
+#          ('date_stamp',
+#           pymongo.ASCENDING)],
+#           unique = True
+#     )
+#     err = []
+#
+#     def __saving_work(code, coll):
+#         QA_util_log_info(
+#             '##JOB03 Now Saving INDEX_DAY ==== {}'.format(str(code)),
+#             ui_log=ui_log
+#         )
+#         try:
+#             ref = coll.find({'code': str(code)[0:6]})
+#             end_date = str(now_time())[0:10]
+#             if ref.count() > 0:
+#                 # 接着上次获取的日期继续更新
+#                 start_date = ref[ref.count() - 1]['date']
+#
+#                 QA_util_log_info(
+#                     'UPDATE_INDEX_DAY \n Trying updating {} from {} to {}, package: {}'
+#                     .format(code,
+#                             start_date,
+#                             end_date,
+#                             package),
+#                     ui_log
+#                 )
+#                 if start_date != end_date:
+#                     update_start_date = QA_util_get_next_day(start_date)
+#                     predata = QA_fetch_get_index_day(
+#                                                     package,
+#                                                     str(code),
+#                                                     update_start_date,
+#                                                     end_date,
+#                                                     'day'
+#                                                     )
+#                     data_getted_start_date = predata.date.min()
+#                     if data_getted_start_date == update_start_date:
+#                         coll.insert_many(
+#                             QA_util_to_json_from_pandas(predata)
+#                         )
+#                     else:
+#                         QA_util_log_info(
+#                             'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
+#                             .format(code,
+#                                     start_date,
+#                                     end_date,
+#                                     package,
+#                                     data_getted_start_date,
+#                                     update_start_date
+#                                     ),
+#                             ui_log
+#                         )
+#                         err.append(str(code))
+#             # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
+#             else:
+#                 start_date = '1990-01-01'
+#                 QA_util_log_info(
+#                     'UPDATE_INDEX_DAY \n Trying updating {} from {} to {}, package: {}'
+#                     .format(code,
+#                             start_date,
+#                             end_date,
+#                             package),
+#                     ui_log
+#                 )
+#                 predata = QA_fetch_get_index_day(
+#                                                 package,
+#                                                 str(code),
+#                                                 update_start_date,
+#                                                 end_date,
+#                                                 'day'
+#                                                 )
+#
+#                 coll.insert_many(
+#                     QA_util_to_json_from_pandas(predata)
+#                 )
+#
+#         except Exception as e:
+#             QA_util_log_info(e, ui_log=ui_log)
+#             err.append(str(code))
+#             QA_util_log_info(err, ui_log=ui_log)
+#
+#     for i_ in range(len(__index_list)):
+#         # __saving_work('000001')
+#         QA_util_log_info(
+#             'The {} of Total {}'.format(i_,
+#                                         len(__index_list)),
+#             ui_log=ui_log
+#         )
+#
+#         strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
+#             str(float(i_ / len(__index_list) * 100))[0:4] + '%'
+#         )
+#         intLogProgress = int(float(i_ / len(__index_list) * 10000.0))
+#         QA_util_log_info(
+#             strLogProgress,
+#             ui_log=ui_log,
+#             ui_progress=ui_progress,
+#             ui_progress_int_value=intLogProgress
+#         )
+#         __saving_work(__index_list.index[i_][0], coll)
+#     if len(err) < 1:
+#         QA_util_log_info('SUCCESS', ui_log=ui_log)
+#     else:
+#         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
+#         QA_util_log_info(err, ui_log=ui_log)
+#
+#
+# def QA_SU_save_index_min(package = None, client=DATABASE, ui_log=None, ui_progress=None):
+#     """save index_min
+#
+#     Keyword Arguments:
+#         client {[type]} -- [description] (default: {DATABASE})
+#     """
+#
+#     __index_list = QA_fetch_get_index_list(package = package)
+#     coll = client.index_min
+#     coll.create_index(
+#         [
+#             ('code',
+#              pymongo.ASCENDING),
+#             ('time_stamp',
+#              pymongo.ASCENDING),
+#             ('date_stamp',
+#              pymongo.ASCENDING)
+#         ]
+#     )
+#     err = []
+#
+#     def __saving_work(code, coll):
+#         QA_util_log_info(
+#             '##JOB05 Now Saving Index_MIN ==== {}'.format(str(code)),
+#             ui_log=ui_log
+#         )
+#         try:
+#             for type in ['1min', '5min', '15min', '30min', '60min']:
+#                 ref_ = coll.find({'code': str(code)[0:6], 'type': type})
+#                 end_time = str(now_time())[0:19]
+#                 if ref_.count() > 0:
+#                     start_time = ref_[ref_.count() - 1]['datetime']
+#
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     if start_time != end_time:
+#                         predata = QA_fetch_get_index_min(
+#                                                         package,
+#                                                         str(code),
+#                                                         start_time,
+#                                                         end_time,
+#                                                         type
+#                                                         )
+#
+#                         update_start_time = copy.deepcopy(start_time)
+#                         data_getted_start_time = predata.datetime.min()
+#                         if data_getted_start_time == update_start_time:
+#                             coll.insert_many(
+#                                 QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
+#                             )
+#                         else:
+#                             QA_util_log_info(
+#                                 'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
+#                                 .format(code,
+#                                         start_time,
+#                                         end_time,
+#                                         package,
+#                                         data_getted_start_time,
+#                                         update_start_time
+#                                         ),
+#                                 ui_log
+#                             )
+#                             err.append(str(code))
+#                 else:
+#                     start_time = '2010-01-01'
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     predata = QA_fetch_get_index_min(
+#                                                     package,
+#                                                     str(code),
+#                                                     start_time,
+#                                                     end_time,
+#                                                     type
+#                                                     )
+#
+#                     coll.insert_many(
+#                         QA_util_to_json_from_pandas(predata)
+#                     )
+#
+#         except:
+#             err.append(code)
+#
+#     executor = ThreadPoolExecutor(max_workers=4)
+#
+#     res = {
+#         executor.submit(__saving_work,
+#                         __index_list.index[i_][0],
+#                         coll)
+#         for i_ in range(len(__index_list))
+#     }  # multi index ./.
+#     count = 0
+#     for i_ in concurrent.futures.as_completed(res):
+#         strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
+#             str(float(count / len(__index_list) * 100))[0:4] + '%'
+#         )
+#         intLogProgress = int(float(count / len(__index_list) * 10000.0))
+#         QA_util_log_info(
+#             'The {} of Total {}'.format(count,
+#                                         len(__index_list)),
+#             ui_log=ui_log
+#         )
+#         QA_util_log_info(
+#             strLogProgress,
+#             ui_log=ui_log,
+#             ui_progress=ui_progress,
+#             ui_progress_int_value=intLogProgress
+#         )
+#         count = count + 1
+#     if len(err) < 1:
+#         QA_util_log_info('SUCCESS', ui_log=ui_log)
+#     else:
+#         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
+#         QA_util_log_info(err, ui_log=ui_log)
+#
+#
+#
+# ########################################################################################################
+#
 
-def QA_SU_save_future_day_all(package = None,client=DATABASE, ui_log=None, ui_progress=None):
-    '''
-     save future_day_all
-    保存日线数据(全部, 包含单月合约)
-    :param client:
-    :param ui_log:  给GUI qt 界面使用
-    :param ui_progress: 给GUI qt 界面使用
-    :param ui_progress_int_value: 给GUI qt 界面使用
-    :return:
-    '''
-    future_list = QA_fetch_get_future_list(package = package).code.unique().tolist()
-    coll = client.future_day
-    coll.create_index(
-        [("code",
-          pymongo.ASCENDING),
-         ("date_stamp",
-          pymongo.ASCENDING)]
-    )
-    err = []
+#
+#
+# def QA_SU_save_index_list(package = None, client=DATABASE, ui_log=None, ui_progress=None):
+#     index_list = QA_fetch_get_index_list(package = package)
+#     coll_index_list = client.index_list
+#     coll_index_list.create_index("code", unique=True)
+#
+#     try:
+#         coll_index_list.insert_many(
+#             QA_util_to_json_from_pandas(index_list),
+#             ordered=False
+#         )
+#     except:
+#         pass
+#
+#
 
-    def __saving_work(code, coll):
-        try:
-            QA_util_log_info(
-                '##JOB12 Now Saving Future_DAY==== {}'.format(str(code)),
-                ui_log
-            )
-
-            # 首选查找数据库 是否 有 这个代码的数据
-            ref = coll.find({'code': str(code)[0:4]})
-            end_date = str(now_time())[0:10]
-
-            # 当前数据库已经包含了这个代码的数据， 继续增量更新
-            # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
-            if ref.count() > 0:
-                # 接着上次获取的日期继续更新
-                start_date = ref[ref.count() - 1]['date']
-
-                QA_util_log_info(
-                    'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
-                    .format(code,
-                            start_date,
-                            end_date,
-                            package),
-                    ui_log
-                )
-                if start_date != end_date:
-                    update_start_date = QA_util_get_next_day(start_date)
-                    predata = QA_fetch_get_future_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    'day'
-                                                    )
-                    data_getted_start_date = predata.date.min()
-                    if data_getted_start_date == update_start_date:
-                        coll.insert_many(
-                            QA_util_to_json_from_pandas(predata)
-                        )
-                    else:
-                        QA_util_log_info(
-                            'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
-                            .format(code,
-                                    start_date,
-                                    end_date,
-                                    package,
-                                    data_getted_start_date,
-                                    update_start_date
-                                    ),
-                            ui_log
-                        )
-                        err.append(str(code))
-                # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
-                else:
-                    start_date = '1990-01-01'
-                    QA_util_log_info(
-                        'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
-                        .format(code,
-                                start_date,
-                                end_date,
-                                package),
-                        ui_log
-                    )
-                    predata = QA_fetch_get_future_day(
-                                                    package,
-                                                    str(code),
-                                                    update_start_date,
-                                                    end_date,
-                                                    'day'
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-
-        except Exception as error0:
-            print(error0)
-            err.append(str(code))
-
-    for item in range(len(future_list)):
-        QA_util_log_info('The {} of Total {}'.format(item, len(future_list)))
-
-        strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
-            str(float(item / len(future_list) * 100))[0:4] + '%',
-            ui_log
-        )
-        intProgressToLog = int(float(item / len(future_list) * 100))
-        QA_util_log_info(
-            strProgressToLog,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intProgressToLog
-        )
-
-        __saving_work(future_list[item], coll)
-
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS save future day ^_^', ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log)
-        QA_util_log_info(err, ui_log)
-
-
-def QA_SU_save_future_min(package = None,client=DATABASE, ui_log=None, ui_progress=None):
-    """save future_min
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-
-    future_list = [
-        item for item in QA_fetch_get_future_list(package = package).code.unique().tolist()
-        if str(item)[-2:] in ['L8',
-                              'L9']
-    ]
-    coll = client.future_min
-    coll.create_index(
-        [
-            ('code',
-             pymongo.ASCENDING),
-            ('time_stamp',
-             pymongo.ASCENDING),
-            ('date_stamp',
-             pymongo.ASCENDING)
-        ]
-    )
-    err = []
-
-    def __saving_work(code, coll):
-
-        QA_util_log_info(
-            '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-
-            for type in ['1min', '5min', '15min', '30min', '60min']:
-                ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-                end_time = str(now_time())[0:19]
-                if ref_.count() > 0:
-                    start_time = ref_[ref_.count() - 1]['datetime']
-
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    if start_time != end_time:
-                        predata = QA_fetch_get_future_min(
-                                                        package,
-                                                        str(code),
-                                                        start_time,
-                                                        end_time,
-                                                        type
-                                                        )
-
-                        update_start_time = copy.deepcopy(start_time)
-                        data_getted_start_time = predata.datetime.min()
-                        if data_getted_start_time == update_start_time:
-                            coll.insert_many(
-                                QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
-                            )
-                        else:
-                            QA_util_log_info(
-                                'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                                .format(code,
-                                        start_time,
-                                        end_time,
-                                        package,
-                                        data_getted_start_time,
-                                        update_start_time
-                                        ),
-                                ui_log
-                            )
-                            err.append(str(code))
-                else:
-                    start_time = '2010-01-01'
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    predata = QA_fetch_get_future_min(
-                                                    package,
-                                                    str(code),
-                                                    start_time,
-                                                    end_time,
-                                                    type
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-
-        except:
-            err.append(code)
-
-    executor = ThreadPoolExecutor(max_workers=4)
-
-    res = {
-        executor.submit(__saving_work,
-                        future_list[i_],
-                        coll)
-        for i_ in range(len(future_list))
-    }  # multi index ./.
-    count = 0
-    for i_ in concurrent.futures.as_completed(res):
-        QA_util_log_info(
-            'The {} of Total {}'.format(count,
-                                        len(future_list)),
-            ui_log=ui_log
-        )
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(count / len(future_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(count / len(future_list) * 10000.0))
-
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        count = count + 1
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
-
-
-def QA_SU_save_future_min_all(package = None, client=DATABASE, ui_log=None, ui_progress=None):
-    """save future_min_all  (全部, 包含单月合约)
-
-    Keyword Arguments:
-        client {[type]} -- [description] (default: {DATABASE})
-    """
-
-    future_list = QA_fetch_get_future_list(package = package).code.unique().tolist()
-    coll = client.future_min
-    coll.create_index(
-        [
-            ('code',
-             pymongo.ASCENDING),
-            ('time_stamp',
-             pymongo.ASCENDING),
-            ('date_stamp',
-             pymongo.ASCENDING)
-        ]
-    )
-    err = []
-
-    def __saving_work(code, coll):
-
-        QA_util_log_info(
-            '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-
-            for type in ['1min', '5min', '15min', '30min', '60min']:
-                ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-                end_time = str(now_time())[0:19]
-                if ref_.count() > 0:
-                    start_time = ref_[ref_.count() - 1]['datetime']
-
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    if start_time != end_time:
-                        predata = QA_fetch_get_future_min(
-                                                        package,
-                                                        str(code),
-                                                        start_time,
-                                                        end_time,
-                                                        type
-                                                        )
-
-                        update_start_time = copy.deepcopy(start_time)
-                        data_getted_start_time = predata.datetime.min()
-                        if data_getted_start_time == update_start_time:
-                            coll.insert_many(
-                                QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
-                            )
-                        else:
-                            QA_util_log_info(
-                                'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                                .format(code,
-                                        start_time,
-                                        end_time,
-                                        package,
-                                        data_getted_start_time,
-                                        update_start_time
-                                        ),
-                                ui_log
-                            )
-                            err.append(str(code))
-                else:
-                    start_time = '2010-01-01'
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    predata = QA_fetch_get_future_min(
-                                                    package,
-                                                    str(code),
-                                                    start_time,
-                                                    end_time,
-                                                    type
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-        except:
-            err.append(code)
-
-    executor = ThreadPoolExecutor(max_workers=4)
-
-    res = {
-        executor.submit(__saving_work,
-                        future_list[i_],
-                        coll)
-        for i_ in range(len(future_list))
-    }  # multi index ./.
-    count = 0
-    for i_ in concurrent.futures.as_completed(res):
-        QA_util_log_info(
-            'The {} of Total {}'.format(count,
-                                        len(future_list)),
-            ui_log=ui_log
-        )
-        strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(count / len(future_list) * 100))[0:4] + '%'
-        )
-        intLogProgress = int(float(count / len(future_list) * 10000.0))
-
-        QA_util_log_info(
-            strLogProgress,
-            ui_log=ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intLogProgress
-        )
-        count = count + 1
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
-
-# def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+#
+#
+# def QA_SU_save_future_day_all(package = None,client=DATABASE, ui_log=None, ui_progress=None):
 #     '''
-#      save stock_day
-#     多进程保存日线数据
+#      save future_day_all
+#     保存日线数据(全部, 包含单月合约)
 #     :param client:
 #     :param ui_log:  给GUI qt 界面使用
 #     :param ui_progress: 给GUI qt 界面使用
 #     :param ui_progress_int_value: 给GUI qt 界面使用
+#     :return:
 #     '''
-#     global err
+#     future_list = QA_fetch_get_future_list(package = package).code.unique().tolist()
+#     coll = client.future_day
+#     coll.create_index(
+#         [("code",
+#           pymongo.ASCENDING),
+#          ("date_stamp",
+#           pymongo.ASCENDING)]
+#     )
 #     err = []
 #
-#     stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
-#     coll = client.stock_day
-#     coll.create_index(
-#         [("code",pymongo.ASCENDING),
-#          ("date_stamp",pymongo.ASCENDING)],
-#           unique = True
-#     )
+#     def __saving_work(code, coll):
+#         try:
+#             QA_util_log_info(
+#                 '##JOB12 Now Saving Future_DAY==== {}'.format(str(code)),
+#                 ui_log
+#             )
 #
-#     executor = ThreadPoolExecutor(max_workers=default_max_workers)
+#             # 首选查找数据库 是否 有 这个代码的数据
+#             ref = coll.find({'code': str(code)[0:4]})
+#             end_date = str(now_time())[0:10]
+#
+#             # 当前数据库已经包含了这个代码的数据， 继续增量更新
+#             # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
+#             if ref.count() > 0:
+#                 # 接着上次获取的日期继续更新
+#                 start_date = ref[ref.count() - 1]['date']
+#
+#                 QA_util_log_info(
+#                     'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
+#                     .format(code,
+#                             start_date,
+#                             end_date,
+#                             package),
+#                     ui_log
+#                 )
+#                 if start_date != end_date:
+#                     update_start_date = QA_util_get_next_day(start_date)
+#                     predata = QA_fetch_get_future_day(
+#                                                     package,
+#                                                     str(code),
+#                                                     update_start_date,
+#                                                     end_date,
+#                                                     'day'
+#                                                     )
+#                     data_getted_start_date = predata.date.min()
+#                     if data_getted_start_date == update_start_date:
+#                         coll.insert_many(
+#                             QA_util_to_json_from_pandas(predata)
+#                         )
+#                     else:
+#                         QA_util_log_info(
+#                             'Trying updating {} from {} to {}, package: {}, Data Error: reason: start date does not match, start date: {}, database calculated start date: {}'
+#                             .format(code,
+#                                     start_date,
+#                                     end_date,
+#                                     package,
+#                                     data_getted_start_date,
+#                                     update_start_date
+#                                     ),
+#                             ui_log
+#                         )
+#                         err.append(str(code))
+#                 # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
+#                 else:
+#                     start_date = '1990-01-01'
+#                     QA_util_log_info(
+#                         'UPDATE_Future_DAY \n Trying updating {} from {} to {}, package: {}'
+#                         .format(code,
+#                                 start_date,
+#                                 end_date,
+#                                 package),
+#                         ui_log
+#                     )
+#                     predata = QA_fetch_get_future_day(
+#                                                     package,
+#                                                     str(code),
+#                                                     update_start_date,
+#                                                     end_date,
+#                                                     'day'
+#                                                     )
+#
+#                     coll.insert_many(
+#                         QA_util_to_json_from_pandas(predata)
+#                     )
+#
+#         except Exception as error0:
+#             print(error0)
+#             err.append(str(code))
+#
+#     for item in range(len(future_list)):
+#         QA_util_log_info('The {} of Total {}'.format(item, len(future_list)))
+#
+#         strProgressToLog = 'DOWNLOAD PROGRESS {} {}'.format(
+#             str(float(item / len(future_list) * 100))[0:4] + '%',
+#             ui_log
+#         )
+#         intProgressToLog = int(float(item / len(future_list) * 100))
+#         QA_util_log_info(
+#             strProgressToLog,
+#             ui_log=ui_log,
+#             ui_progress=ui_progress,
+#             ui_progress_int_value=intProgressToLog
+#         )
+#
+#         __saving_work(future_list[item], coll)
+#
+#     if len(err) < 1:
+#         QA_util_log_info('SUCCESS save future day ^_^', ui_log)
+#     else:
+#         QA_util_log_info(' ERROR CODE \n ', ui_log)
+#         QA_util_log_info(err, ui_log)
+#
+#
+# def QA_SU_save_future_min(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+#     """save future_min
+#
+#     Keyword Arguments:
+#         client {[type]} -- [description] (default: {DATABASE})
+#     """
+#
+#     future_list = [
+#         item for item in QA_fetch_get_future_list(package = package).code.unique().tolist()
+#         if str(item)[-2:] in ['L8',
+#                               'L9']
+#     ]
+#     coll = client.future_min
+#     coll.create_index(
+#         [
+#             ('code',
+#              pymongo.ASCENDING),
+#             ('time_stamp',
+#              pymongo.ASCENDING),
+#             ('date_stamp',
+#              pymongo.ASCENDING)
+#         ]
+#     )
+#     err = []
+#
+#     def __saving_work(code, coll):
+#
+#         QA_util_log_info(
+#             '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)),
+#             ui_log=ui_log
+#         )
+#         try:
+#
+#             for type in ['1min', '5min', '15min', '30min', '60min']:
+#                 ref_ = coll.find({'code': str(code)[0:6], 'type': type})
+#                 end_time = str(now_time())[0:19]
+#                 if ref_.count() > 0:
+#                     start_time = ref_[ref_.count() - 1]['datetime']
+#
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     if start_time != end_time:
+#                         predata = QA_fetch_get_future_min(
+#                                                         package,
+#                                                         str(code),
+#                                                         start_time,
+#                                                         end_time,
+#                                                         type
+#                                                         )
+#
+#                         update_start_time = copy.deepcopy(start_time)
+#                         data_getted_start_time = predata.datetime.min()
+#                         if data_getted_start_time == update_start_time:
+#                             coll.insert_many(
+#                                 QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
+#                             )
+#                         else:
+#                             QA_util_log_info(
+#                                 'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
+#                                 .format(code,
+#                                         start_time,
+#                                         end_time,
+#                                         package,
+#                                         data_getted_start_time,
+#                                         update_start_time
+#                                         ),
+#                                 ui_log
+#                             )
+#                             err.append(str(code))
+#                 else:
+#                     start_time = '2010-01-01'
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     predata = QA_fetch_get_future_min(
+#                                                     package,
+#                                                     str(code),
+#                                                     start_time,
+#                                                     end_time,
+#                                                     type
+#                                                     )
+#
+#                     coll.insert_many(
+#                         QA_util_to_json_from_pandas(predata)
+#                     )
+#
+#         except:
+#             err.append(code)
+#
+#     executor = ThreadPoolExecutor(max_workers=4)
+#
 #     res = {
-#         executor.submit(_saving_work_ForDataWithTime_SpecialCode,
-#                         QA_fetch_get_stock_day,
-#                         package,
-#                         stock_list[i_],
-#                         '1990-01-01',
-#                         coll,
-#                         'date',
-#                         None,
-#                         'STOCK_DAY',
-#                         ui_log)
-#         for i_ in range(len(stock_list))
-#     }
+#         executor.submit(__saving_work,
+#                         future_list[i_],
+#                         coll)
+#         for i_ in range(len(future_list))
+#     }  # multi index ./.
 #     count = 0
 #     for i_ in concurrent.futures.as_completed(res):
 #         QA_util_log_info(
 #             'The {} of Total {}'.format(count,
-#                                         len(stock_list)),
+#                                         len(future_list)),
 #             ui_log=ui_log
 #         )
-#
-#         strProgress = 'DOWNLOAD PROGRESS {} '.format(
-#             str(float(count / len(stock_list) * 100))[0:4] + '%'
+#         strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
+#             str(float(count / len(future_list) * 100))[0:4] + '%'
 #         )
-#         intProgress = int(count / len(stock_list) * 10000.0)
+#         intLogProgress = int(float(count / len(future_list) * 10000.0))
+#
 #         QA_util_log_info(
-#             strProgress,
-#             ui_log,
+#             strLogProgress,
+#             ui_log=ui_log,
 #             ui_progress=ui_progress,
-#             ui_progress_int_value=intProgress
+#             ui_progress_int_value=intLogProgress
 #         )
 #         count = count + 1
-#
 #     if len(err) < 1:
-#         QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
+#         QA_util_log_info('SUCCESS', ui_log=ui_log)
 #     else:
-#         QA_util_log_info('ERROR CODE \n ', ui_log)
-#         QA_util_log_info(err, ui_log)
+#         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
+#         QA_util_log_info(err, ui_log=ui_log)
+#
+#
+# def QA_SU_save_future_min_all(package = None, client=DATABASE, ui_log=None, ui_progress=None):
+#     """save future_min_all  (全部, 包含单月合约)
+#
+#     Keyword Arguments:
+#         client {[type]} -- [description] (default: {DATABASE})
+#     """
+#
+#     future_list = QA_fetch_get_future_list(package = package).code.unique().tolist()
+#     coll = client.future_min
+#     coll.create_index(
+#         [
+#             ('code',
+#              pymongo.ASCENDING),
+#             ('time_stamp',
+#              pymongo.ASCENDING),
+#             ('date_stamp',
+#              pymongo.ASCENDING)
+#         ]
+#     )
+#     err = []
+#
+#     def __saving_work(code, coll):
+#
+#         QA_util_log_info(
+#             '##JOB13 Now Saving Future_MIN ==== {}'.format(str(code)),
+#             ui_log=ui_log
+#         )
+#         try:
+#
+#             for type in ['1min', '5min', '15min', '30min', '60min']:
+#                 ref_ = coll.find({'code': str(code)[0:6], 'type': type})
+#                 end_time = str(now_time())[0:19]
+#                 if ref_.count() > 0:
+#                     start_time = ref_[ref_.count() - 1]['datetime']
+#
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     if start_time != end_time:
+#                         predata = QA_fetch_get_future_min(
+#                                                         package,
+#                                                         str(code),
+#                                                         start_time,
+#                                                         end_time,
+#                                                         type
+#                                                         )
+#
+#                         update_start_time = copy.deepcopy(start_time)
+#                         data_getted_start_time = predata.datetime.min()
+#                         if data_getted_start_time == update_start_time:
+#                             coll.insert_many(
+#                                 QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
+#                             )
+#                         else:
+#                             QA_util_log_info(
+#                                 'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
+#                                 .format(code,
+#                                         start_time,
+#                                         end_time,
+#                                         package,
+#                                         data_getted_start_time,
+#                                         update_start_time
+#                                         ),
+#                                 ui_log
+#                             )
+#                             err.append(str(code))
+#                 else:
+#                     start_time = '2010-01-01'
+#                     QA_util_log_info(
+#                         '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
+#                             ['1min',
+#                              '5min',
+#                              '15min',
+#                              '30min',
+#                              '60min'].index(type),
+#                             str(code),
+#                             start_time,
+#                             end_time,
+#                             type,
+#                             package
+#                         ),
+#                         ui_log=ui_log
+#                     )
+#                     predata = QA_fetch_get_future_min(
+#                                                     package,
+#                                                     str(code),
+#                                                     start_time,
+#                                                     end_time,
+#                                                     type
+#                                                     )
+#
+#                     coll.insert_many(
+#                         QA_util_to_json_from_pandas(predata)
+#                     )
+#         except:
+#             err.append(code)
+#
+#     executor = ThreadPoolExecutor(max_workers=4)
+#
+#     res = {
+#         executor.submit(__saving_work,
+#                         future_list[i_],
+#                         coll)
+#         for i_ in range(len(future_list))
+#     }  # multi index ./.
+#     count = 0
+#     for i_ in concurrent.futures.as_completed(res):
+#         QA_util_log_info(
+#             'The {} of Total {}'.format(count,
+#                                         len(future_list)),
+#             ui_log=ui_log
+#         )
+#         strLogProgress = 'DOWNLOAD PROGRESS {} '.format(
+#             str(float(count / len(future_list) * 100))[0:4] + '%'
+#         )
+#         intLogProgress = int(float(count / len(future_list) * 10000.0))
+#
+#         QA_util_log_info(
+#             strLogProgress,
+#             ui_log=ui_log,
+#             ui_progress=ui_progress,
+#             ui_progress_int_value=intLogProgress
+#         )
+#         count = count + 1
+#     if len(err) < 1:
+#         QA_util_log_info('SUCCESS', ui_log=ui_log)
+#     else:
+#         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
+#         QA_util_log_info(err, ui_log=ui_log)
+
 
 # def gen_param(codelist, start_date=None, end_date=None, if_fq='00', frequence='day', IPList=[]):
 #     # 生成QA.QAFetch.QATdx.QA_fetch_get_stock_day多进程处理的参数

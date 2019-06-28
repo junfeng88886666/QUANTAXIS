@@ -532,6 +532,10 @@ class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
                 ['code'])
     STOCK_BLOCK = ('code',['blockname','code','type','enter_date','source'],['code','blockname'])
 
+    FUTURE_LIST = ('code',['code','name','category','market','desc','source'],['code','market','category'])
+    FUTURE_DAY = ('date',['date','code', 'open', 'high', 'low', 'close', 'price', 'trade', 'position'],['date','code'])
+
+
 class ERRORTYPE():
     '''
     报错类型

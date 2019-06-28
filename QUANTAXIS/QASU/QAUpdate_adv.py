@@ -14,6 +14,8 @@ current_supported_update = {
     DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: {'data_type': [None]}},
     DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: {'data_type': [None]}},
+
+    DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX: {'data_type': [None]}},
 }
 
 
@@ -37,8 +39,8 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.STOCK_MIN: {DATASOURCE.TDX: {'data_type': ['1min', '5min', '15min', '30min', '60min']}}, # 未完成
                             # DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:None}, # 做好了，但是不建议存储
 
-                            # DATABASE_NAME.FUTURE_LIST: {'tdx':None},
-                            # DATABASE_NAME.FUTURE_DAY: {'tdx':None},
+                            # DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX:None},
+                            DATABASE_NAME.FUTURE_DAY: {'tdx':None},
                             # DATABASE_NAME.FUTURE_TRANSACTION: {'tdx':None},
                             # DATABASE_NAME.FUTURE_MIN: {'tdx':{'data_type':['1min','5min','15min','30min','60min']}},
 
@@ -80,6 +82,8 @@ def QA_SU_update_single(database_name = None,package = None,data_type = None, ui
         elif database_name == DATABASE_NAME.STOCK_XDXR: save_engine.QA_SU_save_stock_xdxr(package = package)
         elif database_name == DATABASE_NAME.STOCK_INFO: save_engine.QA_SU_save_stock_info(package = package)
         elif database_name == DATABASE_NAME.STOCK_BLOCK: save_engine.QA_SU_save_stock_block(package = package)
+
+        elif database_name == DATABASE_NAME.FUTURE_LIST: save_engine.QA_SU_save_future_list(package = package)
 
     else:
         QA_util_log_info('Error: DataBase: {}, package: {}, data type: {}; is not supported currently'.format(database_name,package,str(data_type)), ui_log)

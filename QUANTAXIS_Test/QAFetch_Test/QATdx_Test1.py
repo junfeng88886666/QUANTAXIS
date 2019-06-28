@@ -18,6 +18,11 @@ data = QA.QAFetch.QATdx.QA_fetch_get_depth_market_data('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_list()
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_xdxr('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_info('000002')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
+
+data = QA.QAFetch.QATdx.QA_fetch_get_future_list()
+data = QA.QAFetch.QATdx.QA_fetch_get_future_day('RBL8','2018-06-26','2019-06-27')
+
 
 #%%
 data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')

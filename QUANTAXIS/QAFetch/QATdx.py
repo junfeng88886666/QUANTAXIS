@@ -377,6 +377,7 @@ def QA_fetch_get_security_bars(code, _type, lens, ip=None, port=None):
         else:
             return None
 
+#%% STOCK_CN_PART
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_day(code, start, end, if_fq='00', frequence='day', ip=None, port=None):
     """获取日线及以上级别的数据
@@ -644,38 +645,47 @@ def QA_fetch_get_stock_latest(code, frequence='day', ip=None, port=None):
     ip, port = get_mainmarket_ip(ip, port)
     code = [code] if isinstance(code, str) else code
     api = TdxHq_API(multithread=True)
+    try:
+        if frequence in ['w', 'W', 'Week', 'week']:
+            frequence = 5
+        elif frequence in ['month', 'M', 'm', 'Month']:
+            frequence = 6
+        elif frequence in ['Q', 'Quarter', 'q']:
+            frequence = 10
+        elif frequence in ['y', 'Y', 'year', 'Year']:
+            frequence = 11
+        elif frequence in ['5', '5m', '5min', 'five']:
+            frequence = 0
+        elif frequence in ['1', '1m', '1min', 'one']:
+            frequence = 8
+        elif frequence in ['15', '15m', '15min', 'fifteen']:
+            frequence = 1
+        elif frequence in ['30', '30m', '30min', 'half']:
+            frequence = 2
+        elif frequence in ['60', '60m', '60min', '1h']:
+            frequence = 3
+        else:
+            frequence = 9
 
-    if frequence in ['w', 'W', 'Week', 'week']:
-        frequence = 5
-    elif frequence in ['month', 'M', 'm', 'Month']:
-        frequence = 6
-    elif frequence in ['Q', 'Quarter', 'q']:
-        frequence = 10
-    elif frequence in ['y', 'Y', 'year', 'Year']:
-        frequence = 11
-    elif frequence in ['5', '5m', '5min', 'five']:
-        frequence = 0
-    elif frequence in ['1', '1m', '1min', 'one']:
-        frequence = 8
-    elif frequence in ['15', '15m', '15min', 'fifteen']:
-        frequence = 1
-    elif frequence in ['30', '30m', '30min', 'half']:
-        frequence = 2
-    elif frequence in ['60', '60m', '60min', '1h']:
-        frequence = 3
-    else:
-        frequence = 9
-
-    with api.connect(ip, port):
-        data = pd.concat([api.to_df(api.get_security_bars(
-            frequence, _select_market_code(item), item, 0, 1)).assign(code=item) for item in code], axis=0)
-        data = data \
-            .assign(date=pd.to_datetime(data['datetime']
-                                        .apply(lambda x: x[0:10])), date_stamp=data['datetime']
-                    .apply(lambda x: QA_util_date_stamp(str(x[0:10])))) \
-            .set_index('date', drop=False) \
-            .drop(['year', 'month', 'day', 'hour','minute','datetime'], axis=1)
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LATEST)(DATASOURCE.TDX,data)
+        with api.connect(ip, port):
+            data = pd.concat([api.to_df(api.get_security_bars(
+                frequence, _select_market_code(item), item, 0, 1)).assign(code=item) for item in code], axis=0)
+            data = data \
+                .assign(date=pd.to_datetime(data['datetime']
+                                            .apply(lambda x: x[0:10])), date_stamp=data['datetime']
+                        .apply(lambda x: QA_util_date_stamp(str(x[0:10])))) \
+                .set_index('date', drop=False) \
+                .drop(['year', 'month', 'day', 'hour','minute','datetime'], axis=1)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LATEST)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
@@ -691,38 +701,58 @@ def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
     # # reversed_bytes0 时间
 
     api = TdxHq_API()
-    __data = pd.DataFrame()
-    with api.connect(ip, port):
-        code = [code] if isinstance(code, str) else code
-        for id_ in range(int(len(code) / 80) + 1):
-            __data = __data.append(api.to_df(api.get_security_quotes(
-                [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
-            __data['datetime'] = datetime.datetime.now()
-        data = __data[
-            ['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
-             's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
-             'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
-             'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
+    try:
+        __data = pd.DataFrame()
+        with api.connect(ip, port):
+            code = [code] if isinstance(code, str) else code
+            for id_ in range(int(len(code) / 80) + 1):
+                __data = __data.append(api.to_df(api.get_security_quotes(
+                    [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
+                __data['datetime'] = datetime.datetime.now()
+            data = __data[
+                ['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
+                 's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
+                 'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
+                 'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_depth_market_data(code=['000001', '000002'], ip=None, port=None):
     '''当前不使用数据协议，因为不需要对多数据源进行处理，追求速度'''
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    __data = pd.DataFrame()
-    with api.connect(ip, port):
-        code = [code] if isinstance(code, str) else code
-        for id_ in range(int(len(code) / 80) + 1):
-            __data = __data.append(api.to_df(api.get_security_quotes(
-                [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
-            __data['datetime'] = datetime.datetime.now()
-        data = __data
-        # data = __data[['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
-        #                's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
-        #                'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
-        #                'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
+    try:
+        __data = pd.DataFrame()
+        with api.connect(ip, port):
+            code = [code] if isinstance(code, str) else code
+            for id_ in range(int(len(code) / 80) + 1):
+                __data = __data.append(api.to_df(api.get_security_quotes(
+                    [(_select_market_code(x), x) for x in code[80 * id_:80 * (id_ + 1)]])))
+                __data['datetime'] = datetime.datetime.now()
+            data = __data
+            # data = __data[['datetime', 'active1', 'active2', 'last_close', 'code', 'open', 'high', 'low', 'price', 'cur_vol',
+            #                's_vol', 'b_vol', 'vol', 'ask1', 'ask_vol1', 'bid1', 'bid_vol1', 'ask2', 'ask_vol2',
+            #                'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
+            #                'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5']]
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
@@ -742,71 +772,98 @@ def QA_fetch_get_stock_transaction_realtime(code, ip=None, port=None):
                 datetime=pd.to_datetime(data['time'].apply(lambda x: str(day) + ' ' + str(x)))) \
                 .assign(code=str(code)).assign(order=range(len(data.index)))
             return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION_REALTIME)(DATASOURCE.TDX,data)
-    except:
-        return None
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_list(type_='stock', ip=None, port=None):
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    with api.connect(ip, port):
-        data = pd.concat(
-            [pd.concat([api.to_df(api.get_security_list(j, i * 1000)).assign(sse='sz' if j == 0 else 'sh').set_index(
-                ['code', 'sse'], drop=False) for i in range(int(api.get_security_count(j) / 1000) + 1)], axis=0) for j
-                in range(2)], axis=0)
-        # data.code = data.code.apply(int)
-        sz = data.query('sse=="sz"')
-        sh = data.query('sse=="sh"')
+    try:
+        with api.connect(ip, port):
+            data = pd.concat(
+                [pd.concat([api.to_df(api.get_security_list(j, i * 1000)).assign(sse='sz' if j == 0 else 'sh').set_index(
+                    ['code', 'sse'], drop=False) for i in range(int(api.get_security_count(j) / 1000) + 1)], axis=0) for j
+                    in range(2)], axis=0)
+            # data.code = data.code.apply(int)
+            sz = data.query('sse=="sz"')
+            sh = data.query('sse=="sh"')
 
-        sz = sz.assign(sec=sz.code.apply(for_sz))
-        sh = sh.assign(sec=sh.code.apply(for_sh))
+            sz = sz.assign(sec=sz.code.apply(for_sz))
+            sh = sh.assign(sec=sh.code.apply(for_sh))
 
-        if type_ in ['stock', 'gp']:
+            if type_ in ['stock', 'gp']:
 
-            data = pd.concat([sz, sh]).query('sec=="stock_cn"').sort_index().assign(
-                name=data['name'].apply(lambda x: str(x)[0:6]))
+                data = pd.concat([sz, sh]).query('sec=="stock_cn"').sort_index().assign(
+                    name=data['name'].apply(lambda x: str(x)[0:6]))
 
-        elif type_ in ['index', 'zs']:
+            elif type_ in ['index', 'zs']:
 
-            data = pd.concat([sz, sh]).query('sec=="index_cn"').sort_index().assign(
-                name=data['name'].apply(lambda x: str(x)[0:6]))
-            # .assign(szm=data['name'].apply(lambda x: ''.join([y[0] for y in lazy_pinyin(x)])))\
-            # .assign(quanpin=data['name'].apply(lambda x: ''.join(lazy_pinyin(x))))
-        elif type_ in ['etf', 'ETF']:
-            data = pd.concat([sz, sh]).query('sec=="etf_cn"').sort_index().assign(
-                name=data['name'].apply(lambda x: str(x)[0:6]))
+                data = pd.concat([sz, sh]).query('sec=="index_cn"').sort_index().assign(
+                    name=data['name'].apply(lambda x: str(x)[0:6]))
+                # .assign(szm=data['name'].apply(lambda x: ''.join([y[0] for y in lazy_pinyin(x)])))\
+                # .assign(quanpin=data['name'].apply(lambda x: ''.join(lazy_pinyin(x))))
+            elif type_ in ['etf', 'ETF']:
+                data = pd.concat([sz, sh]).query('sec=="etf_cn"').sort_index().assign(
+                    name=data['name'].apply(lambda x: str(x)[0:6]))
 
+            else:
+                data = data.assign(code=data['code'].apply(lambda x: str(x))).assign(
+                    name=data['name'].apply(lambda x: str(x)[0:6]))
+                # .assign(szm=data['name'].apply(lambda x: ''.join([y[0] for y in lazy_pinyin(x)])))\
+                #    .assign(quanpin=data['name'].apply(lambda x: ''.join(lazy_pinyin(x))))
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LIST)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
         else:
-            data = data.assign(code=data['code'].apply(lambda x: str(x))).assign(
-                name=data['name'].apply(lambda x: str(x)[0:6]))
-            # .assign(szm=data['name'].apply(lambda x: ''.join([y[0] for y in lazy_pinyin(x)])))\
-            #    .assign(quanpin=data['name'].apply(lambda x: ''.join(lazy_pinyin(x))))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_LIST)(DATASOURCE.TDX,data)
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_xdxr(code, ip=None, port=None):
     '除权除息'
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    market_code = _select_market_code(code)
-    with api.connect(ip, port):
-        category = {
-            '1': '除权除息', '2': '送配股上市', '3': '非流通股上市', '4': '未知股本变动', '5': '股本变化',
-            '6': '增发新股', '7': '股份回购', '8': '增发新股上市', '9': '转配股上市', '10': '可转债上市',
-            '11': '扩缩股', '12': '非流通股缩股', '13': '送认购权证', '14': '送认沽权证'}
-        data = api.to_df(api.get_xdxr_info(market_code, code))
-        if len(data) >= 1:
-            data = data \
-                .assign(date=pd.to_datetime(data[['year', 'month', 'day']])) \
-                .drop(['year', 'month', 'day'], axis=1) \
-                .assign(category_meaning=data['category'].apply(lambda x: category[str(x)])) \
-                .assign(code=str(code)) \
-                .rename(index=str, columns={'panhouliutong': 'liquidity_after',
-                                            'panqianliutong': 'liquidity_before', 'houzongguben': 'shares_after',
-                                            'qianzongguben': 'shares_before'})
-            data = data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_XDXR)(DATASOURCE.TDX,data)
+    try:
+        market_code = _select_market_code(code)
+        with api.connect(ip, port):
+            category = {
+                '1': '除权除息', '2': '送配股上市', '3': '非流通股上市', '4': '未知股本变动', '5': '股本变化',
+                '6': '增发新股', '7': '股份回购', '8': '增发新股上市', '9': '转配股上市', '10': '可转债上市',
+                '11': '扩缩股', '12': '非流通股缩股', '13': '送认购权证', '14': '送认沽权证'}
+            data = api.to_df(api.get_xdxr_info(market_code, code))
+            if len(data) >= 1:
+                data = data \
+                    .assign(date=pd.to_datetime(data[['year', 'month', 'day']])) \
+                    .drop(['year', 'month', 'day'], axis=1) \
+                    .assign(category_meaning=data['category'].apply(lambda x: category[str(x)])) \
+                    .assign(code=str(code)) \
+                    .rename(index=str, columns={'panhouliutong': 'liquidity_after',
+                                                'panqianliutong': 'liquidity_before', 'houzongguben': 'shares_after',
+                                                'qianzongguben': 'shares_before'})
+                data = data.assign(date=data['date'].apply(lambda x: str(x)[0:10]))
+                return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_XDXR)(DATASOURCE.TDX,data)
+            else:
+                return None
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
         else:
+            print(e)
             return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
@@ -814,31 +871,130 @@ def QA_fetch_get_stock_info(code, ip=None, port=None):
     '股票基本信息'
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    market_code = _select_market_code(code)
-    with api.connect(ip, port):
-        data = api.to_df(api.get_finance_info(market_code, code))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_INFO)(DATASOURCE.TDX,data)
-
+    try:
+        market_code = _select_market_code(code)
+        with api.connect(ip, port):
+            data = api.to_df(api.get_finance_info(market_code, code))
+            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_INFO)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_block(ip=None, port=None):
     '板块数据'
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
-    with api.connect(ip, port):
+    try:
+        with api.connect(ip, port):
+            data = pd.concat([api.to_df(api.get_and_parse_block_info("block_gn.dat")).assign(type='gn'),
+                              api.to_df(api.get_and_parse_block_info(
+                                  "block.dat")).assign(type='yb'),
+                              api.to_df(api.get_and_parse_block_info(
+                                  "block_zs.dat")).assign(type='zs'),
+                              api.to_df(api.get_and_parse_block_info("block_fg.dat")).assign(type='fg')])
 
-        data = pd.concat([api.to_df(api.get_and_parse_block_info("block_gn.dat")).assign(type='gn'),
-                          api.to_df(api.get_and_parse_block_info(
-                              "block.dat")).assign(type='yb'),
-                          api.to_df(api.get_and_parse_block_info(
-                              "block_zs.dat")).assign(type='zs'),
-                          api.to_df(api.get_and_parse_block_info("block_fg.dat")).assign(type='fg')])
-
-        if len(data) > 10:
-            data = data.drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,inplace=False).drop_duplicates()
-            return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_BLOCK)(DATASOURCE.TDX,data)
+            if len(data) > 10:
+                data = data.drop(['block_type', 'code_index'], axis=1).set_index('code', drop=False,inplace=False).drop_duplicates()
+                return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_BLOCK)(DATASOURCE.TDX,data)
+            else:
+                QA_util_log_info('Wrong with fetch block ')
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
         else:
-            QA_util_log_info('Wrong with fetch block ')
+            print(e)
+            return None
+
+#%% FUTURE_CN_PART
+def QA_fetch_get_future_list(ip=None, port=None):
+    """[summary]
+    Keyword Arguments:
+        ip {[type]} -- [description] (default: {None})
+        port {[type]} -- [description] (default: {None})
+    42         3      商品指数         TI
+    60         3    主力期货合约         MA
+    28         3      郑州商品         QZ
+    29         3      大连商品         QD
+    30         3      上海期货(原油+贵金属)  QS
+    47         3     中金所期货         CZ
+    50         3      渤海商品         BH
+    76         3      齐鲁商品         QL
+    46        11      上海黄金(伦敦金T+D)         SG
+    """
+
+    global extension_market_list
+    extension_market_list = QA_fetch_get_extensionmarket_list(
+    ) if extension_market_list is None else extension_market_list
+
+    data = extension_market_list.query('market==42 or market==28 or market==29 or market==30 or market==47')
+    return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_LIST)(DATASOURCE.TDX,data)
+
+
+def QA_fetch_get_future_day(code, start_date, end_date, frequence='day', ip=None, port=None):
+    '期货数据 日线'
+    ip, port = get_extensionmarket_ip(ip, port)
+    apix = TdxExHq_API()
+    try:
+        start_date = str(start_date)[0:10]
+        today_ = datetime.date.today()
+        lens = QA_util_get_trade_gap(start_date, today_)
+        global extension_market_list
+        extension_market_list = QA_fetch_get_extensionmarket_list(
+        ) if extension_market_list is None else extension_market_list
+
+        with apix.connect(ip, port):
+            code_market = extension_market_list.query(
+                'code=="{}"'.format(code)).iloc[0]
+
+            data = pd.concat(
+                [apix.to_df(apix.get_instrument_bars(
+                    _select_type(frequence),
+                    int(code_market.market),
+                    str(code),
+                    (int(lens / 700) - i) * 700, 700)) for i in range(int(lens / 700) + 1)],
+                axis=0)
+
+            try:
+
+                # 获取商品期货会报None
+                data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10]))).assign(code=str(code)) \
+                    .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))).set_index('date',
+                                                                                                                     drop=False,
+                                                                                                                     inplace=False)
+            except Exception as exp:
+                print("code is ", code)
+                print(exp.__str__)
+                return None
+            data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(
+                date=data['date'].apply(lambda x: str(x)[0:10]))
+            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_DAY)(DATASOURCE.TDX,data)
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
+
+#######################################################################################################################################
+#######################################################################################################################################
+### 分割线
+#######################################################################################################################################
+#######################################################################################################################################
+
+
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_index_list(ip=None, port=None):
@@ -1127,7 +1283,7 @@ http://www.tdx.com.cn/page_46.html
        47         3     中金所期货         CZ
        50         3      渤海商品         BH
        76         3      齐鲁商品         QL
-## 基金 
+## 基金
        33         8     开放式基金         FU
        34         9     货币型基金         FB
        35         8  招商理财产品         LC
@@ -1189,30 +1345,6 @@ def QA_fetch_get_extensionmarket_list(ip=None, port=None):
         return pd.concat([apix.to_df(
             apix.get_instrument_info((int(num / 500) - i) * 500, 500))
             for i in range(int(num / 500) + 1)], axis=0).set_index('code', drop=False)
-
-
-def QA_fetch_get_future_list(ip=None, port=None):
-    """[summary]
-    Keyword Arguments:
-        ip {[type]} -- [description] (default: {None})
-        port {[type]} -- [description] (default: {None})
-    42         3      商品指数         TI
-    60         3    主力期货合约         MA
-    28         3      郑州商品         QZ
-    29         3      大连商品         QD
-    30         3      上海期货(原油+贵金属)  QS
-    47         3     中金所期货         CZ
-    50         3      渤海商品         BH
-    76         3      齐鲁商品         QL
-    46        11      上海黄金(伦敦金T+D)         SG
-    """
-
-    global extension_market_list
-    extension_market_list = QA_fetch_get_extensionmarket_list(
-    ) if extension_market_list is None else extension_market_list
-
-    return extension_market_list.query('market==42 or market==28 or market==29 or market==30 or market==47')
-
 
 def QA_fetch_get_globalindex_list(ip=None, port=None):
     """全球指数列表
@@ -1398,10 +1530,10 @@ def QA_fetch_get_option_contract_time_to_market():
     # pprint.pprint(result)
     #  category  market code name desc  code
     '''
-    fix here : 
+    fix here :
     See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
     result['meaningful_name'] = None
-    C:\work_new\QUANTAXIS\QUANTAXIS\QAFetch\QATdx.py:1468: SettingWithCopyWarning: 
+    C:\work_new\QUANTAXIS\QUANTAXIS\QAFetch\QATdx.py:1468: SettingWithCopyWarning:
     A value is trying to be set on a copy of a slice from a DataFrame.
     Try using .loc[row_indexer,col_indexer] = value instead
     '''
@@ -1628,10 +1760,10 @@ def QA_fetch_get_option_50etf_contract_time_to_market():
     # pprint.pprint(result)
     #  category  market code name desc  code
     '''
-    fix here : 
+    fix here :
     See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
     result['meaningful_name'] = None
-    C:\work_new\QUANTAXIS\QUANTAXIS\QAFetch\QATdx.py:1468: SettingWithCopyWarning: 
+    C:\work_new\QUANTAXIS\QUANTAXIS\QAFetch\QATdx.py:1468: SettingWithCopyWarning:
     A value is trying to be set on a copy of a slice from a DataFrame.
     Try using .loc[row_indexer,col_indexer] = value instead
     '''
@@ -1921,48 +2053,6 @@ def QA_fetch_get_exchangerate_list(ip=None, port=None):
 
     return extension_market_list.query('market==10 or market==11').query('category==4')
 
-
-def QA_fetch_get_future_day(code, start_date, end_date, frequence='day', ip=None, port=None):
-    '期货数据 日线'
-    ip, port = get_extensionmarket_ip(ip, port)
-    apix = TdxExHq_API()
-    start_date = str(start_date)[0:10]
-    today_ = datetime.date.today()
-    lens = QA_util_get_trade_gap(start_date, today_)
-    global extension_market_list
-    extension_market_list = QA_fetch_get_extensionmarket_list(
-    ) if extension_market_list is None else extension_market_list
-
-    with apix.connect(ip, port):
-        code_market = extension_market_list.query(
-            'code=="{}"'.format(code)).iloc[0]
-
-        data = pd.concat(
-            [apix.to_df(apix.get_instrument_bars(
-                _select_type(frequence),
-                int(code_market.market),
-                str(code),
-                (int(lens / 700) - i) * 700, 700)) for i in range(int(lens / 700) + 1)],
-            axis=0)
-
-        try:
-
-            # 获取商品期货会报None
-            data = data.assign(date=data['datetime'].apply(lambda x: str(x[0:10]))).assign(code=str(code)) \
-                .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))).set_index('date',
-                                                                                                                 drop=False,
-                                                                                                                 inplace=False)
-
-        except Exception as exp:
-            print("code is ", code)
-            print(exp.__str__)
-            return None
-
-        data = data.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1)[start_date:end_date].assign(
-            date=data['date'].apply(lambda x: str(x)[0:10]))
-        return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_DAY)(DATASOURCE.TDX,data)
-
-
 def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = False, ip=None, port=None):
     '期货数据 分钟线'
     if resample_tick == False:
@@ -2015,7 +2105,7 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = 
             return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATASOURCE.TDX,data)
     else:
         '''
-       TODO: 开发这个板块 
+       TODO: 开发这个板块
        '''
         # data = QA_fetch_get_future_min(code, start, end, frequence, False, ip, port)
         # min_datetime = start
@@ -2180,7 +2270,6 @@ def QA_fetch_get_wholemarket_list():
 if __name__ == '__main__':
     rows = QA_fetch_get_commodity_option_CU_contract_time_to_market()
     print(rows)
-
     print(QA_fetch_get_stock_day('000001', '2017-07-03', '2017-07-10'))
     print(QA_fetch_get_stock_day('000001', '2013-07-01', '2013-07-09'))
     # print(QA_fetch_get_stock_realtime('000001'))
