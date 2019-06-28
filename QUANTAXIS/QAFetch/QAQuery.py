@@ -47,7 +47,18 @@ from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_da
 2018-07-30 修改 增加batch_size  可以做到8MB/S-30mb/s的传输速度
 
 """
-
+def __QA_fetch_query_filter(data,index_columns_unique,query = None):
+    try:
+        if query != None:
+            data = data.drop_duplicates((index_columns_unique[2])).query(query) \
+                        .set_index(index_columns_unique[0], drop=False)
+        else:
+            data = data.drop_duplicates((index_columns_unique[2])) \
+                        .set_index(index_columns_unique[0], drop=False)
+        data = data.ix[:, index_columns_unique[1]]
+    except:
+        data = None
+    return data
 
 def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collections=DATABASE.stock_day):
     """'获取股票日线'
@@ -76,20 +87,16 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         res = pd.DataFrame([item for item in cursor])
 
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
-        try:
-            res = res.drop_duplicates((DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[2])).query('volume>1')\
-                    .set_index(DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[0], drop=False)
-            res = res.ix[:, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY[1]]
-        except:
-            res = None
+        __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY, query='volume>1')
 
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data = res,format = format)
     else:
         QA_util_log_info(
             'QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+        return None
 
-def QA_fetch_stock_transaction(code, start, end, frequence = None, format='numpy', collections=DATABASE.stock_transaction):
+def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = None, collections=DATABASE.stock_transaction):
     """'获取股票tick结果'
     frequence 提供resample功能
     Returns:
@@ -109,72 +116,67 @@ def QA_fetch_stock_transaction(code, start, end, frequence = None, format='numpy
 
         res = pd.DataFrame([item for item in cursor])
         '''若frequence开关开启: 整理tick数据为分钟数据'''
-        if frequence == None:
-            pass
-        elif frequence == '1min':
-            res = QA_data_stocktick_resample_1min(res, '1min', 'database_tick_resample', True)
-
-        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
-        try:
-            res = res.drop_duplicates((DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[2])).query('volume>1')\
-                    .set_index(DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[0], drop=False)
-            res = res.ix[:, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION[1]]
-        except:
-            res = None
-
-        '''数据格式整理'''
-        return QA_util_to_anyformat_from_pandas(data=res, format=format)
+        if len(res)>0:
+            if frequence == None:
+                pass
+            elif frequence == '1min':
+                res = QA_data_stocktick_resample_1min(res, '1min', 'database_tick_resample', True)
+            elif frequence in ['5min','15min','30min','60min']:
+                res = QA_data_stocktick_resample_1min(res,'1min','database_tick_resample',True)
+                res = QA_data_min_resample_stock(res,frequence,'database_tick1min_resample')
+    
+            if frequence == None:
+                '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
+                __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION, query='volume>1')
+    
+                '''数据格式整理'''
+                return QA_util_to_anyformat_from_pandas(data=res, format=format)
+            else:
+                return res
+        else: return res
     else:
         QA_util_log_info(
             'QA Error QA_fetch_stock_transaction data parameter start=%s end=%s is not right' % (start, end))
+        return None
 
 
 def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', collections=DATABASE.stock_min):
     '获取股票分钟线'
-    if frequence in ['1min', '1m']:
-        frequence = '1min'
-    elif frequence in ['5min', '5m']:
-        frequence = '5min'
-    elif frequence in ['15min', '15m']:
-        frequence = '15min'
-    elif frequence in ['30min', '30m']:
-        frequence = '30min'
-    elif frequence in ['60min', '60m']:
-        frequence = '60min'
+    if (QA_tuil_dateordatetime_valid(start)) & (QA_tuil_dateordatetime_valid(end)):
+        '''数据获取'''
+        if frequence in ['1min', '1m']:
+            frequence = '1min'
+        elif frequence in ['5min', '5m']:
+            frequence = '5min'
+        elif frequence in ['15min', '15m']:
+            frequence = '15min'
+        elif frequence in ['30min', '30m']:
+            frequence = '30min'
+        elif frequence in ['60min', '60m']:
+            frequence = '60min'
+        else:
+            print("QA Error QA_fetch_stock_min parameter frequence=%s is none of 1min 1m 5min 5m 15min 15m 30min 30m 60min 60m" % frequence)
+
+        __data = []
+        # code checking
+        code = QA_util_code_tolist(code)
+
+        cursor = collections.find({
+            'code': {'$in': code}, "time_stamp": {
+                "$gte": QA_util_time_stamp(start),
+                "$lte": QA_util_time_stamp(end)
+            }, 'type': frequence
+        }, {"_id": 0}, batch_size=10000)
+
+        res = pd.DataFrame([item for item in cursor])
+        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
+        __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN, query='volume>1')
+        '''数据格式整理'''
+        return QA_util_to_anyformat_from_pandas(data=res, format=format)
     else:
-        print("QA Error QA_fetch_stock_min parameter frequence=%s is none of 1min 1m 5min 5m 15min 15m 30min 30m 60min 60m" % frequence)
-
-    __data = []
-    # code checking
-    code = QA_util_code_tolist(code)
-
-    cursor = collections.find({
-        'code': {'$in': code}, "time_stamp": {
-            "$gte": QA_util_time_stamp(start),
-            "$lte": QA_util_time_stamp(end)
-        }, 'type': frequence
-    }, {"_id": 0}, batch_size=10000)
-
-    res = pd.DataFrame([item for item in cursor])
-    try:
-        res = res.assign(volume=res.vol, datetime=pd.to_datetime(
-            res.datetime)).query('volume>1').drop_duplicates(['datetime', 'code']).set_index('datetime', drop=False)
-        # return res
-    except:
-        res = None
-    if format in ['P', 'p', 'pandas', 'pd']:
-        return res
-    elif format in ['json', 'dict']:
-        return QA_util_to_json_from_pandas(res)
-    # 多种数据格式
-    elif format in ['n', 'N', 'numpy']:
-        return numpy.asarray(res)
-    elif format in ['list', 'l', 'L']:
-        return numpy.asarray(res).tolist()
-    else:
-        print("QA Error QA_fetch_stock_min format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" " % format)
+        QA_util_log_info(
+            'QA Error QA_fetch_stock_min data parameter start=%s end=%s is not right' % (start, end))
         return None
-
 
 def QA_fetch_trade_date():
     '获取交易日期'
@@ -184,7 +186,8 @@ def QA_fetch_trade_date():
 def QA_fetch_stock_list(collections=DATABASE.stock_list):
     '获取股票列表'
 
-    return pd.DataFrame([item for item in collections.find()]).drop('_id', axis=1, inplace=False).set_index('code', drop=False)
+    data = pd.DataFrame([item for item in collections.find()]).drop('_id', axis=1, inplace=False).set_index('code', drop=False)
+    return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_LIST, query=None)
 
 
 def QA_fetch_etf_list(collections=DATABASE.etf_list):

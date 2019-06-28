@@ -485,9 +485,10 @@ class DATA_AGGREMENT_NAME():
     FINANCIAL = 'financial'
 
 class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
-    STOCK_DAY = ('date',['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date'],['date','code'])
-    STOCK_TRANSACTION = ('datetime',['datetime','code','price','volume','buyorsell','date','time','order'],['datetime','code','order'])
-    STOCK_MIN = ('datetime',[],['datetime','code'])
+    STOCK_DAY = ('date',['date','code', 'open', 'high', 'low','close', 'volume', 'amount'],['date','code'])
+    STOCK_TRANSACTION = ('datetime',['datetime','code','price','volume','buyorsell','date','time','order'],['code','order','datetime'])
+    STOCK_MIN = ('datetime',['datetime','code','open','high','low','close','volume','amount'],['datetime','code'])
+    STOCK_LIST = ('code',['code','name','sse','sec','volunit','decimal_point','pre_close'],['code','sse'])
 
 class ERRORTYPE():
     '''

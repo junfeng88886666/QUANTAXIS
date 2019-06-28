@@ -11,22 +11,33 @@ import QUANTAXIS as QA
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000002','2019-06-26','2019-06-27')
-data2 = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2019-06-26','2019-06-27','1min')
+data2 = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
+data4 = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2019-06-26','2019-06-27','30min')
 
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000007','2019-06-01 10:30:00','2019-06-10 10:30:00','1min')
 data = pd.read_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
 #%%
 QA.QA_fetch_stock_day('000001','2018-01-01','2019-01-01')
 data  =QA.QA_fetch_stock_transaction('000048','2019-01-02 09:40:00','2019-05-15 09:55:00','pd')
+data = QA.QA_fetch_stock_min('000001','2018-01-01','2019-01-01','pd')
 
 data['2019-06-26 09:25:00':'2019-06-26 09:30:00']['volume'].sum()
 #%%
-from QUANTAXIS.QAData.data_resample import QA_data_min_resample_stock,QA_data_stocktick_resample_1min
-data1 = QA_data_stocktick_resample_1min(QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000002','2019-06-26','2019-06-27'),'1min')
+start = '2017-06-15'
+end = '2017-06-27'
+freq = '1min'
+from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_min,QA_fetch_get_stock_transaction
+data = QA_fetch_get_stock_min('000002',start,end,freq,True,True)
+#data2 = QA_fetch_get_stock_transaction('000002','2018-12-26','2019-02-15 13:02:00','1min')
+from QUANTAXIS.QAData.data_resample import QA_data_min_resample_stock,QA_data_stocktick_resample_1min,QA_data_min_resample
 
-data3 = 
+
+data1 = QA_data_stocktick_resample_1min(QA_fetch_get_stock_transaction('000002',start,end))
+data3 = QA_data_min_resample_stock(data1,freq)
+data3 = QA_data_min_resample(data1,freq)
 
 
+data1[['datetime','code']]
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2015-06-05','2015-06-06')
 data.index = pd.to_datetime(data.index)

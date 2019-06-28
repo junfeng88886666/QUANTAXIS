@@ -64,6 +64,16 @@ def select_DataAggrement(type):
     elif type == DATA_AGGREMENT_NAME.FUTURE_TRANSACTION: return QA_DataAggrement_Future_transaction
     # elif type == DATA_AGGREMENT_NAME.FUTURE_LIST: return QA_DataAggrement_Future_list
 
+def __QA_DataAggrement_check_QAQuery(data,index_columns_unique):
+    __check = index_columns_unique
+    data = data.set_index(__check[0], drop=False, inplace=False)
+    if type(data.index) == pd.core.indexes.multi.MultiIndex: pass
+    else: data.index.name = 'index'
+    data = data.drop_duplicates((__check[2]))
+    data = data.sort_values(by=__check[2])
+    assert set(__check[1]).issubset(data.columns.tolist())
+    return data
+
 def QA_DataAggrement_Stock_day(package,data):
     '''
     该数据协议为：返回的数据应包含以下列和对应的数据格式，若无该列数据，则填充0
@@ -84,6 +94,9 @@ def QA_DataAggrement_Stock_day(package,data):
         else:
             Engine = use(package)
             data = Engine.QA_DataAggrement_Stock_day(data)
+
+        data['volume'][data['volume'] < 1] = 0
+        data['amount'][data['amount'] < 1] = 0
 
         data[['code',
               'date',
@@ -106,19 +119,12 @@ def QA_DataAggrement_Stock_day(package,data):
         data[['date_stamp','volume']] \
         = data[['date_stamp','volume']].astype('int64')
 
-        data.index.name = 'index'
-        data = data.sort_values(by=['date','code'])
-
         '''为了保证这里的数据和QAQuery结果的一致性'''
-        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY
-        data = data.set_index(__check[0], drop=False, inplace=False)
-        data = data.drop_duplicates((__check[2]))
-        assert set(__check[1]).issubset(data.columns.tolist())
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY)
 
         return data[['code','open','high','low','close','volume','amount','date','date_stamp','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_min(package,data):
@@ -160,25 +166,23 @@ def QA_DataAggrement_Stock_min(package,data):
               'high',
               'low',
               'close',
-              'volume',
               'amount']]\
         = data[['open',
                 'high',
                 'low',
                 'close',
-                'volume',
                 'amount']].astype('float64')
 
         data[['date_stamp',
-              'time_stamp']] \
+              'time_stamp',
+              'volume']] \
         = data[['date_stamp',
-                'time_stamp']].astype('int64')
+                'time_stamp',
+                'volume']].astype('int64')
 
         '''为了保证这里的数据和QAQuery结果的一致性'''
-        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN
-        data = data.set_index(__check[0], drop=False, inplace=False)
-        data = data.drop_duplicates(__check[2])
-        assert set(__check[1]).issubset(data.columns.tolist())
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN)
+
         return data[['code','open','high','low','close','volume','amount','datetime','date','date_stamp','time_stamp','type','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
@@ -212,15 +216,11 @@ def QA_DataAggrement_Stock_transaction(package,data):
                 'time_stamp']].astype('int64')
 
         '''为了保证这里的数据和QAQuery结果的一致性'''
-        __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION
-        data = data.set_index(__check[0], drop=False, inplace=False)
-        data = data.drop_duplicates((__check[2]))
-        assert set(__check[1]).issubset(data.columns.tolist())
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION)
 
         return data[['datetime','code','price','volume','buyorsell','date','time','order','time_stamp','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_latest(package,data):
@@ -251,10 +251,10 @@ def QA_DataAggrement_Stock_latest(package,data):
         = data[['date_stamp']].astype('int64')
 
         data = data.set_index('date', drop=False, inplace=False)
+        data.index.name = 'index'
         return data[['date','code','open','high','low','close','volume','amount','date_stamp','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_realtime(package,data):
@@ -286,8 +286,7 @@ def QA_DataAggrement_Stock_realtime(package,data):
              'bid2', 'bid_vol2', 'ask3', 'ask_vol3', 'bid3', 'bid_vol3', 'ask4',
              'ask_vol4', 'bid4', 'bid_vol4', 'ask5', 'ask_vol5', 'bid5', 'bid_vol5','source']]
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_depth_market_data(package,data):
@@ -299,37 +298,7 @@ def QA_DataAggrement_Stock_depth_market_data(package,data):
         data = Engine.QA_DataAggrement_Stock_depth_market_data(data)
         return data.set_index(['datetime','code'], drop=True, inplace=False)
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
-        return None
-
-def QA_DataAggrement_Stock_list(package,data):
-    try:
-        Engine = use(package)
-        data = Engine.QA_DataAggrement_Stock_list(data)
-        data[['code',
-              'name',
-              'sse',
-              'sec',
-              'source']] \
-        = data[['code',
-                'name',
-                'sse',
-                'sec',
-                'source']].astype(str)
-
-        data[['pre_close']] \
-        = data[['pre_close']].astype('float64')
-
-        data[['volunit',
-              'decimal_point']] \
-        = data[['volunit',
-              'decimal_point']].astype('int64')
-        data = data.set_index(['code','sse'], drop=False, inplace=False)
-        return data[['code','name','sse','sec','volunit','decimal_point','pre_close','source']]
-    except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_transaction_realtime(package,data):
@@ -362,8 +331,36 @@ def QA_DataAggrement_Stock_transaction_realtime(package,data):
         return data[['datetime','code','price','volume','num','buyorsell','date','time','order','source']]
 
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
+        return None
+
+def QA_DataAggrement_Stock_list(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Stock_list(data)
+        data[['code',
+              'name',
+              'sse',
+              'sec',
+              'source']] \
+        = data[['code',
+                'name',
+                'sse',
+                'sec',
+                'source']].astype(str)
+
+        data[['pre_close']] \
+        = data[['pre_close']].astype('float64')
+
+        data[['volunit',
+              'decimal_point']] \
+        = data[['volunit',
+              'decimal_point']].astype('int64')
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_LIST)
+        return data[['code','name','sse','sec','volunit','decimal_point','pre_close','source']]
+
+    except Exception as e:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_xdxr(package,data):

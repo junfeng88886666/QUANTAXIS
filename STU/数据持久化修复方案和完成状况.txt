@@ -4,16 +4,48 @@ DataStruct默认选取QAParameter.DATA_QUERY_INDEX_COLUMNS_UNIQUE的重要列，去索引,去
 TODO: 
 DATA_QUERY_INDEX_COLUMNS_UNIQUE, QAQuery, QADataAggrement的同步
 QATDX, save_adv和update_adv的同步完善，先解决分钟数据的增量问题
+
+{一个存入数据库的数据接口必须保证的流程：
+1，经过检验，可以满足数据库数据调用接口所需的数据，通过数据协议来达到这一标准，若无数据协议，添加数据协议。
+1.5，数据协议运作方式：
+		   1，调用数据源专用数据协议处理数据
+   	                   2，数据格式整理
+	                   3，__QA_DataAggrement_check_QAQuery保证数据至少和QAQuery结果相同
+2，若无数据库数据调用接口，添加
+3，若无数据库增量更新接口，添加
+4，数据库名需在QAParameter.DATABASE_NAME中
+5，数据协议名须在QAParameter.DATA_AGGREMENT_NAME中
+6，数据源名须在QAParameter.DATASOURCE中
+7，数据在线调用和数据库调用协同方案须在QAParameter.DATA_QUERY_INDEX_COLUMNS_UNIQUE中}
+
 ################################
 QATDX
 QA_fetch_get_stock_day
 QA_fetch_get_stock_transaction
 QA_fetch_get_stock_min
+QA_fetch_get_stock_list
+QA_fetch_get_stock_xdxr
 
+QA_fetch_get_Stock_latest(实时，单独）
+QA_fetch_get_Stock_realtime(实时，单独）
+QA_fetch_get_depth_market_data(实时，单独）
+QA_fetch_get_stock_transaction_realtime(实时，单独）
+#################################
+QADataAggrement
+QA_DataAggrement_Stock_day
+QA_DataAggrement_Stock_min
+QA_DataAggrement_Stock_list
 
-
-
-
+QA_DataAggrement_Stock_latest(实时，单独）
+QA_DataAggrement_Stock_realtime(实时，单独）
+QA_DataAggrement_depth_market_data(实时，单独）
+QA_DataAggrement_stock_transaction_realtime(实时，单独）
+#################################
+QAQuery
+QA_fetch_stock_day
+QA_fetch_stock_transaction
+QA_fetch_stock_min
+QA_fetch_stock_list
 
 
 
@@ -21,9 +53,21 @@ QA_fetch_get_stock_min
 QASU
 QA_SU_save_stock_day
 QA_SU_save_stock_transaction
+QA_SU_save_stock_min(暂缓，因为用处不大且需要从外部接入其他数据源)
+QA_SU_save_stock_list
+
+#################################
+QAParameter:DATA_QUERY_INDEX_COLUMNS_UNIQUE
+STOCK_DAY
+STOCK_TRANSACTION
+STOCK_MIN
+STOCK_LIST
 
 
-
-
-
+##################################
+DATABASE_NAME
+STOCK_DAY
+STOCK_TRANSACTION
+STOCK_MIN
+STOCK_LIST
 
