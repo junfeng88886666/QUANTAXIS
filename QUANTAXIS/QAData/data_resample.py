@@ -363,7 +363,7 @@ def QA_data_ctptick_resample(tick, type_='1min'):
 
 
 def QA_data_min_resample(min_data, type_='5min'):
-    """分钟线采样成大周期（标准QA数据协议格式）
+    """分钟线采样成大周期
 
 
     分钟线采样成子级别的分钟线
@@ -427,9 +427,9 @@ def QA_data_min_resample(min_data, type_='5min'):
     return resx.dropna().reset_index().set_index(['datetime', 'code'])
 
 
-def QA_data_min_resample_stock(min_data, period=5):
+def QA_data_min_resample_stock(min_data, period=5, source = '1min_resample'):
     """
-    1min 分钟线采样成 period 级别的分钟线
+    1min 分钟线采样成 period 级别的分钟线（标准QA数据协议格式）
     :param min_data:
     :param period:
     :return:
@@ -478,7 +478,12 @@ def QA_data_min_resample_stock(min_data, period=5):
     # 10:31:00 => 10:30:00
     res.index = (res.index + res.index.freq).to_timestamp() - \
         pd.Timedelta(minutes=1)
-    return res.reset_index().set_index(["datetime", "code"]).sort_index()
+
+    res['source'] = source
+    res = res.sort_values(by=['datetime','code'])
+    return res
+    # return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, res)
+    # return res.reset_index().set_index(["datetime", "code"]).sort_index()
 
 
 def QA_data_futuremin_resample(min_data, type_='5min'):

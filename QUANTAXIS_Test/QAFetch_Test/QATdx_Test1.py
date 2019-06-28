@@ -21,9 +21,12 @@ data  =QA.QA_fetch_stock_transaction('000048','2019-01-02 09:40:00','2019-05-15 
 
 data['2019-06-26 09:25:00':'2019-06-26 09:30:00']['volume'].sum()
 #%%
-from QUANTAXIS.QAData.data_resample import QA_data_tick_resample,QA_data_stocktick_resample_1min
+from QUANTAXIS.QAData.data_resample import QA_data_min_resample_stock,QA_data_stocktick_resample_1min
 data1 = QA_data_stocktick_resample_1min(QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000002','2019-06-26','2019-06-27'),'1min')
-[i for i in data2.index if i not in data1.index]
+
+data3 = 
+
+
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2015-06-05','2015-06-06')
 data.index = pd.to_datetime(data.index)

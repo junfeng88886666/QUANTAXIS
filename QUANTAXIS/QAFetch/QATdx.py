@@ -593,7 +593,7 @@ def QA_fetch_get_stock_transaction(code, start, end, frequence = None,retry=2, i
             elif frequence == '1min':
                 data = QA_data_stocktick_resample_1min(data,'1min','tdx_tick_resample',True)
             elif frequence in ['5min','15min','30min','60min']:
-
+                pass
 
             return data
         else:

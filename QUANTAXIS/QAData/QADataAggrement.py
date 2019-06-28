@@ -106,6 +106,9 @@ def QA_DataAggrement_Stock_day(package,data):
         data[['date_stamp','volume']] \
         = data[['date_stamp','volume']].astype('int64')
 
+        data.index.name = 'index'
+        data = data.sort_values(by=['date','code'])
+
         '''为了保证这里的数据和QAQuery结果的一致性'''
         __check = DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY
         data = data.set_index(__check[0], drop=False, inplace=False)
