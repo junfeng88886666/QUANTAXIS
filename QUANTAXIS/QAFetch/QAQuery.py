@@ -60,6 +60,10 @@ def __QA_fetch_query_filter(data,index_columns_unique,query = None):
         data = None
     return data
 
+def QA_fetch_trade_date():
+    '获取交易日期'
+    return trade_date_sse
+
 def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collections=DATABASE.stock_day):
     """'获取股票日线'
 
@@ -87,7 +91,7 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         res = pd.DataFrame([item for item in cursor])
 
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
-        __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY, query='volume>1')
+        res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_DAY, query='volume>1')
 
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data = res,format = format)
@@ -127,7 +131,7 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = Non
     
             if frequence == None:
                 '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
-                __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION, query='volume>1')
+                res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_TRANSACTION, query='volume>1')
     
                 '''数据格式整理'''
                 return QA_util_to_anyformat_from_pandas(data=res, format=format)
@@ -155,7 +159,7 @@ def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', colle
         elif frequence in ['60min', '60m']:
             frequence = '60min'
         else:
-            print("QA Error QA_fetch_stock_min parameter frequence=%s is none of 1min 1m 5min 5m 15min 15m 30min 30m 60min 60m" % frequence)
+            QA_util_log_info("QA Error QA_fetch_stock_min parameter frequence=%s is none of 1min 1m 5min 5m 15min 15m 30min 30m 60min 60m" % frequence)
 
         __data = []
         # code checking
@@ -170,7 +174,8 @@ def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', colle
 
         res = pd.DataFrame([item for item in cursor])
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
-        __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN, query='volume>1')
+        res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_MIN, query='volume>1')
+        print(res)
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data=res, format=format)
     else:
@@ -178,17 +183,41 @@ def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', colle
             'QA Error QA_fetch_stock_min data parameter start=%s end=%s is not right' % (start, end))
         return None
 
-def QA_fetch_trade_date():
-    '获取交易日期'
-    return trade_date_sse
-
-
 def QA_fetch_stock_list(collections=DATABASE.stock_list):
     '获取股票列表'
 
     data = pd.DataFrame([item for item in collections.find()]).drop('_id', axis=1, inplace=False).set_index('code', drop=False)
     return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_LIST, query=None)
 
+
+def QA_fetch_stock_xdxr(code, format='pd', collections=DATABASE.stock_xdxr):
+    '获取股票除权信息/数据库'
+    code = QA_util_code_tolist(code)
+    data = pd.DataFrame([item for item in collections.find(
+        {'code':  {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
+    return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_XDXR, query=None)
+
+def QA_fetch_stock_info(code, format='pd', collections=DATABASE.stock_info):
+    code = QA_util_code_tolist(code)
+    try:
+        data = pd.DataFrame([item for item in collections.find(
+            {'code':  {'$in': code}}, {"_id": 0}, batch_size=10000)])
+        #data['date'] = pd.to_datetime(data['date'])
+        return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_INFO, query=None)
+    except Exception as e:
+        QA_util_log_info(e)
+        return None
+
+def QA_fetch_stock_block(code=None, format='pd', collections=DATABASE.stock_block):
+    if code is not None:
+        code = QA_util_code_tolist(code)
+        data = pd.DataFrame([item for item in collections.find(
+            {'code': {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
+        return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK, query=None)
+    else:
+        data = pd.DataFrame(
+            [item for item in collections.find()]).drop(['_id'], axis=1)
+        return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK, query=None)
 
 def QA_fetch_etf_list(collections=DATABASE.etf_list):
     '获取ETF列表'
@@ -494,16 +523,6 @@ def QA_fetch_ctp_tick(code, start, end, frequence, format='pd', collections=DATA
     p1.datetime = pd.to_datetime(p1.datetime)
     return p1.set_index(p1.datetime)
 
-
-def QA_fetch_stock_xdxr(code, format='pd', collections=DATABASE.stock_xdxr):
-    '获取股票除权信息/数据库'
-    code = QA_util_code_tolist(code)
-    data = pd.DataFrame([item for item in collections.find(
-        {'code':  {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
-    data['date'] = pd.to_datetime(data['date'])
-    return data.set_index('date', drop=False)
-
-
 def QA_fetch_backtest_info(user=None, account_cookie=None, strategy=None, stock_list=None, collections=DATABASE.backtest_info):
 
     return QA_util_to_json_from_pandas(pd.DataFrame([item for item in collections.find(QA_util_to_json_from_pandas(pd.DataFrame([user, account_cookie, strategy, stock_list], index=['user', 'account_cookie', 'strategy', 'stock_list']).dropna().T)[0])]).drop(['_id'], axis=1))
@@ -511,31 +530,6 @@ def QA_fetch_backtest_info(user=None, account_cookie=None, strategy=None, stock_
 
 def QA_fetch_backtest_history(cookie=None, collections=DATABASE.backtest_history):
     return QA_util_to_json_from_pandas(pd.DataFrame([item for item in collections.find(QA_util_to_json_from_pandas(pd.DataFrame([cookie], index=['cookie']).dropna().T)[0])]).drop(['_id'], axis=1))
-
-
-def QA_fetch_stock_block(code=None, format='pd', collections=DATABASE.stock_block):
-    if code is not None:
-        code = QA_util_code_tolist(code)
-        data = pd.DataFrame([item for item in collections.find(
-            {'code': {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
-        return data.set_index('code', drop=False)
-    else:
-        data = pd.DataFrame(
-            [item for item in collections.find()]).drop(['_id'], axis=1)
-        return data.set_index('code', drop=False)
-
-
-def QA_fetch_stock_info(code, format='pd', collections=DATABASE.stock_info):
-    code = QA_util_code_tolist(code)
-    try:
-        data = pd.DataFrame([item for item in collections.find(
-            {'code':  {'$in': code}}, {"_id": 0}, batch_size=10000)])
-        #data['date'] = pd.to_datetime(data['date'])
-        return data.set_index('code', drop=False)
-    except Exception as e:
-        QA_util_log_info(e)
-        return None
-
 
 def QA_fetch_stock_name(code, collections=DATABASE.stock_list):
     try:

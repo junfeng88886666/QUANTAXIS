@@ -10,10 +10,25 @@ from datetime import time
 import QUANTAXIS as QA
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
-data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000002','2019-06-26','2019-06-27')
-data2 = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
-data4 = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2019-06-26','2019-06-27','30min')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2019-06-26','2019-06-27','30min')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_latest('000002')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_realtime('000002')
+data = QA.QAFetch.QATdx.QA_fetch_get_depth_market_data('000002')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_list()
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_xdxr('000002')
+data = QA.QAFetch.QATdx.QA_fetch_get_stock_info('000002')
 
+#%%
+data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')
+data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
+data = QA.QAFetch.QAQuery.QA_fetch_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
+data = QA.QAFetch.QAQuery.QA_fetch_stock_min('000001','2018-10-16','2018-10-18','1min','pd')
+data = QA.QAFetch.QAQuery.QA_fetch_stock_list()
+data = QA.QAFetch.QAQuery.QA_fetch_stock_xdxr('000002')
+data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
+data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
+#%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000007','2019-06-01 10:30:00','2019-06-10 10:30:00','1min')
 data = pd.read_csv('D:\\Quant\\programe\\strategy_pool_adv\\strategy07\\backtest\\backtest03\\check_result\\min_data.csv')
 #%%
@@ -25,9 +40,11 @@ data['2019-06-26 09:25:00':'2019-06-26 09:30:00']['volume'].sum()
 #%%
 start = '2017-06-15'
 end = '2017-06-27'
-freq = '1min'
+freq = '30min'
 from QUANTAXIS.QAFetch.QATdx import QA_fetch_get_stock_min,QA_fetch_get_stock_transaction
-data = QA_fetch_get_stock_min('000002',start,end,freq,True,True)
+data =  QA_fetch_get_stock_min('000002',start,end,freq,True,True)
+data1 =  QA_fetch_get_stock_min('000002',start,end,freq)
+
 #data2 = QA_fetch_get_stock_transaction('000002','2018-12-26','2019-02-15 13:02:00','1min')
 from QUANTAXIS.QAData.data_resample import QA_data_min_resample_stock,QA_data_stocktick_resample_1min,QA_data_min_resample
 

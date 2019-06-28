@@ -432,6 +432,7 @@ class DATABASE_NAME():
     STOCK_MIN = 'stock_min'
     STOCK_TRANSACTION = 'stock_transaction'
     STOCK_XDXR = 'stock_xdxr'
+    STOCK_INFO = 'stock_info'
     STOCK_BLOCK = 'stock_block'
 
     INDEX_LIST = 'index_list'
@@ -489,6 +490,47 @@ class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
     STOCK_TRANSACTION = ('datetime',['datetime','code','price','volume','buyorsell','date','time','order'],['code','order','datetime'])
     STOCK_MIN = ('datetime',['datetime','code','open','high','low','close','volume','amount'],['datetime','code'])
     STOCK_LIST = ('code',['code','name','sse','sec','volunit','decimal_point','pre_close'],['code','sse'])
+    STOCK_XDXR = ('date',['name','category','date','category_meaning','code','fenhong','peigujia','songzhuangu','peigu','suogu','liquidity_before','liquidity_after','shares_before','shares_after','fenshu','xingquanjia'],['date','code'])
+    STOCK_INFO = ('code',['code',
+                  'updated_date',
+                  'ipo_date',
+                 'liutongguben',
+                 'zongguben',
+                 'guojiagu',
+                 'faqirenfarengu',
+                 'farengu',
+                 'bgu',
+                 'hgu',
+                 'zhigonggu',
+                 'zongzichan',
+                 'liudongzichan',
+                 'gudingzichan',
+                 'wuxingzichan',
+                 'liudongfuzhai',
+                 'changqifuzhai',
+                 'zibengongjijin',
+                 'jingzichan',
+                 'zhuyingshouru',
+                 'zhuyinglirun',
+                 'yingshouzhangkuan',
+                 'yingyelirun',
+                 'touzishouyu',
+                 'jingyingxianjinliu',
+                 'zongxianjinliu',
+                 'cunhuo',
+                 'lirunzonghe',
+                 'shuihoulirun',
+                 'jinglirun',
+                 'weifenpeilirun',
+                 'meigujingzichan',
+                 'baoliu2',
+                 'market',
+                 'province',
+                 'industry',
+                 'gudongrenshu',
+                 'source'],
+                ['code'])
+    STOCK_BLOCK = ('code',['blockname','code','type','enter_date','source'],['code','blockname'])
 
 class ERRORTYPE():
     '''

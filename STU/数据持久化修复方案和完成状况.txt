@@ -25,29 +25,37 @@ QA_fetch_get_stock_transaction
 QA_fetch_get_stock_min
 QA_fetch_get_stock_list
 QA_fetch_get_stock_xdxr
+QA_fetch_get_stock_info
+QA_fetch_get_stock_block
 
 QA_fetch_get_Stock_latest(实时，单独）
 QA_fetch_get_Stock_realtime(实时，单独）
 QA_fetch_get_depth_market_data(实时，单独）
 QA_fetch_get_stock_transaction_realtime(实时，单独）
+
 #################################
 QADataAggrement
 QA_DataAggrement_Stock_day
 QA_DataAggrement_Stock_min
 QA_DataAggrement_Stock_list
+QA_DataAggrement_stock_xdxr
+QA_DataAggrement_stock_info
+QA_DataAggrement_stock_block
 
 QA_DataAggrement_Stock_latest(实时，单独）
 QA_DataAggrement_Stock_realtime(实时，单独）
 QA_DataAggrement_depth_market_data(实时，单独）
 QA_DataAggrement_stock_transaction_realtime(实时，单独）
+
 #################################
 QAQuery
 QA_fetch_stock_day
 QA_fetch_stock_transaction
 QA_fetch_stock_min
 QA_fetch_stock_list
-
-
+QA_fetch_stock_xdxr
+QA_fetch_stock_info
+QA_fetch_stock_block
 
 #################################
 QASU
@@ -55,6 +63,9 @@ QA_SU_save_stock_day
 QA_SU_save_stock_transaction
 QA_SU_save_stock_min(暂缓，因为用处不大且需要从外部接入其他数据源)
 QA_SU_save_stock_list
+QA_SU_save_stock_xdxr
+QA_SU_save_stock_info
+QA_SU_save_stock_block
 
 #################################
 QAParameter:DATA_QUERY_INDEX_COLUMNS_UNIQUE
@@ -62,7 +73,9 @@ STOCK_DAY
 STOCK_TRANSACTION
 STOCK_MIN
 STOCK_LIST
-
+STOCK_XDXR
+STOCK_INFO
+STOCK_BLOCK
 
 ##################################
 DATABASE_NAME
@@ -70,4 +83,6 @@ STOCK_DAY
 STOCK_TRANSACTION
 STOCK_MIN
 STOCK_LIST
-
+STOCK_XDXR
+STOCK_INFO
+STOCK_BLOCK

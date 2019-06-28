@@ -1,5 +1,5 @@
 # coding:utf-8
-from QUANTAXIS.QASU import save_adv
+from QUANTAXIS.QASU import save_adv as save_engine
 from QUANTAXIS.QAUtil.QAParameter import DATABASE_NAME,DATASOURCE
 from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 from QUANTAXIS import __version__ as QAVERSION
@@ -12,6 +12,8 @@ current_supported_update = {
     DATABASE_NAME.STOCK_MIN:{DATASOURCE.TDX:{'data_type':['1min','5min','15min','30min','60min']}},
     DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: {'data_type': [None]}},
+    DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: {'data_type': [None]}},
 }
 
 
@@ -26,18 +28,20 @@ def check_update_permission(database_name=None, package=None, data_type=None):
 
 
 def QA_Update(update_dict = {
+                            # DATABASE_NAME.STOCK_LIST:{DATASOURCE.TDX:None},
+                            # DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:None},
+                            # DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: None},
+                            # DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: None},
+                            # DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
+                            # DATABASE_NAME.STOCK_MIN: {DATASOURCE.EXTERNAL_STOCK_MIN: {'data_type': ['1min', '5min', '15min', '30min', '60min']}}, # 未完成
+                            # DATABASE_NAME.STOCK_MIN: {DATASOURCE.TDX: {'data_type': ['1min', '5min', '15min', '30min', '60min']}}, # 未完成
+                            # DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:None}, # 做好了，但是不建议存储
+
                             # DATABASE_NAME.FUTURE_LIST: {'tdx':None},
                             # DATABASE_NAME.FUTURE_DAY: {'tdx':None},
                             # DATABASE_NAME.FUTURE_TRANSACTION: {'tdx':None},
                             # DATABASE_NAME.FUTURE_MIN: {'tdx':{'data_type':['1min','5min','15min','30min','60min']}},
 
-                            DATABASE_NAME.STOCK_LIST:{DATASOURCE.TDX:None},
-                            # DATABASE_NAME.STOCK_DAY:{'tdx':None},
-                            DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:None},
-                            # DATABASE_NAME.STOCK_MIN:'tdx',
-                            # DATABASE_NAME.STOCK_XDXR:'tdx',
-                            # DATABASE_NAME.STOCK_BLOCK: 'tdx',
-                            #
                             # DATABASE_NAME.INDEX_LIST:'tdx',
                             # DATABASE_NAME.INDEX_DAY:'tdx',
                             # DATABASE_NAME.INDEX_MIN:'tdx',
@@ -69,10 +73,13 @@ def QA_Update(update_dict = {
 
 def QA_SU_update_single(database_name = None,package = None,data_type = None, ui_log = None):
     if check_update_permission(database_name=database_name, package=package, data_type=data_type):
-        if database_name == DATABASE_NAME.STOCK_LIST: save_adv.QA_SU_save_stock_list(package = package)
-        elif database_name == DATABASE_NAME.STOCK_DAY: save_adv.QA_SU_save_stock_day(package = package)
-        elif database_name == DATABASE_NAME.STOCK_TRANSACTION: save_adv.QA_SU_save_stock_transaction(package = package)
-        # elif database_name == DATABASE_NAME.STOCK_MIN: save_adv.QA_SU_save_stock_min(package = package,data_type = data_type)
+        if database_name == DATABASE_NAME.STOCK_LIST: save_engine.QA_SU_save_stock_list(package = package)
+        elif database_name == DATABASE_NAME.STOCK_DAY: save_engine.QA_SU_save_stock_day(package = package)
+        elif database_name == DATABASE_NAME.STOCK_TRANSACTION: save_engine.QA_SU_save_stock_transaction(package = package)
+        elif database_name == DATABASE_NAME.STOCK_MIN: save_engine.QA_SU_save_stock_min(package = package,data_type = data_type)
+        elif database_name == DATABASE_NAME.STOCK_XDXR: save_engine.QA_SU_save_stock_xdxr(package = package)
+        elif database_name == DATABASE_NAME.STOCK_INFO: save_engine.QA_SU_save_stock_info(package = package)
+        elif database_name == DATABASE_NAME.STOCK_BLOCK: save_engine.QA_SU_save_stock_block(package = package)
 
     else:
         QA_util_log_info('Error: DataBase: {}, package: {}, data type: {}; is not supported currently'.format(database_name,package,str(data_type)), ui_log)

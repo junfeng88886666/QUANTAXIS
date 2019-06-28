@@ -706,7 +706,7 @@ def QA_fetch_get_stock_realtime(code=['000001', '000002'], ip=None, port=None):
         return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_DEPTH_MARKET_DATA)(DATASOURCE.TDX,data)
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_depth_market_data(code=['000001', '000002'], ip=None, port=None):
+def QA_fetch_get_depth_market_data(code=['000001', '000002'], ip=None, port=None):
     '''当前不使用数据协议，因为不需要对多数据源进行处理，追求速度'''
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()

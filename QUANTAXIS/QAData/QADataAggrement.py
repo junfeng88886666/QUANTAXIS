@@ -405,7 +405,7 @@ def QA_DataAggrement_Stock_xdxr(package,data):
         data[['category']] \
         = data[['category']].astype('int64')
 
-        data = data.set_index('date',drop = False,inplace = False)
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_XDXR)
         return data[['name',
                      'category',
                       'date',
@@ -424,9 +424,9 @@ def QA_DataAggrement_Stock_xdxr(package,data):
                       'xingquanjia',
                      'source'
                       ]]
+
     except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
-        QA_util_log_info(e)
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
 def QA_DataAggrement_Stock_info(package,data):
@@ -512,6 +512,7 @@ def QA_DataAggrement_Stock_info(package,data):
               'industry',
               'gudongrenshu']].astype('int64')
 
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_INFO)
         return data[['code',
                       'updated_date',
                       'ipo_date',
@@ -562,7 +563,8 @@ def QA_DataAggrement_Stock_block(package,data):
         data = Engine.QA_DataAggrement_Stock_block(data)
         data[['blockname', 'code', 'type','enter_date', 'source']]\
         = data[['blockname','code','type','enter_date','source']].astype(str)
-        data = data.set_index('code',drop = False,inplace = False)
+
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK)
         return data[['blockname','code','type','enter_date','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package))
