@@ -213,6 +213,78 @@ def QA_data_stocktick_resample_1min(tick, type_='1min', source = 'tick_resample'
     resx['source'] = source
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
 
+def QA_data_min_resample_stock(min_data, type_='30min', source = '1min_resample'):
+    """分钟线采样成大周期
+
+
+    分钟线采样成子级别的分钟线
+
+
+    time+ OHLC==> resample
+    Arguments:
+        min {[type]} -- [description]
+        raw_type {[type]} -- [description]
+        new_type {[type]} -- [description]
+    """
+    min_data['datetime'] = pd.to_datetime(min_data['datetime'])
+    try:
+        min_data = min_data.reset_index().set_index('datetime', drop=False)
+    except:
+        min_data = min_data.set_index('datetime', drop=False)
+
+    CONVERSION = {'code': 'first',
+                  'open': 'first',
+                  'high': 'max',
+                  'low': 'min',
+                  'close': 'last',
+                  'vol': 'sum',
+                  'amount': 'sum'
+    } if 'vol' in min_data.columns else {'code': 'first',
+                                         'open': 'first',
+                                         'high': 'max',
+                                         'low': 'min',
+                                         'close': 'last',
+                                         'volume': 'sum',
+                                         'amount': 'sum'}
+
+    resx = pd.DataFrame()
+    
+    for item in set(min_data.index.date):
+        min_data_p = min_data.loc[str(item)]
+        n = min_data_p['{} 21:00:00'.format(item):].resample(
+            type_,
+            base=30,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+
+        d = min_data_p[:'{} 11:30:00'.format(item)].resample(
+            type_,
+            base=30,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+
+        f = min_data_p['{} 13:00:00'.format(item):].resample(
+            type_,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+
+        resx = resx.append(d).append(f)
+    '''整理数据格式到STOCK_MIN格式'''
+    resx['datetime'] = resx.index
+    resx = resx \
+               .assign(date=resx['datetime'].apply(lambda x: str(x)[0:10]),
+                       date_stamp=resx['datetime'].apply(
+                           lambda x: QA_util_date_stamp(x)),
+                       time_stamp=resx['datetime'].apply(
+                           lambda x: QA_util_time_stamp(x)),
+                       type=type_ if 'min' in str(type_) else str(type_)+'min')
+    resx['source'] = source
+    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
+    # return resx.dropna().reset_index().set_index(['datetime', 'code'])
+
 def QA_data_tick_resample(tick, type_='1min'):
     """tick采样成任意级别分钟线
 
@@ -360,80 +432,6 @@ def QA_data_ctptick_resample(tick, type_='1min'):
 
 def QA_data_min_resample():
     raise NotImplementedError
-
-def QA_data_min_resample_stock(min_data, type_='30min', source = '1min_resample'):
-    """分钟线采样成大周期
-
-
-    分钟线采样成子级别的分钟线
-
-
-    time+ OHLC==> resample
-    Arguments:
-        min {[type]} -- [description]
-        raw_type {[type]} -- [description]
-        new_type {[type]} -- [description]
-    """
-    min_data['datetime'] = pd.to_datetime(min_data['datetime'])
-    try:
-        min_data = min_data.reset_index().set_index('datetime', drop=False)
-    except:
-        min_data = min_data.set_index('datetime', drop=False)
-
-    CONVERSION = {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'vol': 'sum',
-        'amount': 'sum'
-    } if 'vol' in min_data.columns else {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volume': 'sum',
-        'amount': 'sum'
-    }
-    resx = pd.DataFrame()
-
-    for item in set(min_data.index.date):
-        min_data_p = min_data.loc[str(item)]
-        n = min_data_p['{} 21:00:00'.format(item):].resample(
-            type_,
-            base=30,
-            closed='right',
-            loffset=type_
-        ).apply(CONVERSION)
-
-        d = min_data_p[:'{} 11:30:00'.format(item)].resample(
-            type_,
-            base=30,
-            closed='right',
-            loffset=type_
-        ).apply(CONVERSION)
-
-        f = min_data_p['{} 13:00:00'.format(item):].resample(
-            type_,
-            closed='right',
-            loffset=type_
-        ).apply(CONVERSION)
-
-        resx = resx.append(d).append(f)
-    '''整理数据格式到STOCK_MIN格式'''
-    resx['datetime'] = resx.index
-    resx = resx \
-               .assign(date=resx['datetime'].apply(lambda x: str(x)[0:10]),
-                       date_stamp=resx['datetime'].apply(
-                           lambda x: QA_util_date_stamp(x)),
-                       time_stamp=resx['datetime'].apply(
-                           lambda x: QA_util_time_stamp(x)),
-                       type=type_ if 'min' in str(type_) else str(type_)+'min')
-    resx['source'] = source
-    return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
-    # return resx.dropna().reset_index().set_index(['datetime', 'code'])
 
 def QA_data_futuremin_resample(min_data, type_='5min'):
     """期货分钟线采样成大周期
