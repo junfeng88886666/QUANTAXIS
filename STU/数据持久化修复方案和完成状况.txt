@@ -33,6 +33,9 @@ QA_fetch_get_Stock_realtime(实时，单独）
 QA_fetch_get_depth_market_data(实时，单独）
 QA_fetch_get_stock_transaction_realtime(实时，单独）
 
+QA_fetch_get_future_list
+QA_fetch_get_future_day
+
 #################################
 QADataAggrement
 QA_DataAggrement_Stock_day
@@ -48,6 +51,8 @@ QA_DataAggrement_depth_market_data(实时，单独）
 QA_DataAggrement_stock_transaction_realtime(实时，单独）
 
 QA_DataAggrement_future_list
+QA_DataAggrement_future_day
+
 
 #################################
 QAQuery
