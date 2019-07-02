@@ -678,7 +678,7 @@ def QA_DataAggrement_Future_transaction(package,data):
               'order',
               'time_stamp']].astype('int64')
 
-        data = data.set_index('datetime',drop = False,inplace = False)
+        data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_TRANSACTION)
         return data[['datetime',
                       'date',
                       'nature_name',
@@ -743,13 +743,11 @@ def QA_DataAggrement_Future_min(package,data):
         data[['open',
               'high',
               'low',
-              'close',
-              'price']] \
+              'close']] \
         = data[['open',
                 'high',
                 'low',
-                'close',
-                'price']].astype('float64')
+                'close']].astype('float64')
 
         data[['position',
               'trade',
@@ -761,7 +759,7 @@ def QA_DataAggrement_Future_min(package,data):
                 'time_stamp']].astype('int64')
 
         data = data.set_index('datetime',drop = False,inplace = False)
-        return data[['open','high','low','close','price','position','trade','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
+        return data[['open','high','low','close','position','trade','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None

@@ -26,7 +26,9 @@ from datetime import time
 
 import pandas as pd
 from QUANTAXIS.QAUtil.QADate import QA_util_date_stamp,QA_util_time_stamp
+from QUANTAXIS.QAUtil.QADate_trade import QA_util_future_to_realdatetime,QA_util_future_to_tradedatetime
 from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
+from QUANTAXIS.QAUtil.QACode import QA_util_futurecode_tosimple
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
 
 def QA_data_stocktick_resample_1min(tick, type_='1min', source = 'tick_resample',if_drop=True):
@@ -213,12 +215,51 @@ def QA_data_stocktick_resample_1min(tick, type_='1min', source = 'tick_resample'
     resx['source'] = source
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
 
-def QA_data_futuretick_resample_1min(tick, type_='1min', source = 'tick_resample',if_drop=True):
+def _resample_edit_periods(data,edit_time_period):
+    raise NotImplementedError
 
 
+def QA_data_futuretick_resample_min(tick, type_='1min', source = 'tick_resample',if_drop=True):
+    """tick采样成1分钟级别分钟线，支持QA_DataAggrement_future_transaction数据
 
+    Arguments:
+        tick {[type]} -- transaction
 
-
+    Returns:
+        [type] -- [description]
+    """
+    tick = tick.sort_values(by=['datetime','code'])
+    tick.index = pd.to_datetime(tick.datetime)
+    data = tick.resample(
+                             type_,
+                             closed='left',
+                             base=30,
+                             loffset=type_
+                         ).apply(
+                             {
+                                 'price': 'ohlc',
+                                 'volume': 'sum',
+                                 'zengcang':'sum',
+                                 'code': 'last'
+                             }
+                         )
+    data.columns = data.columns.droplevel(0)
+        # for edit_time_period in MARKET_PRESET.get_resample_edit_periods(code):
+        #     _data_min = _resample_edit_periods(_data_min,edit_time_period)
+        # resx = resx.append(_data_min)
+    '''整理成符合分钟数据协议的数据格式'''
+    data.rename(columns = {'volume':'trade','zengcang':'position'},inplace = True)
+    for i in ['open', 'high', 'low', 'close']: data[i] /= 1000
+    data['datetime'] = list(map(lambda x:str(x)[:19],data.index))
+    data['tradetime']=pd.to_datetime(data['datetime'].apply(QA_util_future_to_tradedatetime))
+    data = data \
+        .assign(date=data['datetime'].apply(lambda x: str(x)[0:10])) \
+        .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x))) \
+        .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
+        .assign(type=type_)
+    data['source'] = source
+    if if_drop: data = data.dropna()
+    return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATASOURCE.TDX,data)
 
 
 
@@ -294,23 +335,13 @@ def QA_data_min_resample_stock(min_data, type_='30min', source = '1min_resample'
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
     # return resx.dropna().reset_index().set_index(['datetime', 'code'])
 
-def QA_data_min_resample_future():
-    raise NotImplementedError
+# def QA_data_min_resample_future():
+#     raise NotImplementedError
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+##########################################################################################################
+##########################################################################################################
+##########################################################################################################
 
 def QA_data_tick_resample(tick, type_='1min'):
     """tick采样成任意级别分钟线

@@ -57,7 +57,7 @@ from QUANTAXIS.QAUtil import Parallelism
 from QUANTAXIS.QAUtil.QACache import QA_util_cache
 from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
-from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock,QA_data_futuretick_resample_1min,QA_data_min_resample_future
+from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock,QA_data_futuretick_resample_min
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_transaction
 def init_fetcher():
     """初始化获取
@@ -1057,11 +1057,8 @@ def QA_fetch_get_future_transaction(code, start, end, frequence = None, retry=4,
             data = select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX, data)
             '''若frequence开关开启: 整理tick数据为分钟数据'''
             if frequence == None: pass
-            elif frequence == '1min':
-                data = QA_data_futuretick_resample_1min(data,frequence,'tdx_tick_resample',True)
-            elif frequence in ['5min','15min','30min','60min']:
-                data = QA_data_futuretick_resample_1min(data,'1min','tdx_tick_resample',True)
-                data = QA_data_min_resample_future(data,frequence,'tdx_tick1min_resample')
+            else:
+                data = QA_data_futuretick_resample_min(data,frequence,'tdx_tick_resample',True)
 
             '''返回对应的时间的数据'''
             if (len(start)==19)&(len(end)==19): data = data[(data['datetime']>=start)&(data['datetime']<=end)]
@@ -1210,11 +1207,10 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = 
                 code), (int(lens / 700) - i) * 700, 700)) for i in range(int(lens / 700) + 1)], axis=0)
             # print(data)
             # print(data.datetime)
-            data = data \
-                .assign(tradetime=data['datetime'].apply(str), code=str(code)) \
-                .assign(datetime=pd.to_datetime(data['datetime'].apply(QA_util_future_to_realdatetime, 1))) \
-                .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False) \
-                .assign(date=data['datetime'].apply(lambda x: str(x)[0:10])) \
+            data = data.assign(tradetime=data['datetime'].apply(str), code=str(code)) \
+                        .assign(datetime=pd.to_datetime(data['datetime'].apply(QA_util_future_to_realdatetime, 1))) \
+                        .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False)
+            data = data.assign(date=data['datetime'].apply(lambda x: str(x)[0:10])) \
                 .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x))) \
                 .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
                 .assign(type=type_).set_index('datetime', drop=False, inplace=False)

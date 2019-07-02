@@ -80,3 +80,8 @@ def QA_util_code_tolist(code, auto_fill=True):
             return [QA_util_code_tostr(item) for item in code]
         else:
             return [item for item in code]
+
+def QA_util_futurecode_tosimple(code):
+    code = str(code)
+    if code[-2:] in ['L8','L9']: return code[:-2]
+    else: return code[:-4]

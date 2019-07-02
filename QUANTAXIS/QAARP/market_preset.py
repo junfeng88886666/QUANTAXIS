@@ -59,6 +59,31 @@ import pandas as pd
 from functools import lru_cache
 from QUANTAXIS.QAUtil.QAParameter import EXCHANGE_ID
 
+# from datetime import time
+# '''resample_edit_periods的数据来源于 http://www.gjqh.com.cn/ws-2003417-c0002_61-cn/news_50491.shtml'''
+# call_auction_periods = {
+#                         1: [[time(2, 30), time(2, 36)], time(2, 30)],
+#                         2: [[time(8, 55), time(9, 1)], time(9, 1)],
+#                         3: [[time(9, 25), time(9, 31)], time(9, 31)],
+#                         4: [[time(10, 15), time(10, 16)], time(10, 15)],
+#                         5: [[time(10, 30), time(10, 31)], time(10, 31)],
+#                         6: [[time(11, 30), time(11, 36)], time(11, 30)],
+#                         7: [[time(12, 55), time(13, 1)], time(13, 1)],
+#                         8: [[time(15, 0), time(15, 6)], time(15, 0)],
+#                         9: [[time(20, 55), time(21, 1)], time(21, 1)]
+# }
+#
+# trade_periods = {
+#     1:[[time(9,30),time(10,15)],],
+#     2:[[time(10,30),time(11,30)]],
+#     3:[[time(13,30),time(15,0)]],
+#     4:[[time(21,0),time(23,30)]],
+#     5:[[time(21,0),time(1,0)]],
+#     6: [[time(21, 0), time(2,30)]],
+#
+#     7: [[time(9, 30), time(11, 30)],[3,6]],
+#     8: [[time(13, 0), time(15, 0)],[]],
+# }
 
 class MARKET_PRESET:
 
@@ -508,6 +533,7 @@ class MARKET_PRESET:
                 'commission_coeff_pervol': 3.0,
                 'commission_coeff_today_peramount': 0,
                 'commission_coeff_today_pervol': 6.0
+                # 'trade_periods':[]
             },
             'JR': {
                 'name': '粳稻',

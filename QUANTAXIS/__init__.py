@@ -232,8 +232,8 @@ from QUANTAXIS.QAUtil import (  # QAPARAMETER
     ENGINE_EVENT, EXCHANGE_ID, FREQUENCE, MARKET_ERROR, MARKET_EVENT,
     MARKET_TYPE, ORDER_DIRECTION, ORDER_EVENT, ORDER_MODEL, ORDER_STATUS,
     OUTPUT_FORMAT, RUNNING_ENVIRONMENT, TRADE_STATUS, QA_Setting,
-    QA_util_calc_time, QA_util_cfg_initial, QA_util_code_tolist,
-    QA_util_code_tostr, QA_util_date_gap, QA_util_date_int2str,
+    QA_util_calc_time, QA_util_cfg_initial, QA_util_code_tostr,
+    QA_util_code_tolist, QA_util_date_gap, QA_util_date_int2str,
     QA_util_date_stamp, QA_util_date_str2int, QA_util_date_today,
     QA_util_date_valid, QA_util_dict_remove_key, QA_util_diff_list,
     QA_util_file_md5, QA_util_format_date2str, QA_util_get_cfg,
@@ -259,7 +259,7 @@ from QUANTAXIS.QAUtil import (  # QAPARAMETER
     info_ip_list, stock_ip_list, trade_date_sse,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1,
     QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,QA_VectorBacktest_adv,QA_VectorBacktest,
     QA_VectorBacktest_func_add_fixed_stop,QA_VectorBacktest_func_fill_signal,QA_util_math_cross,
-    QA_util_list_cut,QA_util_list_cut_iteration,QA_util_datetime_valid,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas)
+    QA_util_list_cut,QA_util_list_cut_iteration,QA_util_datetime_valid,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,QA_util_futurecode_tosimple)
 
 from QUANTAXIS.QAArgorithm import *
 

@@ -534,6 +534,7 @@ class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
 
     FUTURE_LIST = ('code',['code','name','category','market','desc','source'],['code','market','category'])
     FUTURE_DAY = ('date',['date','code', 'open', 'high', 'low', 'close', 'price', 'trade', 'position'],['date','code'])
+    FUTURE_TRANSACTION = ('datetime',['datetime','code','price','volume','zengcang','direction','nature_name','order'],['datetime','code'])
 
 
 class ERRORTYPE():

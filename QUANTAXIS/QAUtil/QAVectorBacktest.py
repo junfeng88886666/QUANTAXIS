@@ -319,7 +319,9 @@ def QA_VectorBacktest(data = None,
 
         code_list = list(set(data.reset_index()['code']))
         if run_year_list != None:
-            if 'year' not in data.columns: data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
+            if 'year' not in data.columns: 
+                if data_freq[-3:] == 'min': data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['datetime']))
+                else: data['year'] = list(map(lambda x:str(x)[:4],data.reset_index()['date']))
             data = data[data['year'].isin(run_year_list)]
             print('当前回测年份：{}'.format(run_year_list))
         data = data.sort_index()
@@ -343,7 +345,8 @@ def QA_VectorBacktest(data = None,
             #     calculated_data = calculated_data.append(temp_data)
             ###
             calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
-            calculated_data = calculated_data.sort_values(by=['datetime','code'])
+            if data_freq[-3:] == 'min': calculated_data = calculated_data.sort_values(by=['datetime','code'])
+            else: calculated_data = calculated_data.sort_values(by=['date','code'])
             res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model,data_freq)
             calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
             res = res.append(res_temp)
@@ -373,8 +376,8 @@ def QA_VectorBacktest(data = None,
                     ##
 
                     calculated_data = data.groupby(level=1, sort=False).apply(func,params_use).reset_index(drop = True)
-                    calculated_data = calculated_data.sort_values(by=['datetime','code'])
-
+                    if data_freq[-3:] == 'min': calculated_data = calculated_data.sort_values(by=['datetime','code'])
+                    else: calculated_data = calculated_data.sort_values(by=['date','code'])
                     res_temp = _QA_VectorBacktest(calculated_data,comission,params_temp,params_id,save_path,model,data_freq)
                     calculated_data.to_csv(os.path.join(save_path,'calculated_data_'+params_id+'.csv'))
                     res = res.append(res_temp)
@@ -754,9 +757,12 @@ def _QA_VectorBacktest(df=None, comission=None, params=None, params_id=None, sav
     '''
     seaborn.set(palette='deep', style='darkgrid')
     code_list = list(set(df.reset_index()['code']))
-    df = df.sort_values(by=['datetime', 'code'])
-    if 'date' not in df.columns: df['date'] = list(map(lambda x: str(x)[:10], df['datetime']))
-    if 'minute' not in df.columns: df['minute'] = list(map(lambda x: str(x)[11:], df['datetime']))
+    if 'datetime' in df.columns: df = df.sort_values(by=['datetime', 'code'])
+    elif 'date' in df.columns: df = df.sort_values(by=['date', 'code'])  
+    
+    if data_freq[-3:] == 'min':
+        if 'date' not in df.columns: df['date'] = list(map(lambda x: str(x)[:10], df['datetime']))
+        if 'minute' not in df.columns: df['minute'] = list(map(lambda x: str(x)[11:], df['datetime']))
 
     result = pd.DataFrame()
     for code in code_list:

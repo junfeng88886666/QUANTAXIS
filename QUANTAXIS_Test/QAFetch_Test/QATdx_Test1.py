@@ -20,11 +20,11 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_xdxr('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_info('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 
-data = QA.QAFetch.QATdx.QA_fetch_get_future_list()
+
+future_list = QA.QAFetch.QATdx.QA_fetch_get_future_list()
 data = QA.QAFetch.QATdx.QA_fetch_get_future_day('ICL8','2011-06-26','2019-06-27')
 data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
-
-
+data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min('ICL8','2019-06-26','2019-06-27')
 #%%
 data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
@@ -37,6 +37,125 @@ data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 
 data = QA.QAFetch.QAQuery.QA_fetch_future_list()
 data = QA.QAFetch.QAQuery.QA_fetch_future_day('BBL8','2018-06-26','2019-06-27','pd')
+#%%
+CODE = 'FGL8'
+data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min(CODE,'2019-06-26','2019-06-27')
+
+[['open','high','low','close','trade','position']]
+
+tick = QA.QAFetch.QATdx.QA_fetch_get_future_transaction(CODE,'2019-06-26','2019-06-27')
+tick['time'] = tick.datetime.apply(lambda x:str(x)[10:])
+min(list(set(tick['time'])))
+tick['2000-01-01':'2019-01-01']
+
+type_ = '1min'
+
+resx = pd.DataFrame()
+__type_index = type(tick.index[0])
+tick.index = pd.to_datetime(tick.index)
+_temp = set(tick.index.date)
+
+mindata = tick.resample(
+                             type_,
+                             closed='left',
+                             base=30,
+                             loffset=type_
+                         ).apply(
+                             {
+                                 'price': 'ohlc',
+                                 'volume': 'sum',
+                                 'code': 'last'
+                             }
+                         )
+mindata.columns = ['open','high','low','close','volume','code']
+for i in ['open','high','low','close']: mindata[i]/=1000
+
+
+
+#%%
+from datetime import time
+resample_edit_periods = {
+    1:[[time(9,0),time(9,1)],time(9,1)]
+}
+
+
+resample_edit_periods[1]
+#%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+ for item in _temp:
+    _data = tick.loc[str(item)]
+    _data1 = _data[time(9,
+                        31):time(11,
+                                 30)].resample(
+                                     type_,
+                                     closed='right',
+                                     base=30,
+                                     loffset=type_
+                                 ).apply(
+                                     {
+                                         'price': 'ohlc',
+                                         'volume': 'sum',
+                                         'code': 'last',
+                                         'amount': 'sum'
+                                     }
+                                 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000007','2019-06-01 10:30:00','2019-06-10 10:30:00','1min')
@@ -83,7 +202,7 @@ STOCK_DAY = (['code', 'open', 'high', 'low','close', 'volume', 'amount', 'date']
 
 from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_date_valid, QA_util_dict_remove_key,
-                              QA_util_log_info, QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
+                              QA_util_log_info, QA_util_code_tostr, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
                               trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,

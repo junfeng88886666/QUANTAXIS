@@ -30,7 +30,7 @@ import pandas as pd
 from motor.motor_asyncio import (AsyncIOMotorClient, AsyncIOMotorCollection,
                                  AsyncIOMotorCursor)
 
-from QUANTAXIS.QAUtil import (QA_Setting, QA_util_code_tolist,
+from QUANTAXIS.QAUtil import (QA_Setting, QA_util_code_tostr,
                               QA_util_date_stamp, QA_util_date_str2int,
                               QA_util_date_valid, QA_util_dict_remove_key,
                               QA_util_log_info,
@@ -49,7 +49,7 @@ async def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', 
     end = str(end)[0:10]
 
     # code checking
-    code = QA_util_code_tolist(code)
+    code = QA_util_code_tostr(code)
 
     if QA_util_date_valid(end):
 
@@ -104,7 +104,7 @@ async def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min',
 
     __data = []
     # code checking
-    code = QA_util_code_tolist(code)
+    code = QA_util_code_tostr(code)
 
     cursor = collections.find({
         'code': {'$in': code}, "time_stamp": {

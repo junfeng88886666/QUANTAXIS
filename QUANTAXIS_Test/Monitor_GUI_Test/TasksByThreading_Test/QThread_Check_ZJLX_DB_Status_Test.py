@@ -6,7 +6,7 @@ from QUANTAXIS.QAUtil import DATABASE
 
 from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_date_valid, QA_util_dict_remove_key,
-                              QA_util_log_info, QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
+                              QA_util_log_info, QA_util_code_tostr, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
                               trade_date_sse, QADate, QADate_trade)
