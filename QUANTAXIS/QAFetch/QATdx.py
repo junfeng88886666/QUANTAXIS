@@ -59,6 +59,8 @@ from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
 from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock,QA_data_futuretick_resample_min
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_transaction
+
+
 def init_fetcher():
     """初始化获取
     """

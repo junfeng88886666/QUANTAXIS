@@ -25,6 +25,8 @@
 import json
 import pandas as pd
 import tushare as ts
+from retrying import retry
+
 import time
 from QUANTAXIS.QAUtil import (
     QA_util_date_int2str,
@@ -33,30 +35,39 @@ from QUANTAXIS.QAUtil import (
     QA_util_log_info,
     QA_util_to_json_from_pandas
 )
+DEFAULT_TUSHARE_TOKEN = '32b744d16a99d60a9eb04079ed703ccbe1f8b516f9daae54d2a52c7c'
 
+'''
+只需要完成以下数据获取：
+股票tick数据
+股票分钟数据
+期货tick数据
+期货分钟数据
+'''
+pro = ts.pro_api(DEFAULT_TUSHARE_TOKEN)
 
-def set_token(token=None):
+df = pro.fut_basic(exchange='CFFEX', fut_type='2', fields='ts_code,symbol,name,list_date,delist_date')
+
+def set_token(token=DEFAULT_TUSHARE_TOKEN):
     try:
         if token is None:
             # 从~/.quantaxis/setting/config.ini中读取配置
             token = QASETTING.get_config('TSPRO', 'token', None)
+            if token == 'null': token = DEFAULT_TUSHARE_TOKEN
         else:
             QASETTING.set_config('TSPRO', 'token', token)
         ts.set_token(token)
     except:
-        if token is None:
-            print('请设置tushare的token')
-        else:
-            print('请升级tushare 至最新版本 pip install tushare -U')
+        print('请升级tushare 至最新版本 pip install tushare -U')
 
 
-def get_pro():
+def get_pro(token):
     try:
-        set_token()
+        set_token(token)
         pro = ts.pro_api()
     except Exception as e:
         if isinstance(e, NameError):
-            print('请设置tushare pro的token凭证码')
+            print('请设置正确的tushare pro的token凭证码')
         else:
             print('请升级tushare 至最新版本 pip install tushare -U')
             print(e)
@@ -64,7 +75,7 @@ def get_pro():
     return pro
 
 
-def QA_fetch_get_stock_adj(code, end=''):
+def QA_fetch_get_stock_adj(code, end='',token = None):
     """获取股票的复权因子
     
     Arguments:
@@ -77,17 +88,18 @@ def QA_fetch_get_stock_adj(code, end=''):
         [type] -- [description]
     """
 
-    pro = get_pro()
+    pro = get_pro(token)
     adj = pro.adj_factor(ts_code=code, trade_date=end)
     return adj
 
+#QA_fetch_get_stock_adj('000001.SZ','')
 
-def QA_fetch_stock_basic():
+def QA_fetch_stock_basic(token = None):
 
     def fetch_stock_basic():
         stock_basic = None
         try:
-            pro = get_pro()
+            pro = get_pro(token)
             stock_basic = pro.stock_basic(
                 exchange='',
                 list_status='L',
@@ -105,6 +117,7 @@ def QA_fetch_stock_basic():
 
     return fetch_stock_basic()
 
+#QA_fetch_stock_basic()
 
 def cover_time(date):
     """
@@ -185,11 +198,12 @@ def QA_fetch_get_stock_info(name):
     except:
         return None
 
-
 def QA_fetch_get_stock_tick(name, date):
     if (len(name) != 6):
         name = str(name)[0:6]
     return ts.get_tick_data(name, date)
+
+QA_fetch_get_stock_tick('000001','20190627')
 
 
 def QA_fetch_get_stock_list():
