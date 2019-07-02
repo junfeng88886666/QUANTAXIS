@@ -21,7 +21,8 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_info('000002')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 
 data = QA.QAFetch.QATdx.QA_fetch_get_future_list()
-data = QA.QAFetch.QATdx.QA_fetch_get_future_day('AGL8','2018-06-26','2019-06-27')
+data = QA.QAFetch.QATdx.QA_fetch_get_future_day('ICL8','2011-06-26','2019-06-27')
+data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
 
 
 #%%

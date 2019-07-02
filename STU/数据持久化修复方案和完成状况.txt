@@ -35,7 +35,7 @@ QA_fetch_get_stock_transaction_realtime(实时，单独）
 
 QA_fetch_get_future_list
 QA_fetch_get_future_day
-
+QA_fetch_get_future_transaction
 #################################
 QADataAggrement
 QA_DataAggrement_Stock_day
@@ -65,7 +65,7 @@ QA_fetch_stock_info
 QA_fetch_stock_block
 
 QA_fetch_future_list
-
+QA_fetch_future_day
 #################################
 QASU
 QA_SU_save_stock_day
@@ -76,6 +76,8 @@ QA_SU_save_stock_xdxr
 QA_SU_save_stock_info
 QA_SU_save_stock_block
 
+QA_SU_save_future_list
+QA_SU_save_future_day
 #################################
 QAParameter:DATA_QUERY_INDEX_COLUMNS_UNIQUE
 STOCK_DAY
@@ -87,6 +89,7 @@ STOCK_INFO
 STOCK_BLOCK
 
 FUTURE_LIST
+FUTURE_DAY
 ##################################
 DATABASE_NAME
 STOCK_DAY
@@ -98,3 +101,81 @@ STOCK_INFO
 STOCK_BLOCK
 
 FUTURE_LIST
+FUTURE_DAY
+
+
+@retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
+def QA_fetch_get_stock_transaction(code, start, end, frequence = None,retry=2, ip=None, port=None):
+    '''
+    :param code: 股票代码
+    :param start: 开始日期
+    :param end:  结束日期
+    :param retry: 重新尝试次数
+    :param ip: 地址
+    :param port: 端口
+    :return:
+    '''
+    '历史分笔成交 buyorsell 1--sell 0--buy 2--盘前'
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+
+    ip, port = get_mainmarket_ip(ip, port)
+    api = TdxHq_API()
+    try:
+        real_start, real_end = QA_util_get_real_datelist(start, end)
+        if real_start is None:
+            return None
+        real_id_range = []
+        with api.connect(ip, port):
+            data = pd.DataFrame()
+            for index_ in range(trade_date_sse.index(real_start), trade_date_sse.index(real_end) + 1):
+
+                try:
+                    data_ = __QA_fetch_get_stock_transaction(
+                        code, trade_date_sse[index_], retry, api)
+                    if len(data_) < 1:
+                        return None
+                except:
+                    QA_util_log_info('Wrong in Getting {} history transaction data in day {}'.format(
+                        code, trade_date_sse[index_]))
+                else:
+                    QA_util_log_info('Successfully Getting {} history transaction data in day {}'.format(
+                        code, trade_date_sse[index_]))
+                    data = data.append(data_)
+            if len(data) > 0:
+                data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)[0:19]))
+
+                data = data.assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
+                '''数据协议处理数据到标准格式'''
+                data = select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_TRANSACTION)(DATASOURCE.TDX,data)
+                '''若frequence开关开启: 整理tick数据为分钟数据'''
+                if frequence == None: pass
+                elif frequence == '1min':
+                    data = QA_data_stocktick_resample_1min(data,frequence,'tdx_tick_resample',True)
+                elif frequence in ['5min','15min','30min','60min']:
+                    data = QA_data_stocktick_resample_1min(data,'1min','tdx_tick_resample',True)
+                    data = QA_data_min_resample_stock(data,frequence,'tdx_tick1min_resample')
+
+                '''返回对应的时间的数据'''
+                if (len(start)==19)&(len(end)==19): data = data[(data['datetime']>=start)&(data['datetime']<=end)]
+                elif (len(start)==10)&(len(end)==10): data = data[(data['date']>=start)&(data['date']<=end)]
+                elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
+                elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
+
+                return data
+            else:
+                return None
+    except Exception as e:
+        if isinstance(e, TypeError):
+            print('请重新安装pytdx以解决此问题')
+            print('pip uninstall pytdx')
+            print('pip install pytdx')
+            return None
+        else:
+            print(e)
+            return None
+
+MSCI指数构建
+backtest3_moniter
+RPG
+QATdx_Test1

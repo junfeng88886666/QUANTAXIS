@@ -76,14 +76,13 @@ def QA_DataAggrement_Future_day(data):
     data['source'] = DATASOURCE.TDX
     return data
 
-def QA_DataAggrement_Future_min(data):
-    if 'contract' not in data.columns: data['contract'] = 'undefined'
-    data['source'] = DATASOURCE.TDX
-    return data
-
 def QA_DataAggrement_Future_transaction(data):
     del data['natrue_name']
     if 'contract' not in data.columns: data['contract'] = 'undefined'
     data['source'] = DATASOURCE.TDX
     return data
 
+def QA_DataAggrement_Future_min(data):
+    if 'contract' not in data.columns: data['contract'] = 'undefined'
+    data['source'] = DATASOURCE.TDX
+    return data

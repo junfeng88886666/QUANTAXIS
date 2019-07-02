@@ -640,6 +640,64 @@ def QA_DataAggrement_Future_day(package,data):
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
 
+def QA_DataAggrement_Future_transaction(package,data):
+    try:
+        Engine = use(package)
+        data = Engine.QA_DataAggrement_Future_min(data)
+
+        data[['datetime',
+              'date',
+              'nature_name',
+              'code',
+              'contract',
+              'source']]\
+        = data[['datetime',
+              'date',
+              'nature_name',
+              'code',
+              'contract',
+              'source']].astype(str)
+
+        data[['price']] \
+        = data[['price']].astype('float64')
+
+        data[['hour',
+              'minute',
+              'volume',
+              'zengcang',
+              'direction',
+              'nature',
+              'order',
+              'time_stamp']]\
+        = data[['hour',
+              'minute',
+              'volume',
+              'zengcang',
+              'direction',
+              'nature',
+              'order',
+              'time_stamp']].astype('int64')
+
+        data = data.set_index('datetime',drop = False,inplace = False)
+        return data[['datetime',
+                      'date',
+                      'nature_name',
+                      'code',
+                      'price',
+                      'hour',
+                      'minute',
+                      'volume',
+                      'zengcang',
+                      'direction',
+                      'nature',
+                      'order',
+                      'contract',
+                      'source']]
+
+    except Exception as e:
+        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
+        return None
+
 def QA_DataAggrement_Future_min(package,data):
     '''
     该数据协议为：返回的数据应包含以下列和对应的数据格式，若无该列数据，则填充0
@@ -707,62 +765,4 @@ def QA_DataAggrement_Future_min(package,data):
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None
-
-def QA_DataAggrement_Future_transaction(package,data):
-    try:
-        Engine = use(package)
-        data = Engine.QA_DataAggrement_Future_min(data)
-
-        data[['datetime',
-              'date',
-              'nature_name',
-              'code',
-              'contract',
-              'source']]\
-        = data[['datetime',
-              'date',
-              'nature_name',
-              'code',
-              'contract',
-              'source']].astype(str)
-
-        data[['price']] \
-        = data[['price']].astype('float64')
-
-        data[['hour',
-              'minute',
-              'volume',
-              'zengcang',
-              'direction',
-              'nature',
-              'order']]\
-        = data[['hour',
-              'minute',
-              'volume',
-              'zengcang',
-              'direction',
-              'nature',
-              'order']].astype('int64')
-
-        data = data.set_index('datetime',drop = False,inplace = False)
-        return data[['datetime',
-                      'date',
-                      'nature_name',
-                      'code',
-                      'price',
-                      'hour',
-                      'minute',
-                      'volume',
-                      'zengcang',
-                      'direction',
-                      'nature',
-                      'order',
-                      'contract',
-                      'source']]
-
-    except Exception as e:
-        QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
-        return None
-
-
 

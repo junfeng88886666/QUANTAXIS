@@ -213,6 +213,15 @@ def QA_data_stocktick_resample_1min(tick, type_='1min', source = 'tick_resample'
     resx['source'] = source
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
 
+def QA_data_futuretick_resample_1min(tick, type_='1min', source = 'tick_resample',if_drop=True):
+
+
+
+
+
+
+
+
 def QA_data_min_resample_stock(min_data, type_='30min', source = '1min_resample'):
     """分钟线采样成大周期
 
@@ -284,6 +293,24 @@ def QA_data_min_resample_stock(min_data, type_='30min', source = '1min_resample'
     resx['source'] = source
     return select_DataAggrement(DATA_AGGREMENT_NAME.STOCK_MIN)(None, resx)
     # return resx.dropna().reset_index().set_index(['datetime', 'code'])
+
+def QA_data_min_resample_future():
+    raise NotImplementedError
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def QA_data_tick_resample(tick, type_='1min'):
     """tick采样成任意级别分钟线

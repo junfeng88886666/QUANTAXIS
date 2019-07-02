@@ -57,7 +57,7 @@ from QUANTAXIS.QAUtil import Parallelism
 from QUANTAXIS.QAUtil.QACache import QA_util_cache
 from QUANTAXIS.QAUtil.QAParameter import DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.QADataAggrement import select_DataAggrement
-from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock
+from QUANTAXIS.QAData.data_resample import QA_data_stocktick_resample_1min,QA_data_min_resample_stock,QA_data_futuretick_resample_1min,QA_data_min_resample_future
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_transaction
 def init_fetcher():
     """初始化获取
@@ -988,6 +988,91 @@ def QA_fetch_get_future_day(code, start_date, end_date, frequence='day', ip=None
             print(e)
             return None
 
+
+def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
+    batch_size = 1800  # 800 or 2000 ? 2000 maybe also works
+    data_arr = []
+    max_offset = 40
+    cur_offset = 0
+
+    while cur_offset <= max_offset:
+        one_chunk = apix.get_history_transaction_data(
+            code_market, str(code), QA_util_date_str2int(day), cur_offset * batch_size)
+
+        if one_chunk is None or one_chunk == []:
+            break
+        data_arr = one_chunk + data_arr
+        cur_offset += 1
+    data_ = apix.to_df(data_arr)
+
+    for _ in range(retry):
+        if len(data_) < 2:
+            import time
+            time.sleep(0.1)
+            data = __QA_fetch_get_stock_transaction(code, day, 0, apix)
+            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
+        else:
+            data = data_.assign(datetime=pd.to_datetime(data_['date'])).assign(date=str(day)) \
+                .assign(code=str(code)).assign(order=range(len(data_.index))).set_index('datetime', drop=False,
+                                                                                        inplace=False)
+            return data
+
+def QA_fetch_get_future_transaction(code, start, end, frequence = None, retry=4, ip=None, port=None):
+    '期货历史成交分笔'
+    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
+    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+
+    ip, port = get_extensionmarket_ip(ip, port)
+    apix = TdxExHq_API()
+    global extension_market_list
+    extension_market_list = QA_fetch_get_extensionmarket_list(
+    ) if extension_market_list is None else extension_market_list
+    real_start, real_end = QA_util_get_real_datelist(start, end)
+    if real_start is None:
+        return None
+    real_id_range = []
+    with apix.connect(ip, port):
+        code_market = extension_market_list.query(
+            'code=="{}"'.format(code)).iloc[0]
+        data = pd.DataFrame()
+        for index_ in range(trade_date_sse.index(real_start), trade_date_sse.index(real_end) + 1):
+
+            try:
+                data_ = __QA_fetch_get_future_transaction(
+                    code, trade_date_sse[index_], retry, int(code_market.market), apix)
+                if len(data_) < 1:
+                    return None
+            except Exception as e:
+                print(e)
+                QA_util_log_info('Wrong in Getting {} history transaction data in day {}'.format(
+                    code, trade_date_sse[index_]))
+            else:
+                QA_util_log_info('Successfully Getting {} history transaction data in day {}'.format(
+                    code, trade_date_sse[index_]))
+                data = data.append(data_)
+        if len(data) > 0:
+            data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)[0:19]))
+            data = data.assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x)))
+            '''数据协议处理数据到标准格式'''
+            data = select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX, data)
+            '''若frequence开关开启: 整理tick数据为分钟数据'''
+            if frequence == None: pass
+            elif frequence == '1min':
+                data = QA_data_futuretick_resample_1min(data,frequence,'tdx_tick_resample',True)
+            elif frequence in ['5min','15min','30min','60min']:
+                data = QA_data_futuretick_resample_1min(data,'1min','tdx_tick_resample',True)
+                data = QA_data_min_resample_future(data,frequence,'tdx_tick1min_resample')
+
+            '''返回对应的时间的数据'''
+            if (len(start)==19)&(len(end)==19): data = data[(data['datetime']>=start)&(data['datetime']<=end)]
+            elif (len(start)==10)&(len(end)==10): data = data[(data['date']>=start)&(data['date']<=end)]
+            elif (len(start)==19)&(len(end)==10): data = data[(data['datetime']>=start)&(data['date']<=end)]
+            elif (len(start)==10)&(len(end)==19): data = data[(data['date']>=start)&(data['datetime']<=end)]
+
+            return data
+        else:
+            return None
+
 # @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 # def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, ip=None, port=None):
 #     '''
@@ -1155,33 +1240,6 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = 
         #     '''resample数据，得到分钟线数据'''
         raise NotImplementedError
 
-def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
-    batch_size = 1800  # 800 or 2000 ? 2000 maybe also works
-    data_arr = []
-    max_offset = 40
-    cur_offset = 0
-
-    while cur_offset <= max_offset:
-        one_chunk = apix.get_history_transaction_data(
-            code_market, str(code), QA_util_date_str2int(day), cur_offset * batch_size)
-
-        if one_chunk is None or one_chunk == []:
-            break
-        data_arr = one_chunk + data_arr
-        cur_offset += 1
-    data_ = apix.to_df(data_arr)
-
-    for _ in range(retry):
-        if len(data_) < 2:
-            import time
-            time.sleep(0.1)
-            data = __QA_fetch_get_stock_transaction(code, day, 0, apix)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
-        else:
-            data = data_.assign(datetime=pd.to_datetime(data_['date'])).assign(date=str(day)) \
-                .assign(code=str(code)).assign(order=range(len(data_.index))).set_index('datetime', drop=False,
-                                                                                        inplace=False)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
 #######################################################################################################################################
 #######################################################################################################################################
 ### 分割线
@@ -2246,142 +2304,6 @@ def QA_fetch_get_exchangerate_list(ip=None, port=None):
     ) if extension_market_list is None else extension_market_list
 
     return extension_market_list.query('market==10 or market==11').query('category==4')
-
-def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = False, ip=None, port=None):
-    '期货数据 分钟线'
-    if resample_tick == False:
-        ip, port = get_extensionmarket_ip(ip, port)
-        apix = TdxExHq_API()
-        type_ = ''
-        start_date = str(start)[0:10]
-        today_ = datetime.date.today()
-        lens = QA_util_get_trade_gap(start_date, today_)
-        global extension_market_list
-        extension_market_list = QA_fetch_get_extensionmarket_list(
-        ) if extension_market_list is None else extension_market_list
-
-        if str(frequence) in ['5', '5m', '5min', 'five']:
-            frequence, type_ = 0, '5min'
-            lens = 48 * lens * 2.5
-        elif str(frequence) in ['1', '1m', '1min', 'one']:
-            frequence, type_ = 8, '1min'
-            lens = 240 * lens * 2.5
-        elif str(frequence) in ['15', '15m', '15min', 'fifteen']:
-            frequence, type_ = 1, '15min'
-            lens = 16 * lens * 2.5
-        elif str(frequence) in ['30', '30m', '30min', 'half']:
-            frequence, type_ = 2, '30min'
-            lens = 8 * lens * 2.5
-        elif str(frequence) in ['60', '60m', '60min', '1h']:
-            frequence, type_ = 3, '60min'
-            lens = 4 * lens * 2.5
-        if lens > 20800:
-            lens = 20800
-
-        # print(lens)
-        with apix.connect(ip, port):
-
-            code_market = extension_market_list.query(
-                'code=="{}"'.format(code)).iloc[0]
-            data = pd.concat([apix.to_df(apix.get_instrument_bars(frequence, int(code_market.market), str(
-                code), (int(lens / 700) - i) * 700, 700)) for i in range(int(lens / 700) + 1)], axis=0)
-            # print(data)
-            # print(data.datetime)
-            data = data \
-                .assign(tradetime=data['datetime'].apply(str), code=str(code)) \
-                .assign(datetime=pd.to_datetime(data['datetime'].apply(QA_util_future_to_realdatetime, 1))) \
-                .drop(['year', 'month', 'day', 'hour', 'minute'], axis=1, inplace=False) \
-                .assign(date=data['datetime'].apply(lambda x: str(x)[0:10])) \
-                .assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(x))) \
-                .assign(time_stamp=data['datetime'].apply(lambda x: QA_util_time_stamp(x))) \
-                .assign(type=type_).set_index('datetime', drop=False, inplace=False)
-            data = data.assign(datetime=data['datetime'].apply(lambda x: str(x)))[start:end].sort_index()
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_MIN)(DATASOURCE.TDX,data)
-    else:
-        '''
-       TODO: 开发这个板块
-       '''
-        # data = QA_fetch_get_future_min(code, start, end, frequence, False, ip, port)
-        # min_datetime = start
-        # max_datetime = data['datetime'].min()
-        #
-        # if min_datetime < max_datetime:
-        #     '''若数据长度不足'''
-        #     temp = QA_fetch__future_transaction(code, start, end)
-        #     '''先从数据库获取future的tick'''
-        #     if temp != None:
-        #         '''若数据库存在数据, 将数据整理成数据协议格式'''
-        #
-        #
-        #     '''再在线获取future的tick'''
-        #     '''resample数据，得到分钟线数据'''
-        raise NotImplementedError
-
-def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
-    batch_size = 1800  # 800 or 2000 ? 2000 maybe also works
-    data_arr = []
-    max_offset = 40
-    cur_offset = 0
-
-    while cur_offset <= max_offset:
-        one_chunk = apix.get_history_transaction_data(
-            code_market, str(code), QA_util_date_str2int(day), cur_offset * batch_size)
-
-        if one_chunk is None or one_chunk == []:
-            break
-        data_arr = one_chunk + data_arr
-        cur_offset += 1
-    data_ = apix.to_df(data_arr)
-
-    for _ in range(retry):
-        if len(data_) < 2:
-            import time
-            time.sleep(0.1)
-            data = __QA_fetch_get_stock_transaction(code, day, 0, apix)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
-        else:
-            data = data_.assign(datetime=pd.to_datetime(data_['date'])).assign(date=str(day)) \
-                .assign(code=str(code)).assign(order=range(len(data_.index))).set_index('datetime', drop=False,
-                                                                                        inplace=False)
-            return select_DataAggrement(DATA_AGGREMENT_NAME.FUTURE_TRANSACTION)(DATASOURCE.TDX,data)
-
-
-def QA_fetch_get_future_transaction(code, start, end, retry=4, ip=None, port=None):
-    '期货历史成交分笔'
-    ip, port = get_extensionmarket_ip(ip, port)
-    apix = TdxExHq_API()
-    global extension_market_list
-    extension_market_list = QA_fetch_get_extensionmarket_list(
-    ) if extension_market_list is None else extension_market_list
-    real_start, real_end = QA_util_get_real_datelist(start, end)
-    if real_start is None:
-        return None
-    real_id_range = []
-    with apix.connect(ip, port):
-        code_market = extension_market_list.query(
-            'code=="{}"'.format(code)).iloc[0]
-        data = pd.DataFrame()
-        for index_ in range(trade_date_sse.index(real_start), trade_date_sse.index(real_end) + 1):
-
-            try:
-                data_ = __QA_fetch_get_future_transaction(
-                    code, trade_date_sse[index_], retry, int(code_market.market), apix)
-                if len(data_) < 1:
-                    return None
-            except Exception as e:
-                print(e)
-                QA_util_log_info('Wrong in Getting {} history transaction data in day {}'.format(
-                    code, trade_date_sse[index_]))
-            else:
-                QA_util_log_info('Successfully Getting {} history transaction data in day {}'.format(
-                    code, trade_date_sse[index_]))
-                data = data.append(data_)
-        if len(data) > 0:
-
-            return data.assign(datetime=data['datetime'].apply(lambda x: str(x)[0:19]))
-        else:
-            return None
-
 
 def QA_fetch_get_future_transaction_realtime(code, ip=None, port=None):
     '期货历史成交分笔'
