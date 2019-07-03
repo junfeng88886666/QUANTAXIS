@@ -34,7 +34,7 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_log_info, QA_util_code_tostr,QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
-                              trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
+                              trade_date_sse,QA_util_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
                               QA_util_get_last_day, QA_util_get_next_day, QA_util_get_real_date)
 from QUANTAXIS.QAUtil.QAParameter import DATA_QUERY_INDEX_COLUMNS_UNIQUE,DATASOURCE,DATA_AGGREMENT_NAME
 from QUANTAXIS.QAData.financial_mean import financial_dict
@@ -75,7 +75,7 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         感谢@几何大佬的提示
         https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
     """
-    if (QA_tuil_dateordatetime_valid(start))&(QA_tuil_dateordatetime_valid(end)):
+    if (QA_util_dateordatetime_valid(start))&(QA_util_dateordatetime_valid(end)):
         '''数据获取'''
         start_date = str(start)[0:10]
         end_date = str(end)[0:10]
@@ -111,7 +111,7 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = Non
         感谢@几何大佬的提示
         https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
     """
-    if (QA_tuil_dateordatetime_valid(start)) & (QA_tuil_dateordatetime_valid(end)):
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         '''数据获取'''
         code = QA_util_code_tostr(code)
 
@@ -148,7 +148,7 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = Non
 
 def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', collections=DATABASE.stock_min):
     '获取股票分钟线'
-    if (QA_tuil_dateordatetime_valid(start)) & (QA_tuil_dateordatetime_valid(end)):
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         '''数据获取'''
         if frequence in ['1min', '1m']:
             frequence = '1min'

@@ -50,7 +50,7 @@ from QUANTAXIS.QAUtil import (QA_Setting, QA_util_date_stamp,
                               QA_util_get_trade_gap, QA_util_log_info,
                               QA_util_time_stamp, QA_util_web_ping,
                               exclude_from_stock_ip_list, future_ip_list,
-                              stock_ip_list, trade_date_sse,QA_tuil_dateordatetime_valid)
+                              stock_ip_list, trade_date_sse,QA_util_dateordatetime_valid)
 from QUANTAXIS.QAUtil.QASetting import QASETTING
 from QUANTAXIS.QASetting.QALocalize import log_path
 from QUANTAXIS.QAUtil import Parallelism
@@ -397,8 +397,8 @@ def QA_fetch_get_stock_day(code, start, end, if_fq='00', frequence='day', ip=Non
     Exception:
         如果出现网络问题/服务器拒绝, 会出现socket:time out 尝试再次获取/更换ip即可, 本函数不做处理
     """
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
     start_date = str(start)[0:10]
     end_date = str(end)[0:10]
 
@@ -486,8 +486,8 @@ def QA_fetch_get_stock_transaction(code, start, end, frequence = None,retry=2, i
     :return:
     '''
     '历史分笔成交 buyorsell 1--sell 0--buy 2--盘前'
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
 
     ip, port = get_mainmarket_ip(ip, port)
     api = TdxHq_API()
@@ -560,8 +560,8 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
     :param port:
     :return:
     '''
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
     start_date = str(start)[0:10]
     end_date = str(end)[0:10]
 
@@ -1021,8 +1021,8 @@ def __QA_fetch_get_future_transaction(code, day, retry, code_market, apix):
 
 def QA_fetch_get_future_transaction(code, start, end, frequence = None, retry=4, ip=None, port=None):
     '期货历史成交分笔'
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
 
     ip, port = get_extensionmarket_ip(ip, port)
     apix = TdxExHq_API()
@@ -1087,8 +1087,8 @@ def QA_fetch_get_future_transaction(code, start, end, frequence = None, retry=4,
 #     :param port:
 #     :return:
 #     '''
-#     assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-#     assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+#     assert QA_util_dateordatetime_valid(start), 'start input format error'
+#     assert QA_util_dateordatetime_valid(end), 'end input format error'
 #     start_date = str(start)[0:10]
 #     end_date = str(end)[0:10]
 #

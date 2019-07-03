@@ -14,7 +14,7 @@ from QUANTAXIS.QAUtil import (
     QASETTING,
     QA_util_log_info,
     QA_util_to_json_from_pandas,
-    QA_tuil_dateordatetime_valid
+    QA_util_dateordatetime_valid
 )
 from QUANTAXIS.QAUtil.QAParameter import FREQUENCE,MARKET_TYPE,DATASOURCE,DATABASE_NAME
 
@@ -122,8 +122,8 @@ def _QA_freq_toJQDATA(frequence):
         
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api',account=None, password=None, remember = False):
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
 
     if method == 'api':
         JQDATA_login(account = account, password = password, remember = remember)
@@ -147,9 +147,8 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api', account=None, password=None, remember = False):
-    assert QA_tuil_dateordatetime_valid(start), 'start input format error'
-    assert QA_tuil_dateordatetime_valid(end), 'end input format error'
-
+    assert QA_util_dateordatetime_valid(start), 'start input format error'
+    assert QA_util_dateordatetime_valid(end), 'end input format error'
     if method == 'api':
         JQDATA_login(account = account, password = password, remember = remember)
         jqcode = _QA_code_toJQDATA(code,'futures')

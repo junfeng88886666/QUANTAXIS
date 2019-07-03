@@ -53,7 +53,7 @@ from QUANTAXIS.QAUtil.QADate import (QA_util_calc_time, QA_util_date_int2str,
                                      QA_util_select_min, QA_util_time_delay,
                                      QA_util_time_now, QA_util_time_stamp,
                                      QA_util_to_datetime, QA_util_today_str,
-                                     QATZInfo_CN,QA_util_datetime_fixstr1,QA_tuil_dateordatetime_valid)
+                                     QATZInfo_CN,QA_util_datetime_fixstr1,QA_util_dateordatetime_valid)
 # trade date
 from QUANTAXIS.QAUtil.QADate_trade import (QA_util_date_gap,
                                            QA_util_format_date2str,

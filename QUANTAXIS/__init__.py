@@ -259,7 +259,7 @@ from QUANTAXIS.QAUtil import (  # QAPARAMETER
     info_ip_list, stock_ip_list, trade_date_sse,QA_util_listdir,QA_util_listfile,QA_util_datetime_fixstr1,
     QA_VectorBacktest_InterDayOnceTrading_single_fixed_stop,QA_VectorBacktest_adv,QA_VectorBacktest,
     QA_VectorBacktest_func_add_fixed_stop,QA_VectorBacktest_func_fill_signal,QA_util_math_cross,
-    QA_util_list_cut,QA_util_list_cut_iteration,QA_util_datetime_valid,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,QA_util_futurecode_tosimple)
+    QA_util_list_cut,QA_util_list_cut_iteration,QA_util_datetime_valid,QA_util_dateordatetime_valid,QA_util_to_anyformat_from_pandas,QA_util_futurecode_tosimple)
 
 from QUANTAXIS.QAArgorithm import *
 

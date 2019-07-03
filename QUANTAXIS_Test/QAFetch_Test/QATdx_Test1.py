@@ -24,7 +24,9 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 future_list = QA.QAFetch.QATdx.QA_fetch_get_future_list()
 data = QA.QAFetch.QATdx.QA_fetch_get_future_day('ICL8','2011-06-26','2019-06-27')
 data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
-data1 = QA.QA_fetch_get_future_min(None,'AGL8','2010-06-26','2019-06-27')
+
+
+data1 = QA.QA_fetch_get_future_min('jqdata','AGL8','2010-06-26','2019-06-27')
 #%%
 data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
@@ -216,7 +218,7 @@ from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_log_info, QA_util_code_tostr, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
-                              trade_date_sse,QA_tuil_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
+                              trade_date_sse,QA_util_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
                               QA_util_get_last_day,QA_util_get_next_day,QA_util_get_real_date)
 
 

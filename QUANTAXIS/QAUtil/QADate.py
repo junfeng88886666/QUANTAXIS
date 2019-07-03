@@ -232,7 +232,7 @@ def QA_util_datetime_valid(t):
     except:
         return False
 
-def QA_tuil_dateordatetime_valid(t):
+def QA_util_dateordatetime_valid(t):
     if QA_util_date_valid(t)|QA_util_datetime_valid(t): return True
     else: return False
 
