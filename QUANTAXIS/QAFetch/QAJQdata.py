@@ -120,46 +120,51 @@ def _QA_freq_toJQDATA(frequence):
         
         
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, account=None, password=None, remember = False):
+def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api',account=None, password=None, remember = False):
     assert QA_tuil_dateordatetime_valid(start), 'start input format error'
     assert QA_tuil_dateordatetime_valid(end), 'end input format error'
-    
-    JQDATA_login(account = account, password = password, remember = remember)
-    jqcode = _QA_code_toJQDATA(code,'stock')
-    jqfrequence = _QA_freq_toJQDATA(frequence)
-    
-    data = jqdatasdk.get_price(security = jqcode, 
-                               start_date=start, 
-                               end_date=end, 
-                               frequency=jqfrequence, 
-                               fields=None, 
-                               skip_paused=True, 
-                               fq=None, 
-                               count=None)    
-    data['code'] = code
-    data['type'] = frequence
+
+    if method == 'api':
+        JQDATA_login(account = account, password = password, remember = remember)
+        jqcode = _QA_code_toJQDATA(code,'stock')
+        jqfrequence = _QA_freq_toJQDATA(frequence)
+
+        data = jqdatasdk.get_price(security = jqcode,
+                                   start_date=start,
+                                   end_date=end,
+                                   frequency=jqfrequence,
+                                   fields=None,
+                                   skip_paused=True,
+                                   fq=None,
+                                   count=None)
+        data['code'] = code
+        data['type'] = frequence
+    elif method == 'http':
+        raise NotImplementedError
     return select_DataAggrement(DATABASE_NAME.STOCK_MIN)(DATASOURCE.JQDATA,data)
 
-data = QA_fetch_get_stock_min('000001','2019-06-27','2019-06-28')
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, account=None, password=None, remember = False):
+def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api', account=None, password=None, remember = False):
     assert QA_tuil_dateordatetime_valid(start), 'start input format error'
     assert QA_tuil_dateordatetime_valid(end), 'end input format error'
-    
-    JQDATA_login(account = account, password = password, remember = remember)
-    jqcode = _QA_code_toJQDATA(code,'futures')
-    jqfrequence = _QA_freq_toJQDATA(frequence)
-    data = jqdatasdk.get_price(security = jqcode, 
-                               start_date=start, 
-                               end_date=end, 
-                               frequency=jqfrequence, 
-                               fields=None, 
-                               skip_paused=True, 
-                               fq=None, 
-                               count=None)    
-    data['code'] = code
-    data['type'] = frequence
+
+    if method == 'api':
+        JQDATA_login(account = account, password = password, remember = remember)
+        jqcode = _QA_code_toJQDATA(code,'futures')
+        jqfrequence = _QA_freq_toJQDATA(frequence)
+        data = jqdatasdk.get_price(security = jqcode,
+                                   start_date=start,
+                                   end_date=end,
+                                   frequency=jqfrequence,
+                                   fields=None,
+                                   skip_paused=True,
+                                   fq=None,
+                                   count=None)
+        data['code'] = code
+        data['type'] = frequence
+    elif method == 'http':
+        raise NotImplementedError
     return select_DataAggrement(DATABASE_NAME.FUTURE_MIN)(DATASOURCE.JQDATA,data)
 
 #if __name__ =='__main__':
