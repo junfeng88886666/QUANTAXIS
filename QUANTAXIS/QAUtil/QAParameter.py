@@ -375,7 +375,7 @@ class DATASOURCE():
     CCXT = 'ccxt'  # github/ccxt 虚拟货币
     COFUND = 'cofund'
     LOCALFILE = 'localfile'  # 本地文件
-
+    HEXUN = 'hexun'
 
 class OUTPUT_FORMAT():
     """输出格式

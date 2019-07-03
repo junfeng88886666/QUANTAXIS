@@ -35,33 +35,37 @@ from QUANTAXIS.QAFetch import QACoFund as QACoFund
 from QUANTAXIS.QAFetch import QAWind as QAWind
 from QUANTAXIS.QAFetch import QATushare as QATushare
 from QUANTAXIS.QAFetch import QATdx as QATdx
+from QUANTAXIS.QAFetch import QAJQdata as QAJQdata
 from QUANTAXIS.QAFetch import QAThs as QAThs
 from QUANTAXIS.QAFetch import QACrawler as QACL
 from QUANTAXIS.QAFetch import QAEastMoney as QAEM
 from QUANTAXIS.QAFetch import QAHexun as QAHexun
 from QUANTAXIS.QAFetch import QAfinancial
 from QUANTAXIS.QAFetch.base import get_stock_market
-from QUANTAXIS.QAUtil.QAParameter import DATASOURCE_DEFAULT
+from QUANTAXIS.QAUtil.QAParameter import DATASOURCE_DEFAULT,DATASOURCE
 
 def use(package):
 
-    if package in ['wind']:
+    if package in ['wind',DATASOURCE.WIND]:
         try:
             from WindPy import w
             # w.start()
             return QAWind
         except ModuleNotFoundError:
             print('NO WIND CLIENT FOUND')
-    elif package in ['tushare', 'ts']:
+    elif package in ['tushare', 'ts',DATASOURCE.TUSHARE]:
         return QATushare
-    elif package in ['tdx', 'pytdx']:
+    elif package in ['tdx', 'pytdx',DATASOURCE.TDX]:
         return QATdx
-    elif package in ['ths', 'THS']:
+    elif package in ['ths', 'THS',DATASOURCE.THS]:
         return QAThs
-    elif package in ['HEXUN', 'Hexun', 'hexun']:
+    elif package in ['HEXUN', 'Hexun', 'hexun',DATASOURCE.TUSHARE]:
         return QAHexun
-    elif package in ['cofund', 'cof','CoFund','COFUND']:
+    elif package in ['cofund', 'cof','CoFund','COFUND',DATASOURCE.COFUND]:
         return QACoFund
+    elif package in ['JQDATA', 'JQdata', 'JQ', 'jq', 'jqdata',DATASOURCE.JQDATA]:
+        return QAJQdata
+
 
 def _check_func_useful(func,package):
     if func not in dir(DATASOURCE_DEFAULT): assert False,'Unsupport function'

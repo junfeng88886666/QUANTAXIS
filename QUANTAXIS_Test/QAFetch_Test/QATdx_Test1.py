@@ -24,7 +24,7 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 future_list = QA.QAFetch.QATdx.QA_fetch_get_future_list()
 data = QA.QAFetch.QATdx.QA_fetch_get_future_day('ICL8','2011-06-26','2019-06-27')
 data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
-data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min('RBL9','2019-06-27 09:30:00','2019-06-28')
+data1 = QA.QA_fetch_get_future_min(None,'ICL8','2019-06-26','2019-06-27')
 #%%
 data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
@@ -36,16 +36,25 @@ data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 
 data = QA.QAFetch.QAQuery.QA_fetch_future_list()
-data = QA.QAFetch.QAQuery.QA_fetch_future_day('BBL9','2018-06-26','2019-06-27','pd')
+data = QA.QAFetch.QAQuery.QA_fetch_future_day('BBL8','2018-06-26','2019-06-27','pd')
 #%%
-CODE = 'FGL8'
+CODE = 'I1909'
 data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min(CODE,'2019-06-26','2019-06-27')
-
-
 
 [['open','high','low','close','trade','position']]
 
 tick = QA.QAFetch.QATdx.QA_fetch_get_future_transaction(CODE,'2019-06-26','2019-06-27')
+tick_min = QA.QAFetch.QATdx.QA_fetch_get_future_transaction(CODE,'2019-06-26','2019-06-27','1min')
+
+
+i = data1[['close']]
+i['b'] = tick_min[['close']]
+i.columns = ['real_close','tick_resample_close']
+i.plot()
+
+
+
+
 tick['time'] = tick.datetime.apply(lambda x:str(x)[10:])
 min(list(set(tick['time'])))
 tick['2000-01-01':'2019-01-01']
@@ -58,17 +67,17 @@ tick.index = pd.to_datetime(tick.index)
 _temp = set(tick.index.date)
 
 mindata = tick.resample(
-                         type_,
-                         closed='left',
-                         base=30,
-                         loffset=type_
+                             type_,
+                             closed='left',
+                             base=30,
+                             loffset=type_
                          ).apply(
-                         {
-                         'price': 'ohlc',
-                         'volume': 'sum',
-                         'code': 'last'
-                         }
-                        )
+                             {
+                                 'price': 'ohlc',
+                                 'volume': 'sum',
+                                 'code': 'last'
+                             }
+                         )
 mindata.columns = ['open','high','low','close','volume','code']
 for i in ['open','high','low','close']: mindata[i]/=1000
 

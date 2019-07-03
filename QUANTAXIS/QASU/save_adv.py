@@ -222,8 +222,9 @@ def _saving_work_For_SpecialCode_ThreadPool(func = None,
                                             coll=None,
                                             message_type=None,
                                             ui_log=None,
-                                            ui_progress=None):
-    executor = ThreadPoolExecutor(max_workers=default_max_workers)
+                                            ui_progress=None,
+                                            num_threads = default_max_workers):
+    executor = ThreadPoolExecutor(max_workers=num_threads)
     res = {
         executor.submit(_saving_work_For_SpecialCode,
                         func,
@@ -269,8 +270,9 @@ def _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = None,
                                                           data_type = None,
                                                           message_type = None,
                                                           ui_log = None,
-                                                          ui_progress = None):
-    executor = ThreadPoolExecutor(max_workers=default_max_workers)
+                                                          ui_progress = None,
+                                                          num_threads = default_max_workers):
+    executor = ThreadPoolExecutor(max_workers=num_threads)
     res = {
         executor.submit(_saving_work_ForDataWithTime_SpecialCode,
                         func,
@@ -353,7 +355,7 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
     global err
     err = []
 
-    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+    stock_list = QA_fetch_get_stock_list(package = None).code.unique().tolist()
     coll = client.stock_day
     coll.create_index(
         [("code",pymongo.ASCENDING),
@@ -402,14 +404,16 @@ def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = Non
                                                       ui_log = ui_log,
                                                       ui_progress = ui_progress)
 
-def QA_SU_save_stock_min(package = None,data_type = None, client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_max_workers, client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_min
 
     Keyword Arguments:
         client {[type]} -- [description] (default: {DATABASE})
     """
-    if data_type == None: data_type = '1min'
-    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+    global err
+    err = []
+    if data_type == None: data_type = ['1min']
+    stock_list = QA_fetch_get_stock_list(package = None).code.unique().tolist()
     coll = client.stock_min
     coll.create_index(
         [
@@ -422,129 +426,19 @@ def QA_SU_save_stock_min(package = None,data_type = None, client=DATABASE, ui_lo
         ],
         unique = True
     )
-    err = []
+    for item in data_type:
+        _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_stock_min,
+                                                            package=package,
+                                                            code_list=stock_list,
+                                                            initial_start='2014-01-01',
+                                                            coll=coll,
+                                                            time_type='datetime',
+                                                            data_type=item,
+                                                            message_type='STOCK_MIN',
+                                                            ui_log=ui_log,
+                                                            ui_progress=ui_progress,
+                                                            num_threads = num_threads)
 
-    def __saving_work(code, coll):
-        QA_util_log_info(
-            '##JOB03 Now Saving STOCK_MIN ==== {}'.format(str(code)),
-            ui_log=ui_log
-        )
-        try:
-            for type in ['1min', '5min', '15min', '30min', '60min']:
-                ref_ = coll.find({'code': str(code)[0:6], 'type': type})
-                end_time = str(now_time())[0:19]
-                if ref_.count() > 0:
-                    start_time = ref_[ref_.count() - 1]['datetime']
-
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    if start_time != end_time:
-                        predata = QA_fetch_get_stock_min(
-                                                        package,
-                                                        str(code),
-                                                        start_time,
-                                                        end_time,
-                                                        type
-                                                        )
-                        
-                        update_start_time = copy.deepcopy(start_time)
-                        data_getted_start_time = predata.datetime.min()
-                        if data_getted_start_time == update_start_time:
-                            coll.insert_many(
-                                QA_util_to_json_from_pandas(predata[predata['datetime']>start_time])
-                            )
-                        else: 
-                            QA_util_log_info(
-                                'Trying updating {} from {} to {}, package: {}, Data Error: reason: start time does not match, start time: {}, database calculated start time: {}'
-                                .format(code,
-                                        start_time,
-                                        end_time,
-                                        package,
-                                        data_getted_start_time,
-                                        update_start_time
-                                        ),
-                                ui_log
-                            )
-                            err.append(str(code))
-                else:
-                    start_time = '2010-01-01'
-                    QA_util_log_info(
-                        '##JOB03.{} Trying updating {} from {} to {} =={}, package: {}'.format(
-                            ['1min',
-                             '5min',
-                             '15min',
-                             '30min',
-                             '60min'].index(type),
-                            str(code),
-                            start_time,
-                            end_time,
-                            type,
-                            package
-                        ),
-                        ui_log=ui_log
-                    )
-                    predata = QA_fetch_get_stock_min(
-                                                    package,
-                                                    str(code),
-                                                    start_time,
-                                                    end_time,
-                                                    type
-                                                    )
-
-                    coll.insert_many(
-                        QA_util_to_json_from_pandas(predata)
-                    )
-
-        except Exception as e:
-            QA_util_log_info(e, ui_log=ui_log)
-            err.append(code)
-            QA_util_log_info(err, ui_log=ui_log)
-
-    executor = ThreadPoolExecutor(max_workers=4)
-    # executor.map((__saving_work,  stock_list[i_], coll),URLS)
-    res = {
-        executor.submit(__saving_work,
-                        stock_list[i_],
-                        coll)
-        for i_ in range(len(stock_list))
-    }
-    count = 0
-    for i_ in concurrent.futures.as_completed(res):
-        QA_util_log_info(
-            'The {} of Total {}'.format(count,
-                                        len(stock_list)),
-            ui_log=ui_log
-        )
-
-        strProgress = 'DOWNLOAD PROGRESS {} '.format(
-            str(float(count / len(stock_list) * 100))[0:4] + '%'
-        )
-        intProgress = int(count / len(stock_list) * 10000.0)
-        QA_util_log_info(
-            strProgress,
-            ui_log,
-            ui_progress=ui_progress,
-            ui_progress_int_value=intProgress
-        )
-        count = count + 1
-    if len(err) < 1:
-        QA_util_log_info('SUCCESS', ui_log=ui_log)
-    else:
-        QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
-        QA_util_log_info(err, ui_log=ui_log)
 
 def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progress=None):
     """[summary]
@@ -554,7 +448,7 @@ def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progr
     """
     global err
     err = []
-    stock_list = QA_fetch_get_stock_list(package = package).code.unique().tolist()
+    stock_list = QA_fetch_get_stock_list(package = None).code.unique().tolist()
     try:
         coll = client.stock_xdxr
         coll.create_index(
@@ -594,7 +488,7 @@ def QA_SU_save_stock_info(package = None,client=DATABASE, ui_log=None, ui_progre
     err = []
 
     client.drop_collection('stock_info')
-    stock_list = QA_fetch_get_stock_list(package).code.unique().tolist()
+    stock_list = QA_fetch_get_stock_list(package = None).code.unique().tolist()
     coll = client.stock_info
     coll.create_index('code')
 
@@ -615,7 +509,7 @@ def QA_SU_save_stock_block(package = None,client=DATABASE, ui_log=None, ui_progr
 
     try:
         client.drop_collection('stock_block')
-        stock_list = QA_fetch_get_stock_list(package).code.unique().tolist()
+        stock_list = QA_fetch_get_stock_list(package = None).code.unique().tolist()
         coll = client.stock_block
         coll.create_index('code')
 
@@ -630,7 +524,7 @@ def QA_SU_save_stock_block(package = None,client=DATABASE, ui_log=None, ui_progr
 #%% FUTURE_CN_PART
 def QA_SU_save_future_list(package = None, client=DATABASE, ui_log=None, ui_progress=None):
     client.drop_collection('future_list')
-    future_list = QA_fetch_get_future_list(package = package)
+    future_list = QA_fetch_get_future_list(package = None)
     coll_future_list = client.future_list
     coll_future_list.create_index("code", unique=True)
 
@@ -656,7 +550,7 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
     global err
     err = []
     future_list = [
-        item for item in QA_fetch_get_future_list(package = package).code.unique().tolist()
+        item for item in QA_fetch_get_future_list(package = None).code.unique().tolist()
         if str(item)[-2:] in ['L8',
                               'L9']
     ]
@@ -678,6 +572,48 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
                                                           message_type = 'FUTURE_DAY',
                                                           ui_log = ui_log,
                                                           ui_progress = ui_progress)
+
+def QA_SU_save_future_min(package = None, data_type = None,num_threads = default_max_workers, client=DATABASE, ui_log=None, ui_progress=None):
+    """save future_min
+
+    Keyword Arguments:
+        client {[type]} -- [description] (default: {DATABASE})
+    """
+    global err
+    err = []
+
+    if data_type == None: data_type = ['1min']
+    future_list = [
+        item for item in QA_fetch_get_future_list(package = None).code.unique().tolist()
+        if str(item)[-2:] in ['L8',
+                              'L9']
+    ]
+    coll = client.future_min
+    coll.create_index(
+        [
+            ('code',
+             pymongo.ASCENDING),
+            ('time_stamp',
+             pymongo.ASCENDING),
+            ('date_stamp',
+             pymongo.ASCENDING)
+        ],
+        unique = True
+    )
+
+    for item in data_type:
+        _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_future_min,
+                                                            package=package,
+                                                            code_list=future_list,
+                                                            initial_start='2010-01-01',
+                                                            coll=coll,
+                                                            time_type='datetime',
+                                                            data_type=item,
+                                                            message_type='FUTURE_MIN',
+                                                            ui_log=ui_log,
+                                                            ui_progress=ui_progress,
+                                                            num_threads = num_threads)
+
 
 
 #

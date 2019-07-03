@@ -1169,7 +1169,7 @@ def QA_fetch_get_future_transaction(code, start, end, frequence = None, retry=4,
 #             print(e)
 #             return None
 
-def QA_fetch_get_future_min(code, start, end, frequence='1min', resample_tick = False, ip=None, port=None):
+def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, ip=None, port=None):
     '期货数据 分钟线'
     if resample_tick == False:
         ip, port = get_extensionmarket_ip(ip, port)
