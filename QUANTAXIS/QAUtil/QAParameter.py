@@ -534,9 +534,9 @@ class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
     STOCK_BLOCK = ('code',['blockname','code','type','enter_date','source'],['code','blockname'])
 
     FUTURE_LIST = ('code',['code','name','category','market','desc','source'],['code','market','category'])
-    FUTURE_DAY = ('date',['date','code', 'open', 'high', 'low', 'close', 'price', 'trade', 'position'],['date','code'])
+    FUTURE_DAY = ('date',['date','code', 'open', 'high', 'low', 'close', 'price', 'volume', 'position'],['date','code'])
     FUTURE_TRANSACTION = ('datetime',['datetime','code','price','volume','zengcang','direction','nature_name','order'],['datetime','code'])
-    FUTURE_MIN = ('datetime',['datetime','tradetime','code', 'open', 'high', 'low', 'close', 'trade'],['datetime','code'])
+    FUTURE_MIN = ('datetime',['datetime','tradetime','code', 'open', 'high', 'low', 'close', 'volume'],['datetime','code'])
 
 class DATASOURCE_DEFAULT():
     QA_fetch_get_stock_day = DATASOURCE.TDX

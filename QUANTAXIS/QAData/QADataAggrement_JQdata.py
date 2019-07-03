@@ -91,7 +91,7 @@ def QA_DataAggrement_Future_transaction(data):
 def QA_DataAggrement_Future_min(data):
     if 'contract' not in data.columns: data['contract'] = 'uf'
     if 'position' not in data.columns: data['position'] = 0
-    data = data.reset_index().rename(columns={'index': 'datetime','money':'amount','volume':'trade'})
+    data = data.reset_index().rename(columns={'index': 'datetime','money':'amount'})
 
     data = data.assign(date=data['datetime'].apply(lambda x: str(x)[0:10]))
     data = data \

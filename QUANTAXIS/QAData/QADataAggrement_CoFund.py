@@ -25,7 +25,7 @@ def QA_DataAggrement_Future_min(data):
         .assign(datetime=data['StrTime'].apply(QA_util_datetime_fixstr1)) \
         .assign(amount = 0) \
         .rename(
-        columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Oi': 'position', 'Volume': 'trade',
+        columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Oi': 'position', 'Volume': 'volume',
                  'Contract': 'contract'})
     data = data.assign(date=data['datetime'].apply(lambda x: str(x)[0:10]))
     # data = data[data['date'].isin(trade_date_sse)]

@@ -71,6 +71,7 @@ def QA_DataAggrement_Future_list(data):
     return data
 
 def QA_DataAggrement_Future_day(data):
+    data = data.rename(columns={'trade':'volume'})
     if 'contract' not in data.columns: data['contract'] = 'uf'
     data['trade']*=100
     data['source'] = DATASOURCE.TDX
@@ -83,6 +84,7 @@ def QA_DataAggrement_Future_transaction(data):
     return data
 
 def QA_DataAggrement_Future_min(data):
+    data = data.rename(columns={'trade':'volume'})
     if 'contract' not in data.columns: data['contract'] = 'uf'
     data['amount'] = 0
     data['source'] = DATASOURCE.TDX

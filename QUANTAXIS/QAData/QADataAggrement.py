@@ -618,10 +618,10 @@ def QA_DataAggrement_Future_day(package,data):
               'price']].astype('float64')
 
         data[['position',
-              'trade',
+              'volume',
               'date_stamp']]\
         = data[['position',
-              'trade',
+              'volume',
               'date_stamp']].astype('int64')
 
         data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_DAY)
@@ -633,7 +633,7 @@ def QA_DataAggrement_Future_day(package,data):
                       'close',
                       'price',
                       'position',
-                      'trade',
+                      'volume',
                       'date_stamp',
                       'contract',
                       'source']]
@@ -754,16 +754,16 @@ def QA_DataAggrement_Future_min(package,data):
                 'amount']].astype('float64')
 
         data[['position',
-              'trade',
+              'volume',
               'date_stamp',
               'time_stamp']]\
         = data[['position',
-                'trade',
+                'volume',
                 'date_stamp',
                 'time_stamp']].astype('int64')
 
         data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_MIN)
-        return data[['open','high','low','close','trade','amount','position','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
+        return data[['open','high','low','close','volume','amount','position','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
     except Exception as e:
         QA_util_log_info(ERRORTYPE.DATAAGGREMENT_ERROR + ', package: ' + str(package)+'\n '+'           Error Reason: '+str(e))
         return None

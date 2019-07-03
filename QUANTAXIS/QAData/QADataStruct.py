@@ -61,7 +61,6 @@ from QUANTAXIS.QAUtil.QAParameter import FREQUENCE, MARKET_TYPE
 
 class QA_DataStruct_Stock_day(_quotation_base):
     '''
-
         股票日线数据
     '''
 
