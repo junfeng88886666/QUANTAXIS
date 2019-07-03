@@ -54,7 +54,8 @@ def reset_config():
 def JQDATA_login(account = None, password = None, remember = False):
     get_config(account = account, password = password, remember = remember)
 
-def reset_JQDOTA_code_compare(client = DATABASE,reset = False,ui_log = None):
+def set_JQDOTA_code_compare(account = None, password = None, remember = False,reset = False,client = DATABASE,ui_log = None):
+    JQDATA_login(account=None, password=None, remember=False)
     if reset: client.drop_collection('jqdata_securities_record')
     coll = client.jqdata_securities_record
     coll.create_index(
@@ -79,7 +80,7 @@ def reset_JQDOTA_code_compare(client = DATABASE,reset = False,ui_log = None):
     else:
         pass
 
-reset_JQDOTA_code_compare(reset = False)
+set_JQDOTA_code_compare(reset = False)
 
 def _QA_fetch_jqdata_securities_record(jqcode_simple = 'RB9999',type_ = 'futures',client = DATABASE,ui_log = None):
     coll = client.jqdata_securities_record

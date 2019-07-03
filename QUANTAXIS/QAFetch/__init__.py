@@ -228,9 +228,13 @@ def QA_fetch_get_future_transaction(package, code, start, end, frequence = None)
         return 'Unsupport packages'
 
 def QA_fetch_get_future_min(package, code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False):
+    print(1)
     try:
+
         package = _check_func_useful('QA_fetch_get_future_min',package)
+        print(package)
         Engine = use(package)
+
         return Engine.QA_fetch_get_future_min(code, start, end, frequence, fill_data_with_tick_database, fill_data_with_tick_online)
     except Exception as e:
         print(e)

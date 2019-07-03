@@ -171,8 +171,6 @@ def QA_fetch_get_stock_adj(code, end='',token = None):
     adj = pro.adj_factor(ts_code=code, trade_date=end)
     return adj
 
-QA_fetch_get_stock_adj('000001.SZ','')
-
 def QA_fetch_stock_basic(token = None):
 
     def fetch_stock_basic():
