@@ -329,7 +329,7 @@ def for_sz(code):
     elif str(code)[0:2] in ['20']:
         return 'stockB_cn'
     else:
-        return 'undefined'
+        return 'uf'
 
 
 def for_sh(code):
@@ -344,7 +344,7 @@ def for_sh(code):
     elif str(code)[0:3] in ['129', '100', '110', '120']:
         return 'bond_cn'
     else:
-        return 'undefined'
+        return 'uf'
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
 def QA_fetch_get_security_bars(code, _type, lens, ip=None, port=None):

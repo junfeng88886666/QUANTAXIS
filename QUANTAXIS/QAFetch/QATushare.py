@@ -53,7 +53,9 @@ def set_token(token=DEFAULT_TUSHARE_TOKEN):
         if token is None:
             # 从~/.quantaxis/setting/config.ini中读取配置
             token = QASETTING.get_config('TSPRO', 'token', None)
-            if token == 'null': token = DEFAULT_TUSHARE_TOKEN
+            if token == 'null': 
+                token = DEFAULT_TUSHARE_TOKEN
+                QASETTING.set_config('TSPRO', 'token', DEFAULT_TUSHARE_TOKEN)
         else:
             QASETTING.set_config('TSPRO', 'token', token)
         ts.set_token(token)
@@ -73,8 +75,85 @@ def get_pro(token):
             print(e)
         pro = None
     return pro
+def QA_fetch_get_stock_info():
+    raise NotImplementedError
+def QA_fetch_get_stock_tsbasics(code = None,token = None):
+    pro = get_pro(token)
+    data = ts.get_stock_basics().reset_index()
+    data = data.sort_values(by='code')
+    try:
+        if code != None: return data.loc[code]
+        else: return data
+    except:
+        return None
+    
+def _QA_code_toTushare(code,type_,token = None):
+    pro = get_pro(token)
+    exchange_list = ['CFFEX','DCE','CZCE','SHFE','INE']
+    code = str(code)
+    if type_ == 'E':
+        code = code.zfill(6)
+        if code[0] in ['0','3']: return code+'.SZ'
+        elif code[0] in ['6']: return code+'.SH'
+    elif type_ == 'FT':
+        if code[-2:] in ['L8']: 
+            code = code[:-2]
+            for ex in exchange_list:
+                fut_list = pro.fut_basic(exchange=ex, fut_type='2', fields='symbol')['symbol'].tolist()
+                if code in fut_list:
+                    return code+'.'+ex
+        elif code[-2:] in ['L9']: 
+            code = code[:-2]+'L'
+            for ex in exchange_list:
+                fut_list = pro.fut_basic(exchange=ex, fut_type='2', fields='symbol')['symbol'].tolist()
+                if code in fut_list:
+                    return code+'.'+ex    
+        else:
+            for ex in exchange_list:
+                fut_list = pro.fut_basic(exchange=ex, fut_type='1', fields='symbol')['symbol'].tolist()
+                if code in fut_list:
+                    return code+'.'+ex        
+        
+#def QA_fetch_get_stock_min():
+#    pass
+#
+#def QA_fetch_get_future_min():
+#    pass
+# =============================================================================
+# 
+#pro = ts.pro_api()
+#df = pro.query('daily', ts_code='CSL.DCE', start_date='20180601', end_date='20190701')
+#
+#df = pro.fut_basic(exchange='DCE', fut_type='1', fields='symbol')['symbol'].tolist()
+#
+#from jqdatasdk import *
+#auth('13018055851','LIWEIQI199')
+#from jqdatasdk import finance
+#finance.run_query(query(finance.FUT_MEMBER_POSITION_RANK).filter(finance.FUT_MEMBER_POSITION_RANK.code==code).limit(n))
+#a = get_price(security = 'RB9999.XSGE', 
+#              start_date='2015-01-01', 
+#              end_date='2019-07-01', 
+#              frequency='5m', 
+#              fields=['open','close','high','low','volume','money'], 
+#              skip_paused=False, 
+#              fq=None, 
+#              count=None)
 
+#A=ts.pro_bar(
+#            ts_code=_QA_code_toTushare('M1909','FT'),
+#            asset='FT',
+#            adj='bfq',
+#            start_date='20190101',
+#            end_date='20190702',
+#            freq='30min'
+#            )
+#ts.set_token(DEFAULT_TUSHARE_TOKEN)
+#ts.get_tick_data(_QA_code_toTushare('000001','E'), '20190701')
+# =============================================================================
 
+#############################################################################
+#############################################################################
+#############################################################################
 def QA_fetch_get_stock_adj(code, end='',token = None):
     """获取股票的复权因子
     
@@ -92,7 +171,7 @@ def QA_fetch_get_stock_adj(code, end='',token = None):
     adj = pro.adj_factor(ts_code=code, trade_date=end)
     return adj
 
-#QA_fetch_get_stock_adj('000001.SZ','')
+QA_fetch_get_stock_adj('000001.SZ','')
 
 def QA_fetch_stock_basic(token = None):
 
@@ -191,20 +270,12 @@ def QA_fetch_get_stock_realtime():
     return data_json
 
 
-def QA_fetch_get_stock_info(name):
-    data = ts.get_stock_basics()
-    try:
-        return data.loc[name]
-    except:
-        return None
 
-def QA_fetch_get_stock_tick(name, date):
+
+def _QA_fetch_get_stock_tick(name, date):
     if (len(name) != 6):
         name = str(name)[0:6]
     return ts.get_tick_data(name, date)
-
-QA_fetch_get_stock_tick('000001','20190627')
-
 
 def QA_fetch_get_stock_list():
     df = QA_fetch_stock_basic()
@@ -244,8 +315,6 @@ def QA_fetch_get_lhb(date):
 def QA_fetch_get_stock_money():
     pass
 
-
-# test
 
 # print(get_stock_day("000001",'2001-01-01','2010-01-01'))
 # print(get_stock_tick("000001.SZ","2017-02-21"))

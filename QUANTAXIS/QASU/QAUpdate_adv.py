@@ -9,15 +9,16 @@ DATABASE_NAME_ALL = [i for i in vars(DATABASE_NAME).values() if type(i)==str][2:
 current_supported_update = {
     DATABASE_NAME.STOCK_LIST: {DATASOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:{'data_type':[None]}},
-    DATABASE_NAME.STOCK_MIN:{DATASOURCE.TDX:{'data_type':['1min','5min','15min','30min','60min']}},
-    DATABASE_NAME.STOCK_TRANSACTION:{DATASOURCE.TDX:{'data_type':[None]}},
+    DATABASE_NAME.STOCK_MIN:{DATASOURCE.TDX: {'data_type': ['1min', '5min', '15min', '30min', '60min']},
+                             DATASOURCE.JQDATA: {'data_type': ['1min', '5min', '15min', '30min', '60min']}},
     DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:{'data_type':[None]}},
     DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: {'data_type': [None]}},
     DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: {'data_type': [None]}},
 
     DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX: {'data_type': [None]}},
     DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX: {'data_type': [None]}},
-
+    DATABASE_NAME.FUTURE_MIN: {DATASOURCE.TDX: {'data_type': ['1min', '5min', '15min', '30min', '60min']},
+                               DATASOURCE.JQDATA: {'data_type': ['1min', '5min', '15min', '30min', '60min']}},
 }
 
 

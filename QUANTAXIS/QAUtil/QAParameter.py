@@ -367,6 +367,7 @@ class DATASOURCE():
     TDB = 'tdb'  # wind tdb
     THS = 'ths'  # 同花顺网页
     TUSHARE = 'tushare'  # tushare
+    JQDATA = 'jqdata'
     TDX = 'tdx'  # 通达信
     MONGO = 'mongo'  # 本地/远程Mongodb
     EASTMONEY = 'eastmoney'  # 东方财富网
@@ -535,6 +536,22 @@ class DATA_QUERY_INDEX_COLUMNS_UNIQUE():
     FUTURE_LIST = ('code',['code','name','category','market','desc','source'],['code','market','category'])
     FUTURE_DAY = ('date',['date','code', 'open', 'high', 'low', 'close', 'price', 'trade', 'position'],['date','code'])
     FUTURE_TRANSACTION = ('datetime',['datetime','code','price','volume','zengcang','direction','nature_name','order'],['datetime','code'])
+    FUTURE_MIN = ('datetime',['datetime','tradetime','code', 'open', 'high', 'low', 'close', 'trade'],['datetime','code'])
+
+class DATASOURCE_DEFAULT():
+    QA_fetch_get_stock_day = DATASOURCE.TDX
+    QA_fetch_get_stock_list = DATASOURCE.TDX
+    QA_fetch_get_stock_xdxr = DATASOURCE.TDX
+    QA_fetch_get_stock_info = DATASOURCE.TDX
+    QA_fetch_get_stock_block = DATASOURCE.TDX
+    QA_fetch_get_stock_min = DATASOURCE.JQDATA
+
+    QA_fetch_get_future_list = DATASOURCE.TDX
+    QA_fetch_get_future_day = DATASOURCE.TDX
+    QA_fetch_get_future_min = DATASOURCE.JQDATA
+
+    QA_fetch_get_trade_date = DATASOURCE.TDX
+
 
 
 class ERRORTYPE():

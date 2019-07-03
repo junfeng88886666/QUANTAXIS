@@ -105,7 +105,7 @@ class QA_Setting():
             section='MONGODB',
             option='uri',
             default_value=DEFAULT_DB_URI
-    ):
+            ):
         """[summary]
 
         Keyword Arguments:

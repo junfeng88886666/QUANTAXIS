@@ -64,7 +64,7 @@ class _quotation_base():
     def __init__(
             self,
             DataFrame,
-            dtype='undefined',
+            dtype='uf',
             if_fq='bfq',
             marketdata_type='None'
     ):

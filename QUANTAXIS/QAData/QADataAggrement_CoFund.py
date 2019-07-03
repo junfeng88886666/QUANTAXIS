@@ -23,7 +23,7 @@ def QA_DataAggrement_Future_min(data):
     data['StrTime'] = data['RealDate'].astype(str) + ' ' + data['Time']
     data = data \
         .assign(datetime=data['StrTime'].apply(QA_util_datetime_fixstr1)) \
-        .assign(price=0,amount = 0) \
+        .assign(amount = 0) \
         .rename(
         columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Oi': 'position', 'Volume': 'trade',
                  'Contract': 'contract'})
