@@ -162,13 +162,13 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_t
     data['type'] = frequence
     return select_DataAggrement(DATABASE_NAME.FUTURE_MIN)(DATASOURCE.JQDATA,data)
 
-if __name__ =='__main__':
-    start = '2019-06-27'
-    end = '2019-06-28'
-    frequence = '1min'
-
-    DATA=QA_fetch_get_stock_min('000001',start,end,frequence)
-    DATA=QA_fetch_get_future_min('RBL8',start,end,frequence)
+#if __name__ =='__main__':
+#    start = '2019-06-27'
+#    end = '2019-06-28'
+#    frequence = '1min'
+#
+#    DATA=QA_fetch_get_stock_min('000001',start,end,frequence)
+#    DATA=QA_fetch_get_future_min('RBL8',start,end,frequence)
     
 
 """

@@ -69,19 +69,19 @@ def QA_Update(update_dict = {
 
 def QA_SU_update_single(database_name = None,package = None,data_type = None, ui_log = None):
     if check_update_permission(database_name=database_name, package=package, data_type=data_type):
-        if package == DATASOURCE.JQDATA: num_threads = 3
+        if package == DATASOURCE.JQDATA: num_threads = 2
         else: num_threads = default_max_workers
         if database_name == DATABASE_NAME.STOCK_LIST: save_engine.QA_SU_save_stock_list(package = package)
-        elif database_name == DATABASE_NAME.STOCK_DAY: save_engine.QA_SU_save_stock_day(package = package)
-        elif database_name == DATABASE_NAME.STOCK_TRANSACTION: save_engine.QA_SU_save_stock_transaction(package = package)
-        elif database_name == DATABASE_NAME.STOCK_MIN: save_engine.QA_SU_save_stock_min(package = package,data_type = data_type,num_threads = num_threads)
+        elif database_name == DATABASE_NAME.STOCK_DAY: save_engine.QA_SU_save_stock_day(package = package,initial_start = '1990-01-01')
+        elif database_name == DATABASE_NAME.STOCK_TRANSACTION: save_engine.QA_SU_save_stock_transaction(package = package,initial_start = '2019-01-01')
+        elif database_name == DATABASE_NAME.STOCK_MIN: save_engine.QA_SU_save_stock_min(package = package,data_type = data_type,num_threads = num_threads,initial_start = '2014-01-01')
         elif database_name == DATABASE_NAME.STOCK_XDXR: save_engine.QA_SU_save_stock_xdxr(package = package)
         elif database_name == DATABASE_NAME.STOCK_INFO: save_engine.QA_SU_save_stock_info(package = package)
         elif database_name == DATABASE_NAME.STOCK_BLOCK: save_engine.QA_SU_save_stock_block(package = package)
 
         elif database_name == DATABASE_NAME.FUTURE_LIST: save_engine.QA_SU_save_future_list(package = package)
-        elif database_name == DATABASE_NAME.FUTURE_DAY: save_engine.QA_SU_save_future_day(package = package)
-        elif database_name == DATABASE_NAME.FUTURE_MIN: save_engine.QA_SU_save_future_min(package = package,data_type = data_type,num_threads = num_threads)
+        elif database_name == DATABASE_NAME.FUTURE_DAY: save_engine.QA_SU_save_future_day(package = package,initial_start = '1990-01-01')
+        elif database_name == DATABASE_NAME.FUTURE_MIN: save_engine.QA_SU_save_future_min(package = package,data_type = data_type,num_threads = num_threads,initial_start = '2014-01-01')
 
     else:
         QA_util_log_info('Error: DataBase: {}, package: {}, data type: {}; is not supported currently'.format(database_name,package,str(data_type)), ui_log)

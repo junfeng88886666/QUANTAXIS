@@ -84,6 +84,6 @@ def QA_DataAggrement_Future_transaction(data):
 
 def QA_DataAggrement_Future_min(data):
     if 'contract' not in data.columns: data['contract'] = 'uf'
-    data['amount'] = 'uf'
+    data['amount'] = 0
     data['source'] = DATASOURCE.TDX
     return data

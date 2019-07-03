@@ -343,7 +343,7 @@ def QA_SU_save_stock_list(package = None,client=DATABASE, ui_log=None, ui_progre
         print(" Error save_tdx.QA_SU_save_stock_list exception!")
         pass
 
-def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_stock_day(package = None,initial_start = '1990-01-01',client=DATABASE, ui_log=None, ui_progress=None):
     '''
      save stock_day
     多进程保存日线数据
@@ -366,7 +366,7 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
     _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_stock_day,
                                                       package = package,
                                                       code_list = stock_list,
-                                                      initial_start = '1990-01-01',
+                                                      initial_start = initial_start,
                                                       coll = coll,
                                                       time_type = 'date',
                                                       data_type = None,
@@ -374,7 +374,7 @@ def QA_SU_save_stock_day(package = None,client=DATABASE, ui_log=None, ui_progres
                                                       ui_log = ui_log,
                                                       ui_progress = ui_progress)
 
-def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = None, ui_progress = None):
+def QA_SU_save_stock_transaction(package = None,initial_start = '2019-01-01', client = DATABASE, ui_log = None, ui_progress = None):
     """save stock_transaction
     注：1, transaction数据库索引均不唯一，因为其对应的时间戳有相同时间，入库的时候还需要对order进行增量。
        2, transaction数据库使用日级别增量更新
@@ -396,7 +396,7 @@ def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = Non
     _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_stock_transaction,
                                                       package = package,
                                                       code_list = stock_list,
-                                                      initial_start = '2019-01-01',
+                                                      initial_start = initial_start,
                                                       coll = coll,
                                                       time_type = 'date',
                                                       data_type = None,
@@ -404,7 +404,7 @@ def QA_SU_save_stock_transaction(package = None, client = DATABASE, ui_log = Non
                                                       ui_log = ui_log,
                                                       ui_progress = ui_progress)
 
-def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_max_workers, client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_max_workers,initial_start = '2014-01-01', client=DATABASE, ui_log=None, ui_progress=None):
     """save stock_min
 
     Keyword Arguments:
@@ -430,7 +430,7 @@ def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_m
         _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_stock_min,
                                                             package=package,
                                                             code_list=stock_list,
-                                                            initial_start='2014-01-01',
+                                                            initial_start=initial_start,
                                                             coll=coll,
                                                             time_type='datetime',
                                                             data_type=item,
@@ -537,7 +537,7 @@ def QA_SU_save_future_list(package = None, client=DATABASE, ui_log=None, ui_prog
     except:
         QA_util_log_info('ERROR: SAVE {}'.format('FUTURE_LIST'), ui_log)
 
-def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_future_day(package = None,client=DATABASE, initial_start = '1990-01-01', ui_log=None, ui_progress=None):
     '''
      save future_day
     保存日线数据
@@ -565,7 +565,7 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
     _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func = QA_fetch_get_future_day,
                                                           package = package,
                                                           code_list = future_list,
-                                                          initial_start = '1990-01-01',
+                                                          initial_start = initial_start,
                                                           coll = coll,
                                                           time_type = 'date',
                                                           data_type = None,
@@ -573,7 +573,7 @@ def QA_SU_save_future_day(package = None,client=DATABASE, ui_log=None, ui_progre
                                                           ui_log = ui_log,
                                                           ui_progress = ui_progress)
 
-def QA_SU_save_future_min(package = None, data_type = None,num_threads = default_max_workers, client=DATABASE, ui_log=None, ui_progress=None):
+def QA_SU_save_future_min(package = None, data_type = None,num_threads = default_max_workers, initial_start = '2010-01-01',client=DATABASE, ui_log=None, ui_progress=None):
     """save future_min
 
     Keyword Arguments:
@@ -605,7 +605,7 @@ def QA_SU_save_future_min(package = None, data_type = None,num_threads = default
         _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_future_min,
                                                             package=package,
                                                             code_list=future_list,
-                                                            initial_start='2010-01-01',
+                                                            initial_start=initial_start,
                                                             coll=coll,
                                                             time_type='datetime',
                                                             data_type=item,
