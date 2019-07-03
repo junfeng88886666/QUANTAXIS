@@ -426,18 +426,17 @@ def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_m
         ],
         unique = True
     )
-    for item in data_type:
-        _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_stock_min,
-                                                            package=package,
-                                                            code_list=stock_list,
-                                                            initial_start=initial_start,
-                                                            coll=coll,
-                                                            time_type='datetime',
-                                                            data_type=item,
-                                                            message_type='STOCK_MIN',
-                                                            ui_log=ui_log,
-                                                            ui_progress=ui_progress,
-                                                            num_threads = num_threads)
+    _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_stock_min,
+                                                        package=package,
+                                                        code_list=stock_list,
+                                                        initial_start=initial_start,
+                                                        coll=coll,
+                                                        time_type='datetime',
+                                                        data_type=data_type,
+                                                        message_type='STOCK_MIN',
+                                                        ui_log=ui_log,
+                                                        ui_progress=ui_progress,
+                                                        num_threads = num_threads)
 
 
 def QA_SU_save_stock_xdxr(package = None, client=DATABASE, ui_log=None, ui_progress=None):
@@ -601,18 +600,17 @@ def QA_SU_save_future_min(package = None, data_type = None,num_threads = default
         unique = True
     )
 
-    for item in data_type:
-        _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_future_min,
-                                                            package=package,
-                                                            code_list=future_list,
-                                                            initial_start=initial_start,
-                                                            coll=coll,
-                                                            time_type='datetime',
-                                                            data_type=item,
-                                                            message_type='FUTURE_MIN',
-                                                            ui_log=ui_log,
-                                                            ui_progress=ui_progress,
-                                                            num_threads = num_threads)
+    _saving_work_ForDataWithTime_SpecialCode_ThreadPool(func=QA_fetch_get_future_min,
+                                                        package=package,
+                                                        code_list=future_list,
+                                                        initial_start=initial_start,
+                                                        coll=coll,
+                                                        time_type='datetime',
+                                                        data_type=data_type,
+                                                        message_type='FUTURE_MIN',
+                                                        ui_log=ui_log,
+                                                        ui_progress=ui_progress,
+                                                        num_threads = num_threads)
 
 
 

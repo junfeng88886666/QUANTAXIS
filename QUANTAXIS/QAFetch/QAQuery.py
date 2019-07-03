@@ -434,8 +434,8 @@ def QA_fetch_future_day(code, start, end, format='numpy', collections=DATABASE.f
 def QA_fetch_future_min(
         code,
         start, end,
-        format='numpy',
         frequence='1min',
+        format='numpy',
         collections=DATABASE.future_min):
     '获取股票分钟线'
     if frequence in ['1min', '1m']:
@@ -448,33 +448,30 @@ def QA_fetch_future_min(
         frequence = '30min'
     elif frequence in ['60min', '60m']:
         frequence = '60min'
-    __data = []
+
+    start = str(start)[0:19]
+    end = str(end)[0:19]
     code = QA_util_code_tolist(code, auto_fill=False)
-    cursor = collections.find({
-        'code': {'$in': code}, "time_stamp": {
-            "$gte": QA_util_time_stamp(start),
-            "$lte": QA_util_time_stamp(end)
-        }, 'type': frequence
-    }, batch_size=10000)
-    if format in ['dict', 'json']:
-        return [data for data in cursor]
-    for item in cursor:
+    print(code)
+    print(frequence)
+    print(QA_util_time_stamp(start))
+    print(QA_util_time_stamp(end))
+    if QA_util_date_valid(end) == True:
+        cursor = collections.find({
+            'code': {'$in': code}, "time_stamp": {
+                "$gte": QA_util_time_stamp(start),
+                "$lte": QA_util_time_stamp(end)
+            }, 'type': frequence
+        }, batch_size=10000)
 
-        __data.append([str(item['code']), float(item['open']), float(item['high']), float(
-            item['low']), float(item['close']), float(item['position']), float(item['price']), float(item['trade']),
-            item['datetime'], item['tradetime'], item['time_stamp'], item['date'], item['type'],str(item['contract'])])
-
-    __data = DataFrame(__data, columns=[
-        'code', 'open', 'high', 'low', 'close',  'position', 'price', 'trade', 'datetime', 'tradetime', 'time_stamp', 'date', 'type','contract'])
-
-    __data['datetime'] = pd.to_datetime(__data['datetime'])
-    __data = __data.set_index('datetime', drop=False)
-    if format in ['numpy', 'np', 'n']:
-        return numpy.asarray(__data)
-    elif format in ['list', 'l', 'L']:
-        return numpy.asarray(__data).tolist()
-    elif format in ['P', 'p', 'pandas', 'pd']:
-        return __data
+        res = pd.DataFrame([item for item in cursor])
+        '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
+        res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_MIN, query=None)
+        '''数据格式整理'''
+        return QA_util_to_anyformat_from_pandas(data = res,format = format)
+    else:
+        QA_util_log_info('QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+        return None
 
 def QA_fetch_future_tick():
     raise NotImplementedError

@@ -96,8 +96,8 @@ def _QA_fetch_jqdata_securities_record(jqcode_simple = 'RB9999',type_ = 'futures
 def _QA_code_toJQDATA(code,type_):
     try:
         if type_ == 'futures':
-            jqcode_simple = code.replace('L8','9999')
-            jqcode_simple = jqcode_simple.replace('L9','8888')
+            if code[-2:] == 'L8': jqcode_simple = code[:-2]+str('9999')
+            elif code[-2:] == 'L9': jqcode_simple = code[:-2] + str('8888')
         else:
             jqcode_simple = code
         jqdata_securities_record = _QA_fetch_jqdata_securities_record(jqcode_simple,type_)
