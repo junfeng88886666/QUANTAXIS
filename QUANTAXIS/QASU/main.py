@@ -35,6 +35,27 @@ from QUANTAXIS.QAUtil import DATABASE
 # from QUANTAXIS.QASU import crawl_jrj_stock_divyield as save_stock_divyield
 
 
+def select_save_engine(engine, paralleled=False):
+    '''
+    select save_engine , tushare ts Tushare 使用 Tushare 免费数据接口， tdx 使用通达信数据接口
+    :param engine: 字符串Str
+    :param paralleled: 是否并行处理；默认为False
+    :return: sts means save_tushare_py  or stdx means save_tdx_py
+    '''
+    if engine in ['tushare', 'ts', 'Tushare']:
+        return sts
+    elif engine in ['tdx']:
+        if paralleled:
+            return stdx_parallelism
+        else:
+            return stdx
+    elif engine in ['gm', 'goldenminer']:
+        return sgm
+    elif engine in ['jq', 'joinquant']:
+        return sjq
+    else:
+        print('QA Error QASU.main.py call select_save_engine with parameter %s is None of  thshare, ts, Thshare, or tdx', engine)
+
 def QA_SU_save_stock_info(engine, client=DATABASE):
     """save stock info
 
@@ -339,27 +360,6 @@ def QA_SU_save_stock_block(engine, client=DATABASE):
     engine = select_save_engine(engine)
     engine.QA_SU_save_stock_block(client=client)
 
-
-def select_save_engine(engine, paralleled=False):
-    '''
-    select save_engine , tushare ts Tushare 使用 Tushare 免费数据接口， tdx 使用通达信数据接口
-    :param engine: 字符串Str
-    :param paralleled: 是否并行处理；默认为False
-    :return: sts means save_tushare_py  or stdx means save_tdx_py
-    '''
-    if engine in ['tushare', 'ts', 'Tushare']:
-        return sts
-    elif engine in ['tdx']:
-        if paralleled:
-            return stdx_parallelism
-        else:
-            return stdx
-    elif engine in ['gm', 'goldenminer']:
-        return sgm
-    elif engine in ['jq', 'joinquant']:
-        return sjq
-    else:
-        print('QA Error QASU.main.py call select_save_engine with parameter %s is None of  thshare, ts, Thshare, or tdx', engine)
 
 
 def QA_SU_save_stock_min_5(file_dir, client=DATABASE):
