@@ -113,6 +113,7 @@ def QA_fetch_stock_day_adv(
             code, start, end))
         return None
     else:
+        res['date'] = pd.to_datetime(res['date'])
         res_reset_index = res.set_index(['date', 'code'], drop=if_drop_index)
         # if res_reset_index is None:
         #     print("QA Error QA_fetch_stock_day_adv set index 'datetime, code' return None")
@@ -175,6 +176,7 @@ def QA_fetch_stock_min_adv(
             code, start, end, frequence))
         return None
     else:
+        res['datetime'] = pd.to_datetime(res['datetime'])
         res_set_index = res.set_index(['datetime', 'code'], drop=if_drop_index)
         # if res_set_index is None:
         #     print("QA Error QA_fetch_stock_min_adv set index 'datetime, code' return None")
@@ -194,6 +196,7 @@ def QA_fetch_stock_day_full_adv(date):
         print("QA Error QA_fetch_stock_day_full_adv parameter date=%s call QA_fetch_stock_full return None" % (date))
         return None
     else:
+        res['date'] = pd.to_datetime(res['date'])
         res_set_index = res.set_index(['date', 'code'])
         # if res_set_index is None:
         #     print("QA Error QA_fetch_stock_day_full set index 'date, code' return None")
@@ -228,6 +231,7 @@ def QA_fetch_index_day_adv(
             code, start, end))
         return None
     else:
+        res['date'] = pd.to_datetime(res['date'])
         res_set_index = res.set_index(['date', 'code'], drop=if_drop_index)
         # if res_set_index is None:
         #     print("QA Error QA_fetch_index_day_adv set index 'date, code' return None")
@@ -283,6 +287,7 @@ def QA_fetch_index_min_adv(
         print("QA Error QA_fetch_index_min_adv parameter code=%s start=%s end=%s frequence=%s call QA_fetch_index_min return None" % (
             code, start, end, frequence))
     else:
+        res['datetime'] = pd.to_datetime(res['datetime'])
         res_reset_index = res.set_index(
             ['datetime', 'code'], drop=if_drop_index)
         # if res_reset_index is None:
@@ -368,6 +373,7 @@ def QA_fetch_future_day_adv(
         print("QA Error QA_fetch_future_day_adv parameter code=%s start=%s end=%s call QA_fetch_future_day return None" % (
             code, start, end))
     else:
+        res['date'] = pd.to_datetime(res['date'])
         res_set_index = res.set_index(['date', 'code'])
         # if res_set_index is None:
         #     print("QA Error QA_fetch_index_day_adv set index 'date, code' return None")
@@ -423,6 +429,7 @@ def QA_fetch_future_min_adv(
         print("QA Error QA_fetch_future_min_adv parameter code=%s start=%s end=%s frequence=%s call QA_fetch_future_min return None" % (
             code, start, end, frequence))
     else:
+        res['datetime'] = pd.to_datetime(res['datetime'])
         res_reset_index = res.set_index(
             ['datetime', 'code'], drop=if_drop_index)
         # if res_reset_index is None:
@@ -506,6 +513,7 @@ def QA_fetch_stock_realtime_adv(code=None,
             return
 
         data = pd.DataFrame(items_from_collections)
+        data['datetime'] = pd.to_datetime(data['datetime'])
         data_set_index = data.set_index(
             ['datetime', 'code'], drop=False).drop(['_id'], axis=1)
         return data_set_index

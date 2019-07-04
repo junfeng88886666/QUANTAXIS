@@ -38,7 +38,7 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:None},
                             # DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: None},
                             # DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: None},
-                            DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
+                            # DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
                             #
                             # DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX:None},
                             # DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX:None},

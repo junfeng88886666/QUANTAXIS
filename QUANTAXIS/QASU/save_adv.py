@@ -422,6 +422,8 @@ def QA_SU_save_stock_min(package = None,data_type = None,num_threads = default_m
             ('time_stamp',
              pymongo.ASCENDING),
             ('date_stamp',
+             pymongo.ASCENDING),
+            ('type',
              pymongo.ASCENDING)
         ],
         unique = True
@@ -595,6 +597,8 @@ def QA_SU_save_future_min(package = None, data_type = None,num_threads = default
             ('time_stamp',
              pymongo.ASCENDING),
             ('date_stamp',
+             pymongo.ASCENDING),
+            ('type',
              pymongo.ASCENDING)
         ],
         unique = True

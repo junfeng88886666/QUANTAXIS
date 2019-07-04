@@ -221,7 +221,6 @@ def _resample_edit_periods(data,edit_time_period):
 
 def QA_data_futuretick_resample_min(tick, type_='1min', source = 'tick_resample',if_drop=True):
     """tick采样成1分钟级别分钟线，支持QA_DataAggrement_future_transaction数据
-
     Arguments:
         tick {[type]} -- transaction
 
@@ -488,8 +487,65 @@ def QA_data_ctptick_resample(tick, type_='1min'):
     return resx.reset_index().drop_duplicates().set_index(['datetime',
                                                            'code']).sort_index()
 
-def QA_data_min_resample():
-    raise NotImplementedError
+
+def QA_data_min_resample(min_data, type_='5min'):
+    """分钟线采样成大周期
+    分钟线采样成子级别的分钟线
+    time+ OHLC==> resample
+    Arguments:
+        min {[type]} -- [description]
+        raw_type {[type]} -- [description]
+        new_type {[type]} -- [description]
+    """
+
+    try:
+        min_data = min_data.reset_index().set_index('datetime', drop=False)
+    except:
+        min_data = min_data.set_index('datetime', drop=False)
+
+    CONVERSION = {
+        'code': 'first',
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'vol': 'sum',
+        'amount': 'sum'
+    } if 'vol' in min_data.columns else {
+        'code': 'first',
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volume': 'sum',
+        'amount': 'sum'
+    }
+    resx = pd.DataFrame()
+
+    for item in set(min_data.index.date):
+        min_data_p = min_data.loc[str(item)]
+        n = min_data_p['{} 21:00:00'.format(item):].resample(
+            type_,
+            base=30,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+
+        d = min_data_p[:'{} 11:30:00'.format(item)].resample(
+            type_,
+            base=30,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+        f = min_data_p['{} 13:00:00'.format(item):].resample(
+            type_,
+            closed='right',
+            loffset=type_
+        ).apply(CONVERSION)
+
+        resx = resx.append(d).append(f)
+
+    return resx.dropna().reset_index().set_index(['datetime', 'code'])
 
 def QA_data_futuremin_resample(min_data, type_='5min'):
     """期货分钟线采样成大周期

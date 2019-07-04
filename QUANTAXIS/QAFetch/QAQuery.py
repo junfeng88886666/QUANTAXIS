@@ -31,7 +31,7 @@ from pandas import DataFrame
 
 from QUANTAXIS.QAUtil import (DATABASE, QA_Setting, QA_util_date_stamp,
                               QA_util_date_valid, QA_util_dict_remove_key,
-                              QA_util_log_info, QA_util_code_tostr,QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
+                              QA_util_log_info,QA_util_code_tolist, QA_util_date_str2int, QA_util_date_int2str,
                               QA_util_sql_mongo_sort_DESCENDING,
                               QA_util_time_stamp, QA_util_to_json_from_pandas,
                               trade_date_sse,QA_util_dateordatetime_valid,QA_util_to_anyformat_from_pandas,
@@ -83,7 +83,7 @@ def QA_fetch_stock_day(code, start, end, format='numpy', frequence='day', collec
         #code= [code] if isinstance(code,str) else code
 
         # code checking
-        code = QA_util_code_tostr(code)
+        code = QA_util_code_tolist(code)
 
         cursor = collections.find({
             'code': {'$in': code}, "date_stamp": {
@@ -113,7 +113,7 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = Non
     """
     if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         '''数据获取'''
-        code = QA_util_code_tostr(code)
+        code = QA_util_code_tolist(code)
 
         cursor = collections.find({
             'code': {'$in': code}, "time_stamp": {
@@ -146,7 +146,7 @@ def QA_fetch_stock_transaction(code, start, end, format='numpy', frequence = Non
         return None
 
 
-def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', collections=DATABASE.stock_min):
+def QA_fetch_stock_min(code, start, end, frequence='1min', format='numpy', collections=DATABASE.stock_min):
     '获取股票分钟线'
     if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         '''数据获取'''
@@ -165,7 +165,7 @@ def QA_fetch_stock_min(code, start, end, format='numpy', frequence='1min', colle
 
         __data = []
         # code checking
-        code = QA_util_code_tostr(code)
+        code = QA_util_code_tolist(code)
 
         cursor = collections.find({
             'code': {'$in': code}, "time_stamp": {
@@ -194,13 +194,13 @@ def QA_fetch_stock_list(collections=DATABASE.stock_list):
 
 def QA_fetch_stock_xdxr(code, format='pd', collections=DATABASE.stock_xdxr):
     '获取股票除权信息/数据库'
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
     data = pd.DataFrame([item for item in collections.find(
         {'code':  {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
     return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_XDXR, query=None)
 
 def QA_fetch_stock_info(code, format='pd', collections=DATABASE.stock_info):
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
     try:
         data = pd.DataFrame([item for item in collections.find(
             {'code':  {'$in': code}}, {"_id": 0}, batch_size=10000)])
@@ -212,7 +212,7 @@ def QA_fetch_stock_info(code, format='pd', collections=DATABASE.stock_info):
 
 def QA_fetch_stock_block(code=None, format='pd', collections=DATABASE.stock_block):
     if code is not None:
-        code = QA_util_code_tostr(code)
+        code = QA_util_code_tolist(code)
         data = pd.DataFrame([item for item in collections.find(
             {'code': {'$in': code}}, batch_size=10000)]).drop(['_id'], axis=1)
         return __QA_fetch_query_filter(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.STOCK_BLOCK, query=None)
@@ -330,7 +330,7 @@ def QA_fetch_index_day(code, start, end, format='numpy', collections=DATABASE.in
     '获取指数日线'
     start = str(start)[0:10]
     end = str(end)[0:10]
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
     if QA_util_date_valid(end) == True:
 
         cursor = collections.find({
@@ -380,7 +380,7 @@ def QA_fetch_index_min(
     elif frequence in ['60min', '60m']:
         frequence = '60min'
     __data = []
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
     cursor = collections.find({
         'code': {'$in': code}, "time_stamp": {
             "$gte": QA_util_time_stamp(start),
@@ -427,12 +427,13 @@ def QA_fetch_future_day(code, start, end, format='numpy', collections=DATABASE.f
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data = res,format = format)
     else:
-        QA_util_log_info('QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+        QA_util_log_info('QA Error QA_fetch_future_day data parameter start=%s end=%s is not right' % (start, end))
         return None
 
 def QA_fetch_future_min(
         code,
-        start, end,
+        start,
+        end,
         frequence='1min',
         format='numpy',
         collections=DATABASE.future_min):
@@ -821,7 +822,7 @@ def QA_fetch_stock_financial_calendar(code, start, end=None, format='pd', collec
     '获取股票日线'
     #code= [code] if isinstance(code,str) else code
     # code checking
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
 
     if QA_util_date_valid(end):
 
@@ -861,7 +862,7 @@ def QA_fetch_stock_divyield(code, start, end=None, format='pd', collections=DATA
     '获取股票日线'
     #code= [code] if isinstance(code,str) else code
     # code checking
-    code = QA_util_code_tostr(code)
+    code = QA_util_code_tolist(code)
 
     if QA_util_date_valid(end):
 

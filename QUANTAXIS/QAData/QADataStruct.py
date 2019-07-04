@@ -64,14 +64,14 @@ class QA_DataStruct_Stock_day(_quotation_base):
         股票日线数据
     '''
 
-    def __init__(self, init_data_by_df, dtype='stock_day', if_fq='bfq'):
+    def __init__(self, init_data_by_df, dtype='stock_day', if_fq='bfq',if_sort_index=True):
         '''
         # 🛠 todo dtype=stock_day 和 QA_DataStruct_Stock_day 类的名字是对应的 不变的不需要指定 ，容易出错，建议改成常量 ❌
         :param init_data_by_df:  DataFrame 类型的数据，包含了数据，用来初始化这个类
         :param dtype:  stock_day 🛠 todo 改成常量
         :param if_fq:  是否复权
         '''
-        super().__init__(init_data_by_df, dtype, if_fq)
+        super().__init__(init_data_by_df, dtype, if_fq,if_sort_index=if_sort_index)
 
         if isinstance(init_data_by_df, pd.DataFrame) == False:
             print("QAError init_data_by_df is not kind of DataFrame type !")
@@ -192,8 +192,8 @@ class QA_DataStruct_Stock_day(_quotation_base):
 
 
 class QA_DataStruct_Stock_min(_quotation_base):
-    def __init__(self, DataFrame, dtype='stock_min', if_fq='bfq'):
-        super().__init__(DataFrame, dtype, if_fq)
+    def __init__(self, DataFrame, dtype='stock_min', if_fq='bfq', if_sort_index = True):
+        super().__init__(DataFrame, dtype, if_fq,if_sort_index)
 
         try:
             if 'preclose' in DataFrame.columns:
@@ -293,8 +293,8 @@ class QA_DataStruct_Stock_min(_quotation_base):
 
 
 class QA_DataStruct_Future_day(_quotation_base):
-    def __init__(self, DataFrame, dtype='future_day', if_fq=''):
-        super().__init__(DataFrame, dtype, if_fq)
+    def __init__(self, DataFrame, dtype='future_day', if_fq='',if_sort_index = True):
+        super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = 'future_day'
         self.data = self.data.loc[:, [
             'open', 'high', 'low', 'close', 'volume', 'position', 'price']]
@@ -373,9 +373,9 @@ class QA_DataStruct_Future_min(_quotation_base):
     struct for future
     """
 
-    def __init__(self, DataFrame, dtype='future_min', if_fq=''):
+    def __init__(self, DataFrame, dtype='future_min', if_fq='',if_sort_index = True):
         # 🛠todo  期货分钟数据线的维护， 暂时用日线代替分钟线
-        super().__init__(DataFrame, dtype, if_fq)
+        super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = dtype
         self.data = self.data.loc[:, [
             'open', 'high', 'low', 'close', 'volume', 'position', 'price', 'tradetime', 'type','contract']]
@@ -448,8 +448,8 @@ class QA_DataStruct_Future_min(_quotation_base):
 class QA_DataStruct_Index_day(_quotation_base):
     '自定义的日线数据结构'
 
-    def __init__(self, DataFrame, dtype='index_day', if_fq=''):
-        super().__init__(DataFrame, dtype, if_fq)
+    def __init__(self, DataFrame, dtype='index_day', if_fq='',if_sort_index = True):
+        super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         # self.data = DataFrame
         self.type = dtype
         self.if_fq = if_fq
@@ -507,8 +507,8 @@ class QA_DataStruct_Index_day(_quotation_base):
 class QA_DataStruct_Index_min(_quotation_base):
     '自定义的分钟线数据结构'
 
-    def __init__(self, DataFrame, dtype='index_min', if_fq=''):
-        super().__init__(DataFrame, dtype, if_fq)
+    def __init__(self, DataFrame, dtype='index_min', if_fq='',if_sort_index = True):
+        super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = dtype
         self.if_fq = if_fq
         self.data = self.data.loc[:, [
@@ -805,18 +805,18 @@ class QA_DataStruct_Day(_quotation_base):
         _quotation_base {[type]} -- [description]
     """
 
-    def __init__(self, data, dtype='unknown_day', if_fq='bfq'):
+    def __init__(self, data, dtype='unknown_day', if_fq='bfq',if_sort_index = True):
         '''
         '''
-        super().__init__(data, dtype, if_fq)
+        super().__init__(data, dtype, if_fq,if_sort_index)
 
 
 class QA_DataStruct_Min(_quotation_base):
     '''这个类是个通用类 一般不使用  特定生成的时候可能会用到 只具备基类方法
     '''
 
-    def __init__(self, data, dtype='unknown_min', if_fq='bfq'):
-        super().__init__(data, dtype, if_fq)
+    def __init__(self, data, dtype='unknown_min', if_fq='bfq',if_sort_index=True):
+        super().__init__(data, dtype, if_fq,if_sort_index)
 
 
 class _realtime_base():

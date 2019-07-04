@@ -63,9 +63,10 @@ class _quotation_base():
     # 🛠todo  DataFrame 改成 df 变量名字
     def __init__(
             self,
-            DataFrame,
+            DataFrame = None,
             dtype='uf',
             if_fq='bfq',
+            if_sort_index=True,
             marketdata_type='None'
     ):
         '''
@@ -80,7 +81,8 @@ class _quotation_base():
             DataFrame = DataFrame.assign(volume=DataFrame.trade)
         # print(DataFrame)
         # 🛠todo 判断DataFame 对象字段的合法性，是否正确
-        self.data = DataFrame.drop_duplicates().sort_index()
+        if if_sort_index: self.data = DataFrame.drop_duplicates().sort_index()
+        else: self.data = DataFrame.drop_duplicates()
         self.data.index = self.data.index.remove_unused_levels()
         # 🛠todo 该变量没有用到， 是不是 self.type = marketdata_type ??
 
@@ -214,6 +216,7 @@ class _quotation_base():
     def __getitem__(self, key):
         '''
         # 🛠todo 进一步研究 DataFrame __getitem__ 的意义。
+        调用列: eg. data[['close']]
         DataFrame调用__getitem__调用(key)
         :param key:
         :return:
@@ -323,7 +326,6 @@ class _quotation_base():
 
     """为了方便调用  增加一些容易写错的情况
     """
-
     HIGH = high
     High = high
     LOW = low
@@ -406,10 +408,10 @@ class _quotation_base():
 
     @property
     @lru_cache()
-    def avg(self):
+    def avgprice(self):
         try:
             res = self.amount / self.volume
-            res.name = 'avg'
+            res.name = 'avgprice'
             return res
         except:
             return None
@@ -786,7 +788,7 @@ class _quotation_base():
         )
 
     def get(self, name):
-
+        '''获取对应的dataframe方法'''
         if name in self.data.__dir__():
             return eval('self.{}'.format(name))
         else:
@@ -846,7 +848,7 @@ class _quotation_base():
             squeeze=squeeze
         )
 
-    def new(self, data=None, dtype=None, if_fq=None):
+    def new(self, data=None, dtype=None, if_fq=None,if_sort_index = True):
         """
         创建一个新的DataStruct
         data 默认是self.data
@@ -858,11 +860,11 @@ class _quotation_base():
         if_fq = self.if_fq if if_fq is None else if_fq
 
         temp = copy(self)
-        temp.__init__(data, dtype, if_fq)
+        temp.__init__(data, dtype, if_fq,if_sort_index)
         return temp
 
     def reverse(self):
-        return self.new(self.data[::-1])
+        return self.new(data = self.data[::-1],if_sort_index = False)
 
     def reindex(self, ind):
         """reindex
@@ -927,7 +929,6 @@ class _quotation_base():
         Returns:
             [type] -- [description]
         """
-
         return self.new(self.data.tail(lens))
 
     def head(self, lens):
@@ -939,7 +940,6 @@ class _quotation_base():
         Returns:
             [type] -- [description]
         """
-
         return self.new(self.data.head(lens))
 
     def show(self):
@@ -971,10 +971,10 @@ class _quotation_base():
         转换DataStruct为json
         """
         
-        data = self.data
+        data = self.data.reset_index()
         if self.type[-3:] != 'min':
-            data = self.data.assign(datetime= self.datetime)
-        return QA_util_to_json_from_pandas(data.reset_index())
+            data = data.assign(datetime= data.date)
+        return QA_util_to_json_from_pandas(data)
 
     def to_string(self):
         return json.dumps(self.to_json())
