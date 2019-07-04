@@ -27,7 +27,7 @@ data = QA.QA_fetch_get_future_day('tdx','ICL8','2011-06-26','2019-06-27')
 data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
 data = QA.QA_fetch_get_future_min('jq','ICL8','2015-06-26','2019-06-27')
 
-data1 = QA.QA_fetch_get_future_min('jqdata','AGL8','2010-06-26','2019-06-27')
+data2 = QA.QA_fetch_get_future_min('jq','AGL8','2019-06-26','2019-06-27 23:59:00','5m')
 #%%
 data = QA.QAFetch.QAQuery.QA_fetch_stock_day('300434','2018-10-16','2019-10-19','pd')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
@@ -39,20 +39,30 @@ data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 
 data = QA.QAFetch.QAQuery.QA_fetch_future_list()
-data = QA.QA_fetch_future_day_adv('CJL9','2018-06-26','2019-06-27','pd')
+#%%
+data = QA.QA_fetch_future_day_adv('CJL9','2018-06-26','2019-06-27')
+
 #%%
 data = QA.QA_fetch_stock_day_adv('000001','2018-06-26','2019-06-27')
-data2 = QA.QA_fetch_stock_day_adv('000002','2018-06-26','2019-06-27')
+data2 = QA.QA_fetch_stock_day_adv('000001','2018-06-26','2019-06-27')
+
+data = QA.QA_fetch_future_day_adv('AL9','2018-06-26','2019-06-27')
+data2 = QA.QA_fetch_future_day_adv('AGL9','2018-06-26','2019-06-27')
+
+data = QA.QA_fetch_future_min_adv('AL9','2018-06-26','2019-06-27','1min')
+data2 = QA.QA_fetch_future_min_adv('AGL9','2018-06-26','2019-06-27','1min')
 a = data+data2+data2
-a.data
-b=a-data2
-b.data
-b()
-b['2019-06-27']
-help(b.data.__getitem__)
-data['open']
-c = b[['open']]
-c.data
+a.data.columns
+a.tradetime
+
+a.data.preclose
+a.preclose
+
+b = a.min30
+
+a.pivot('close')
+a.index.levels[0][0]
+
 #%%
 CODE = 'I1909'
 data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min(CODE,'2019-06-26','2019-06-27')

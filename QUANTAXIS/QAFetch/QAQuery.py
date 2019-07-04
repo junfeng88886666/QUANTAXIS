@@ -300,8 +300,7 @@ def QA_fetch_stock_to_market_date(stock_code):
 def QA_fetch_stock_full(date, format='numpy', collections=DATABASE.stock_day):
     '获取全市场的某一日的数据'
     Date = str(date)[0:10]
-    if QA_util_date_valid(Date) is True:
-
+    if (QA_util_dateordatetime_valid(date)):
         __data = []
         for item in collections.find({
                 "date_stamp": QA_util_date_stamp(Date)}, batch_size=10000):
@@ -331,7 +330,7 @@ def QA_fetch_index_day(code, start, end, format='numpy', collections=DATABASE.in
     start = str(start)[0:10]
     end = str(end)[0:10]
     code = QA_util_code_tolist(code)
-    if QA_util_date_valid(end) == True:
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
 
         cursor = collections.find({
             'code': {'$in': code}, "date_stamp": {
@@ -413,8 +412,7 @@ def QA_fetch_future_day(code, start, end, format='numpy', collections=DATABASE.f
     end = str(end)[0:10]
     code = QA_util_code_tolist(code, auto_fill=False)
 
-    if QA_util_date_valid(end) == True:
-
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         __data = []
         cursor = collections.find({
             'code': {'$in': code}, "date_stamp": {
@@ -452,11 +450,8 @@ def QA_fetch_future_min(
     start = str(start)[0:19]
     end = str(end)[0:19]
     code = QA_util_code_tolist(code, auto_fill=False)
-    print(code)
-    print(frequence)
-    print(QA_util_time_stamp(start))
-    print(QA_util_time_stamp(end))
-    if QA_util_date_valid(end) == True:
+
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         cursor = collections.find({
             'code': {'$in': code}, "time_stamp": {
                 "$gte": QA_util_time_stamp(start),
@@ -470,7 +465,7 @@ def QA_fetch_future_min(
         '''数据格式整理'''
         return QA_util_to_anyformat_from_pandas(data = res,format = format)
     else:
-        QA_util_log_info('QA Error QA_fetch_stock_day data parameter start=%s end=%s is not right' % (start, end))
+        QA_util_log_info('QA Error QA_fetch_future_min data parameter start=%s end=%s is not right' % (start, end))
         return None
 
 def QA_fetch_future_tick():
@@ -824,8 +819,7 @@ def QA_fetch_stock_financial_calendar(code, start, end=None, format='pd', collec
     # code checking
     code = QA_util_code_tolist(code)
 
-    if QA_util_date_valid(end):
-
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         __data = []
         cursor = collections.find({
             'code': {'$in': code}, "real_date": {
@@ -864,8 +858,7 @@ def QA_fetch_stock_divyield(code, start, end=None, format='pd', collections=DATA
     # code checking
     code = QA_util_code_tolist(code)
 
-    if QA_util_date_valid(end):
-
+    if (QA_util_dateordatetime_valid(start)) & (QA_util_dateordatetime_valid(end)):
         __data = []
         cursor = collections.find({
             'a_stockcode': {'$in': code}, "dir_dcl_date": {

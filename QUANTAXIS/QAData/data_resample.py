@@ -503,23 +503,18 @@ def QA_data_min_resample(min_data, type_='5min'):
     except:
         min_data = min_data.set_index('datetime', drop=False)
 
-    CONVERSION = {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'vol': 'sum',
-        'amount': 'sum'
-    } if 'vol' in min_data.columns else {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volume': 'sum',
-        'amount': 'sum'
-    }
+    CONVERSION = {}
+    if 'code' in min_data.columns: CONVERSION['code'] = 'first'
+    if 'open' in min_data.columns: CONVERSION['open'] = 'first'
+    if 'high' in min_data.columns: CONVERSION['high'] = 'max'
+    if 'low' in min_data.columns: CONVERSION['low'] = 'min'
+    if 'close' in min_data.columns: CONVERSION['close'] = 'last'
+    if 'vol' in min_data.columns: CONVERSION['vol'] = 'sum'
+    if 'volume' in min_data.columns: CONVERSION['volume'] = 'sum'
+    if 'amount' in min_data.columns: CONVERSION['amount'] = 'sum'
+    if 'position' in min_data.columns: CONVERSION['position'] = 'last'
+    if 'tradetime' in min_data.columns: CONVERSION['tradetime'] = 'last'
+
     resx = pd.DataFrame()
 
     for item in set(min_data.index.date):
@@ -599,23 +594,17 @@ def QA_data_day_resample(day_data, type_='w'):
     except:
         day_data = day_data.set_index('date', drop=False)
 
-    CONVERSION = {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'vol': 'sum',
-        'amount': 'sum'
-    } if 'vol' in day_data.columns else {
-        'code': 'first',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volume': 'sum',
-        'amount': 'sum'
-    }
+    CONVERSION = {}
+    if 'code' in day_data.columns: CONVERSION['code'] = 'first'
+    if 'open' in day_data.columns: CONVERSION['open'] = 'first'
+    if 'high' in day_data.columns: CONVERSION['high'] = 'max'
+    if 'low' in day_data.columns: CONVERSION['low'] = 'min'
+    if 'close' in day_data.columns: CONVERSION['close'] = 'last'
+    if 'vol' in day_data.columns: CONVERSION['vol'] = 'sum'
+    if 'volume' in day_data.columns: CONVERSION['volume'] = 'sum'
+    if 'amount' in day_data.columns: CONVERSION['amount'] = 'sum'
+    if 'position' in day_data.columns: CONVERSION['position'] = 'last'
+
 
     return day_data.resample(
         type_,

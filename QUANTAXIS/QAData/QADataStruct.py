@@ -195,15 +195,15 @@ class QA_DataStruct_Stock_min(_quotation_base):
     def __init__(self, DataFrame, dtype='stock_min', if_fq='bfq', if_sort_index = True):
         super().__init__(DataFrame, dtype, if_fq,if_sort_index)
 
-        try:
-            if 'preclose' in DataFrame.columns:
-                self.data = DataFrame.loc[:, [
-                    'open', 'high', 'low', 'close', 'volume', 'amount', 'preclose', 'type']]
-            else:
-                self.data = DataFrame.loc[:, [
-                    'open', 'high', 'low', 'close', 'volume', 'amount', 'type']]
-        except Exception as e:
-            raise e
+        # try:
+        #     if 'preclose' in DataFrame.columns:
+        #         self.data = DataFrame.loc[:, [
+        #             'open', 'high', 'low', 'close', 'volume', 'amount', 'preclose', 'type']]
+        #     else:
+        #         self.data = DataFrame.loc[:, [
+        #             'open', 'high', 'low', 'close', 'volume', 'amount', 'type']]
+        # except Exception as e:
+        #     raise e
 
         self.type = dtype
         self.if_fq = if_fq
@@ -296,8 +296,8 @@ class QA_DataStruct_Future_day(_quotation_base):
     def __init__(self, DataFrame, dtype='future_day', if_fq='',if_sort_index = True):
         super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = 'future_day'
-        self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'volume', 'position', 'price']]
+        # self.data = self.data.loc[:, [
+        #     'open', 'high', 'low', 'close', 'volume', 'position', 'price']]
         self.if_fq = if_fq
 
     # 抽象类继承
@@ -377,8 +377,8 @@ class QA_DataStruct_Future_min(_quotation_base):
         # 🛠todo  期货分钟数据线的维护， 暂时用日线代替分钟线
         super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = dtype
-        self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'volume', 'position', 'price', 'tradetime', 'type','contract']]
+        # self.data = self.data.loc[:, [
+        #     'open', 'high', 'low', 'close', 'volume', 'position', 'price', 'tradetime', 'type','contract']]
         self.if_fq = if_fq
 
     # 抽象类继承
@@ -511,8 +511,8 @@ class QA_DataStruct_Index_min(_quotation_base):
         super().__init__(DataFrame, dtype, if_fq,if_sort_index)
         self.type = dtype
         self.if_fq = if_fq
-        self.data = self.data.loc[:, [
-            'open', 'high', 'low', 'close', 'up_count', 'down_count', 'volume', 'amount', 'type']]
+        # self.data = self.data.loc[:, [
+        #     'open', 'high', 'low', 'close', 'up_count', 'down_count', 'volume', 'amount', 'type']]
         # self.mongo_coll = DATABASE.index_min
 
     # 抽象类继承
