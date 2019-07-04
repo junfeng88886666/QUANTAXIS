@@ -5,7 +5,7 @@ import tushare as ts
 from retrying import retry
 import jqdatasdk
 import pymongo
-
+import QUANTAXIS.QAFetch.jqdatahttp as jqdatahttp
 import time
 from QUANTAXIS.QAUtil import (
     DATABASE,
@@ -43,6 +43,7 @@ def get_config(account = None, password = None, remember = False):
             if remember: QASETTING.set_config('JQDATA', 'password', password)
             
         jqdatasdk.auth(account,password)
+        return (account,password)
     except:
         print('请升级jqdatasdk 至最新版本 pip install jqdatasdk -U')
         
@@ -50,12 +51,12 @@ def reset_config():
     QASETTING.set_config('JQDATA', 'account', DEFAULT_ACCOUNT)
     QASETTING.set_config('JQDATA', 'password', DEFAULT_PASSWORD)
     
-    
 def JQDATA_login(account = None, password = None, remember = False):
-    get_config(account = account, password = password, remember = remember)
+    account, password = get_config(account = account, password = password, remember = remember)
+    return (account,password)
 
-def set_JQDOTA_code_compare(account = None, password = None, remember = False,reset = False,client = DATABASE,ui_log = None):
-    JQDATA_login(account=None, password=None, remember=False)
+def set_JQDOTA_code_compare(method = 'http',reset = False,account = None, password = None, remember = False,client = DATABASE,ui_log = None):
+    if method == 'api': JQDATA_login(account=None, password=None, remember=False)
     if reset: client.drop_collection('jqdata_securities_record')
     coll = client.jqdata_securities_record
     coll.create_index(
@@ -65,8 +66,11 @@ def set_JQDOTA_code_compare(account = None, password = None, remember = False,re
           unique = True
     )
     ref_ = coll.find()
-    if (ref_.count() <= 0)|(reset == True):        
-        security_info = jqdatasdk.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
+    if (ref_.count() <= 0)|(reset == True):
+        if method == 'api':
+            security_info = jqdatasdk.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
+            jqdatasdk.logout()
+        elif method == 'http': jqdatahttp.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
         security_info = security_info.reset_index().rename(columns = {'index':'jqcode'})
         security_info['jqcode_simple'] = list(map(lambda x:x.split('.')[0],security_info['jqcode']))
         coll.insert_many(
@@ -109,8 +113,8 @@ def _QA_code_toJQDATA(code,type_):
     
 def _QA_freq_toJQDATA(frequence):
     if frequence in ['day', 'd', 'D', 'DAY', 'Day']: return '1d'
-    elif frequence in ['w', 'W', 'Week', 'week']: return None
-    elif frequence in ['month', 'M', 'm', 'Month']: return None
+    elif frequence in ['w', 'W', 'Week', 'week']: return '1w'
+    elif frequence in ['month', 'M', 'm', 'Month']: return '1M'
     elif frequence in ['quarter', 'Q', 'Quarter', 'q']: return None
     elif frequence in ['y', 'Y', 'year', 'Year']: return None
     elif str(frequence) in ['1', '1m', '1min', 'one']: return '1m'
@@ -121,15 +125,14 @@ def _QA_freq_toJQDATA(frequence):
         
         
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api',account=None, password=None, remember = False):
+def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'http',account=None, password=None, remember = False):
     assert QA_util_dateordatetime_valid(start), 'start input format error'
     assert QA_util_dateordatetime_valid(end), 'end input format error'
+    jqcode = _QA_code_toJQDATA(code, 'stock')
+    jqfrequence = _QA_freq_toJQDATA(frequence)
 
     if method == 'api':
         JQDATA_login(account = account, password = password, remember = remember)
-        jqcode = _QA_code_toJQDATA(code,'stock')
-        jqfrequence = _QA_freq_toJQDATA(frequence)
-
         data = jqdatasdk.get_price(security = jqcode,
                                    start_date=start,
                                    end_date=end,
@@ -138,21 +141,31 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
                                    skip_paused=True,
                                    fq=None,
                                    count=None)
-        data['code'] = code
-        data['type'] = frequence
+        jqdatasdk.logout()
     elif method == 'http':
-        raise NotImplementedError
+        data = jqdatahttp.get_price(security = jqcode,
+                                   start_date=start,
+                                   end_date=end,
+                                   frequency=jqfrequence,
+                                   fields=None,
+                                   skip_paused=True,
+                                   fq=None,
+                                   count=None)
+    data['code'] = code
+    data['type'] = frequence
     return select_DataAggrement(DATABASE_NAME.STOCK_MIN)(DATASOURCE.JQDATA,data)
 
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api', account=None, password=None, remember = False):
+def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'http', account=None, password=None, remember = False):
     assert QA_util_dateordatetime_valid(start), 'start input format error'
     assert QA_util_dateordatetime_valid(end), 'end input format error'
+    jqcode = _QA_code_toJQDATA(code, 'futures')
+    jqfrequence = _QA_freq_toJQDATA(frequence)
+
     if method == 'api':
         JQDATA_login(account = account, password = password, remember = remember)
-        jqcode = _QA_code_toJQDATA(code,'futures')
-        jqfrequence = _QA_freq_toJQDATA(frequence)
+
         data = jqdatasdk.get_price(security = jqcode,
                                    start_date=start,
                                    end_date=end,
@@ -161,10 +174,18 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_t
                                    skip_paused=True,
                                    fq=None,
                                    count=None)
-        data['code'] = code
-        data['type'] = frequence
+        jqdatasdk.logout()
     elif method == 'http':
-        raise NotImplementedError
+        data = jqdatahttp.get_price(security = jqcode,
+                                   start_date=start,
+                                   end_date=end,
+                                   frequency=jqfrequence,
+                                   fields=None,
+                                   skip_paused=True,
+                                   fq=None,
+                                   count=None)
+    data['code'] = code
+    data['type'] = frequence
     return select_DataAggrement(DATABASE_NAME.FUTURE_MIN)(DATASOURCE.JQDATA,data)
 
 #if __name__ =='__main__':

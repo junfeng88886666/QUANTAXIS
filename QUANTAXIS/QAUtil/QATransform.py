@@ -80,3 +80,12 @@ def QA_util_to_anyformat_from_pandas(data = None,format = None):
         QA_util_log_info(
             "QA Error format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" " % format)
         return None
+
+def QA_util_to_pandas_from_RequestsResponse(data):
+    list_all = []
+    for line in data.iter_lines():
+        decoded_line = line.decode('utf-8')
+        temp_list = list(decoded_line.split(','))
+        list_all.append(temp_list)
+
+    return pd.DataFrame(data=list_all[1:], columns=list_all[0])
