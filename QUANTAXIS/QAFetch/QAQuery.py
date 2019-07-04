@@ -421,7 +421,6 @@ def QA_fetch_future_day(code, start, end, format='numpy', collections=DATABASE.f
                 "$lte": QA_util_date_stamp(end),
                 "$gte": QA_util_date_stamp(start)}}, {"_id": 0}, batch_size=10000)
         res = pd.DataFrame([item for item in cursor])
-
         '''数据处理（不改变格式，只进行异常排查，设置索引，选择重要的列这三个部分）'''
         res = __QA_fetch_query_filter(res, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_DAY, query=None)
 

@@ -69,7 +69,7 @@ def set_JQDOTA_code_compare(method = 'http',reset = False,account = None, passwo
     if (ref_.count() <= 0)|(reset == True):
         if method == 'api':
             security_info = jqdatasdk.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
-            jqdatasdk.logout()
+            # jqdatasdk.logout()
         elif method == 'http': jqdatahttp.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
         security_info = security_info.reset_index().rename(columns = {'index':'jqcode'})
         security_info['jqcode_simple'] = list(map(lambda x:x.split('.')[0],security_info['jqcode']))
@@ -125,7 +125,7 @@ def _QA_freq_toJQDATA(frequence):
         
         
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'http',account=None, password=None, remember = False):
+def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api',account=None, password=None, remember = False):
     assert QA_util_dateordatetime_valid(start), 'start input format error'
     assert QA_util_dateordatetime_valid(end), 'end input format error'
     jqcode = _QA_code_toJQDATA(code, 'stock')
@@ -141,7 +141,7 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
                                    skip_paused=True,
                                    fq=None,
                                    count=None)
-        jqdatasdk.logout()
+        # jqdatasdk.logout()
     elif method == 'http':
         data = jqdatahttp.get_price(security = jqcode,
                                    start_date=start,
@@ -157,7 +157,7 @@ def QA_fetch_get_stock_min(code, start, end, frequence='1min', fill_data_with_ti
 
 
 @retry(stop_max_attempt_number=3, wait_random_min=50, wait_random_max=100)
-def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'http', account=None, password=None, remember = False):
+def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_tick_database = False, fill_data_with_tick_online = False, method = 'api', account=None, password=None, remember = False):
     assert QA_util_dateordatetime_valid(start), 'start input format error'
     assert QA_util_dateordatetime_valid(end), 'end input format error'
     jqcode = _QA_code_toJQDATA(code, 'futures')
@@ -174,7 +174,7 @@ def QA_fetch_get_future_min(code, start, end, frequence='1min', fill_data_with_t
                                    skip_paused=True,
                                    fq=None,
                                    count=None)
-        jqdatasdk.logout()
+        # jqdatasdk.logout()
     elif method == 'http':
         data = jqdatahttp.get_price(security = jqcode,
                                    start_date=start,

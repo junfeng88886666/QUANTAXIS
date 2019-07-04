@@ -38,7 +38,7 @@ def QA_Update(update_dict = {
                             # DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:None},
                             # DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: None},
                             # DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: None},
-                            # DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
                             #
                             # DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX:None},
                             # DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX:None},
@@ -69,7 +69,7 @@ def QA_Update(update_dict = {
 
 def QA_SU_update_single(database_name = None,package = None,data_type = None, ui_log = None):
     if check_update_permission(database_name=database_name, package=package, data_type=data_type):
-        if package == DATASOURCE.JQDATA: num_threads = default_max_workers
+        if package == DATASOURCE.JQDATA: num_threads = 2
         else: num_threads = default_max_workers
         if database_name == DATABASE_NAME.STOCK_LIST: save_engine.QA_SU_save_stock_list(package = package)
         elif database_name == DATABASE_NAME.STOCK_DAY: save_engine.QA_SU_save_stock_day(package = package,initial_start = '1990-01-01')

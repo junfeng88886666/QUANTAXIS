@@ -94,11 +94,15 @@ def get_price(security = None,
         if end_date != None: body['end_date'] = end_date
         if frequency != None: body['unit'] = frequency
         if fq_ref_date != None: body['fq_ref_date'] = fq_ref_date
-    
         response = requests.post(url, data = json.dumps(body))
-        data = QA_util_to_pandas_from_RequestsResponse(response).set_index('date')
+        data = QA_util_to_pandas_from_RequestsResponse(response)
+        data = data.set_index('date')
         data.index.name = 'index'
-        if skip_paused: data = data[data['paused'] == '0']
+        if frequency == '1d':
+            if skip_paused: data = data[data['paused'] == '0']
+            data['paused'] = data['paused'].astype('int64')
+            data['high_limit'] = data['high_limit'].astype('float64')
+            data['low_limit'] = data['low_limit'].astype('float64')
         if fields == None: fields = ['open','close','high','low','volume','money']
         data['open'] = data['open'].astype('float64')
         data['close'] = data['close'].astype('float64')
@@ -106,9 +110,7 @@ def get_price(security = None,
         data['low'] = data['low'].astype('float64')
         data['volume'] = data['volume'].astype('int64')
         data['money'] = data['money'].astype('float64')
-        data['paused'] = data['paused'].astype('int64')
-        data['high_limit'] = data['high_limit'].astype('float64')
-        data['low_limit'] = data['low_limit'].astype('float64')
+        data.index = pd.to_datetime(data.index)
         return data[fields]
     else:
         QA_util_log_info(

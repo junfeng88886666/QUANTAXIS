@@ -22,13 +22,14 @@ data = QA.QAFetch.QATdx.QA_fetch_get_stock_block()
 
 
 future_list = QA.QAFetch.QATdx.QA_fetch_get_future_list()
-data = QA.QAFetch.QATdx.QA_fetch_get_future_day('ICL8','2011-06-26','2019-06-27')
+data = QA.QA_fetch_get_future_day('tdx','ICL8','2011-06-26','2019-06-27')
 data = QA.QAFetch.QATdx.QA_fetch_get_future_transaction('ICL8','2019-06-26','2019-06-27')
-
+data = QA.QA_fetch_get_future_min('jq','ICL8','2015-06-26','2019-06-27')
+60*24*250
 
 data1 = QA.QA_fetch_get_future_min('jqdata','AGL8','2010-06-26','2019-06-27')
 #%%
-data = QA.QAFetch.QAQuery.QA_fetch_stock_day('000001','2018-10-16','2018-10-18','pd')
+data = QA.QA_fetch_stock_day('000001','2018-10-16','2018-10-19','pd')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
 data = QA.QAFetch.QAQuery.QA_fetch_stock_min('000001','2018-10-16','2018-10-18','1min','pd')
@@ -38,7 +39,8 @@ data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 data = QA.QAFetch.QAQuery.QA_fetch_stock_info('000002')
 
 data = QA.QAFetch.QAQuery.QA_fetch_future_list()
-data = QA.QAFetch.QAQuery.QA_fetch_future_day('BBL8','2018-06-26','2019-06-27','pd')
+data = QA.QAFetch.QAQuery.QA_fetch_future_day('CJL9','2018-06-26','2019-06-27','pd')
+
 #%%
 CODE = 'I1909'
 data1 = QA.QAFetch.QATdx.QA_fetch_get_future_min(CODE,'2019-06-26','2019-06-27')

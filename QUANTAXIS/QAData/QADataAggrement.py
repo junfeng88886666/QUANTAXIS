@@ -594,7 +594,7 @@ def QA_DataAggrement_Future_day(package,data):
         data = Engine.QA_DataAggrement_Future_day(data)
 
         data['position'][data['position'] < 1] = 0
-        data['trade'][data['trade'] < 1] = 0
+        data['volume'][data['volume'] < 1] = 0
         data['price'] = data['price'].apply(lambda x:round(x,2))
 
         data[['date',
@@ -761,7 +761,6 @@ def QA_DataAggrement_Future_min(package,data):
                 'volume',
                 'date_stamp',
                 'time_stamp']].astype('int64')
-
         data = __QA_DataAggrement_check_QAQuery(data, DATA_QUERY_INDEX_COLUMNS_UNIQUE.FUTURE_MIN)
         return data[['open','high','low','close','volume','amount','position','datetime','tradetime','code','date','date_stamp','time_stamp','type','contract','source']]
     except Exception as e:
