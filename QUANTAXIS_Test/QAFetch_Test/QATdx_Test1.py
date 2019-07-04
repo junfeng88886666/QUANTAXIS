@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from datetime import time
 import QUANTAXIS as QA
-
+ 
 #%%
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_transaction('000001','2019-02-01 10:30:00','2019-02-03')
 data = QA.QAFetch.QATdx.QA_fetch_get_stock_min('000002','2018-06-26','2019-06-27','1min',True,True)
