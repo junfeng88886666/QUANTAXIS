@@ -5,7 +5,7 @@ import tushare as ts
 from retrying import retry
 import jqdatasdk
 import pymongo
-import QUANTAXIS.QAFetch.jqdatahttp as jqdatahttp
+from QUANTAXIS.QAFetch import jqdatahttp as jqdatahttp
 import time
 from QUANTAXIS.QAUtil import (
     DATABASE,
