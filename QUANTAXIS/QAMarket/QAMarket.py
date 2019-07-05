@@ -56,6 +56,15 @@ from QUANTAXIS.QAUtil.QAParameter import (
 )
 from QUANTAXIS.QAUtil.QARandom import QA_util_random_with_topic
 
+'''
+对QA_Market的理解
+QA_Market作为一个重要的中间枢纽，他的主要功能是：
+1，根据传入的市场数据调用 account/strategy 的 on_bar/on_tick 方法，来实现交易
+2，连接(account/strategy)
+3，连接broker
+4，连接order_handler 
+5，开启交易引擎
+'''
 
 class QA_Market(QA_Trade):
     """
@@ -69,6 +78,14 @@ class QA_Market(QA_Trade):
 
     def __init__(self, if_start_orderthreading=True, *args, **kwargs):
         """MARKET的初始化过程
+        Market的初始属性：
+        session: MARKET的账户字典
+        _broker: 当前所有的broker集合 TODO: 转移到QAParameter
+        broker: MARKET的broker字典
+        running_time: MARKET当前的运行时间
+        last_query_data: MARKET上次获取的数据
+        if_start_orderthreading: MARKET是否开启订单队列线程的开关
+        order_handler: 订单队列
 
         Keyword Arguments:
             if_start_orderthreading {bool} -- 是否在初始化的时候开启查询子线程(实盘需要) (default: {False})
@@ -102,7 +119,7 @@ class QA_Market(QA_Trade):
 
     def upcoming_data(self, broker, data):
         '''
-        更新市场数据
+        根据更新的市场数据来更新账户信息
         broker 为名字，
         data 是市场数据
         被 QABacktest 中run 方法调用 upcoming_data
@@ -126,6 +143,12 @@ class QA_Market(QA_Trade):
             ))
 
     def start(self):
+        '''
+        1，开启交易引擎
+        2，开启订单流线程
+        :return:
+        '''
+
         self.trade_engine.start()
         if self.if_start_orderthreading:
             """查询子线程开关

@@ -146,7 +146,7 @@ class QA_Backtest():
     def start_market(self):
         """
         start the market thread and register backtest broker thread
-        QAMarket 继承QATrader， QATrader 中有 trade_engine属性 ， trade_engine类型是QA_Engine从 QA_Thread继承
+        QAMarket 继承QATrade， QATrade 中有 trade_engine属性 ， trade_engine类型是QA_Engine从 QA_Thread继承
         """
         # 启动 trade_engine 线程
         self.market.start()
