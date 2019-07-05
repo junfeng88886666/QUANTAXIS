@@ -559,18 +559,44 @@ class QA_Market(QA_Trade):
             print(e)
 
     def query_orders(self, account_cookie):
+        '''
+        从订单队列.订单状态中获取指定账户的所有订单信息
+        :param account_cookie:
+        :return:
+        '''
         return self.order_handler.order_status.xs(account_cookie)
 
     def query_order(self, account_cookie, realorder_id):
+        '''
+        从订单队列.订单状态中获取指定账户的指定订单的信息
+        :param account_cookie:
+        :param realorder_id:
+        :return:
+        '''
         return self.order_handler.order_status.loc[account_cookie, realorder_id]
 
     def query_assets(self, account_cookie):
+        '''
+        查看指定账户的初始资产
+        :param account_cookie:
+        :return:
+        '''
         return self.get_account(account_cookie).init_assets
 
     def query_position(self, account_cookie):
+        '''
+        查看指定账户的持仓
+        :param account_cookie:
+        :return:
+        '''
         return self.get_account(account_cookie).hold
 
     def query_cash(self, account_cookie):
+        '''
+        查看指定账户的现金
+        :param account_cookie:
+        :return:
+        '''
         return self.get_account(account_cookie).cash_available
 
     def query_data_no_wait(
@@ -581,7 +607,17 @@ class QA_Market(QA_Trade):
             code,
             start,
             end=None
-    ):
+        ):
+        '''
+        从broker获取数据
+        :param broker_name:
+        :param frequence:
+        :param market_type:
+        :param code:
+        :param start:
+        :param end:
+        :return:
+        '''
         return self.broker[broker_name].run(
             event=QA_Event(
                 event_type=MARKET_EVENT.QUERY_DATA,
