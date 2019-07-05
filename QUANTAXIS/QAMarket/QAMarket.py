@@ -158,6 +158,12 @@ class QA_Market(QA_Trade):
         )
 
     def register(self, broker_name, broker):
+        '''
+        注册broker
+        :param broker_name:
+        :param broker:
+        :return:
+        '''
         if broker_name not in self._broker.keys():
             self.broker[broker_name] = broker
             # self.trade_engine.create_kernel(
@@ -192,6 +198,8 @@ class QA_Market(QA_Trade):
 
     def login(self, broker_name, account_cookie, account=None):
         """login 登录到交易前置
+        1，在account和broker间同步信息
+        2，order_handler订阅account和对应的broker
 
         2018-07-02 在实盘中,登录到交易前置后,需要同步资产状态
 
@@ -254,7 +262,9 @@ class QA_Market(QA_Trade):
 
     def sync_account(self, broker_name, account_cookie):
         """同步账户信息
-
+        若broker是回测的，那么不用同步，账户直接就是初始化的
+        若broker是其他的，那么需要和broker同步信息，从broker获取初始持仓信息
+        这是因为，回测刚开始的账户都是需要初始化的，不需要从broker核对
         Arguments:
             broker_id {[type]} -- [description]
             account_cookie {[type]} -- [description]

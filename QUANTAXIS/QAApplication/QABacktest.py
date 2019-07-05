@@ -118,30 +118,6 @@ class QA_Backtest():
                 self.start,
                 self.end
             ).to_qfq().panel_gen
-        elif self.market_type is MARKET_TYPE.STOCK_CN and self.frequence[-3:] == 'min':
-            # 获取分钟级别的回测数据
-            self.ingest_data = QA_fetch_stock_min_adv(
-                self.code_list,
-                self.start,
-                self.end,
-                self.frequence
-            ).to_qfq().panel_gen
-
-        elif self.market_type is MARKET_TYPE.INDEX_CN and self.frequence is FREQUENCE.DAY:
-            # 获取日线级别的回测数据
-            self.ingest_data = QA_fetch_index_day_adv(
-                self.code_list,
-                self.start,
-                self.end
-            ).panel_gen
-        elif self.market_type is MARKET_TYPE.INDEX_CN and self.frequence[-3:] == 'min':
-            # 获取日线级别的回测数据
-            self.ingest_data = QA_fetch_index_min_adv(
-                self.code_list,
-                self.start,
-                self.end,
-                self.frequence
-            ).panel_gen
 
         elif self.market_type is MARKET_TYPE.FUTURE_CN and self.frequence is FREQUENCE.DAY:
             # 获取日线级别的回测数据
@@ -175,7 +151,6 @@ class QA_Backtest():
         # 启动 trade_engine 线程
         self.market.start()
         print('market start')
-
         # 注册 backtest_broker ，并且启动和它关联线程QAThread 存放在 kernels 词典中， { 'broker_name': QAThread }
         self.market.register(self.broker_name, self.broker)
 

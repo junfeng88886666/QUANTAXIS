@@ -44,8 +44,6 @@ class QA_Thread(threading.Thread):
 
     如果你重写了run方法:
     则你需要自行处理queue中的事情/简单的做你自己的逻辑
-
-
     '''
 
     def __init__(self, queue=None, name=None, daemon=False):
@@ -81,15 +79,12 @@ class QA_Thread(threading.Thread):
                                                  #print(_task.worker, self.name)
                         assert isinstance(_task, QA_Task)
                         if _task.worker != None:
-
                             _task.do()
-
                             self.queue.task_done() # 完成一个任务
                         else:
                             pass
                     else:
                         self.idle = True
-
                         # Mac book下风扇狂转，如果sleep cpu 占用率回下降
                         # time.sleep(0.01)
                 except Exception as e:
@@ -130,7 +125,7 @@ class QA_Thread(threading.Thread):
 
 class QA_Engine(QA_Thread):
     '''
-        QA_Thread的区别是，
+        与QA_Thread的区别是，
         QA_Thread 只是单纯一个线程，里面有个队列执行 QA_Task 的do 方法
 
         QA_Engine 有 kernels_dict词典，可以指定 {名字：QA_Thread}，
@@ -162,6 +157,7 @@ class QA_Engine(QA_Thread):
         self.kernels_dict[name] = QA_Thread(name=name, daemon=daemon)
 
     def register_kernel(self, name, kernel):
+        # ENGINE线程注册一个已经创建的事件线程
         if name not in self.kernels_dict.keys():
             self.kernels_dict[name] = kernel
 

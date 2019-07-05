@@ -35,7 +35,6 @@ class QA_Worker(object):
         👻QA_OrderHandler 继承这个类
         这些类都要实现run方法，在其它线程🌀中允许自己的业务代码
     """
-
     def __init__(self):
         self.type = None
 

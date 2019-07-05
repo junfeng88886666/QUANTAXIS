@@ -34,14 +34,14 @@ def check_update_permission(database_name=None, package=None, data_type=None):
 
 
 def QA_Update(update_dict = {
-                            # DATABASE_NAME.STOCK_LIST:{DATASOURCE.TDX:None},
-                            # DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:None},
-                            # DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: None},
-                            # DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: None},
-                            # DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_LIST:{DATASOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_XDXR:{DATASOURCE.TDX:None},
+                            DATABASE_NAME.STOCK_INFO: {DATASOURCE.TDX: None},
+                            DATABASE_NAME.STOCK_BLOCK: {DATASOURCE.TDX: None},
+                            DATABASE_NAME.STOCK_DAY:{DATASOURCE.TDX:None},
                             #
-                            # DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX:None},
-                            # DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX:None},
+                            DATABASE_NAME.FUTURE_LIST: {DATASOURCE.TDX:None},
+                            DATABASE_NAME.FUTURE_DAY: {DATASOURCE.TDX:None},
                             DATABASE_NAME.FUTURE_MIN: {DATASOURCE.JQDATA:{'data_type':['1min','5min','15min','30min','60min']}},
                             },
                             ui_log = None,
