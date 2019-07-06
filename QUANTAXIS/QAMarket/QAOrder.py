@@ -201,11 +201,13 @@ class QA_Order():
         ) else kwargs['mainacc_id']
         self.subacc_id = None if 'subacc_id' not in kwargs.keys(
         ) else kwargs['subacc_id']
+
         self.direction = 'BUY' if self.towards in [
             ORDER_DIRECTION.BUY,
             ORDER_DIRECTION.BUY_OPEN,
             ORDER_DIRECTION.BUY_CLOSE
         ] else 'SELL'
+
         self.offset = 'OPEN' if self.towards in [
             ORDER_DIRECTION.BUY,
             ORDER_DIRECTION.BUY_OPEN,
@@ -811,6 +813,6 @@ class QA_OrderQueue(): # also the order tree ？？ what's the tree means?
 
 if __name__ == '__main__':
     ax = QA_Order()
-
+    print(ax.__dict__)
     print(ax.info())
     print(ax.to_df())
