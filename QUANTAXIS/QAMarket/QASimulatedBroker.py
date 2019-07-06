@@ -33,7 +33,9 @@ from QUANTAXIS.QAMarket.QADealer import QA_Dealer
 from QUANTAXIS.QAUtil.QALogs import QA_util_log_info
 from QUANTAXIS.QAUtil.QAParameter import FREQUENCE, MARKET_TYPE
 
-
+'''
+模拟盘broker
+'''
 class QA_SimulatedBroker(QA_Broker):
     def __init__(self, *args, **kwargs):
         self.dealer = QA_Dealer()
