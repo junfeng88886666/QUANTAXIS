@@ -276,7 +276,6 @@ class QA_Order():
 
     @property
     def status(self):
-
         # 以下几个都是最终状态 并且是外部动作导致的
         if self._status in [ORDER_STATUS.FAILED,
                             ORDER_STATUS.NEXT,
@@ -354,7 +353,6 @@ class QA_Order():
 
     def trade(self, trade_id, trade_price, trade_amount, trade_time):
         """trade 状态
-
         Arguments:
             amount {[type]} -- [description]
         """
@@ -363,15 +361,12 @@ class QA_Order():
             trade_id = str(trade_id)
 
             if trade_amount < 1:
-
                 self._status = ORDER_STATUS.NEXT
                 return False
             else:
                 if trade_id not in self.trade_id:
                     trade_price = float(trade_price)
-
                     trade_time = str(trade_time)
-
                     self.trade_id.append(trade_id)
                     self.trade_price = (
                         self.trade_price * self.trade_amount +
@@ -712,7 +707,7 @@ class QA_OrderQueue(): # also the order tree ？？ what's the tree means?
         else:
             if self.order_list[order.order_id
                               ].trade_amount != order.trade_amount:
-                slef.order_list[order.order_id] = order
+                self.order_list[order.order_id] = order
                 return True
             else:
                 return False

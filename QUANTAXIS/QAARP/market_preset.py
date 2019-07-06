@@ -102,6 +102,20 @@ class MARKET_PRESET:
 
               """
         self.table = {
+            # 'STOCK_CN_A':{
+            #     'name': '中国A股',
+            #     'unit_table': 1,
+            #     'price_tick': 0.01,
+            #     'buy_frozen_coeff': 1,
+            #     'sell_frozen_coeff': 1,
+            #     'exchange': [EXCHANGE_ID.SSE,EXCHANGE_ID.SZSE],
+            #     'commission_coeff_peramount': 0.00025,
+            #     'commission_coeff_pervol': 0,
+            #     'commission_coeff_today_peramount': 'uf',
+            #     'commission_coeff_today_pervol': 'uf',
+            #     'tax_coeff_peramount':0.001,
+            #     'tax_coeff_pervol':0
+            # },
             'AG': {
                 'name': '白银',
                 'unit_table': 15,

@@ -110,8 +110,6 @@ class QA_OrderHandler(QA_Worker):
 
         elif event.event_type is BROKER_EVENT.SETTLE:
             """订单队列的结算:
-
-
             当队列中的订单都被处理过后:
             算可以结算了
             """
@@ -148,9 +146,7 @@ class QA_OrderHandler(QA_Worker):
             """query_order和query_deal 需要联动使用 
 
             query_order 得到所有的订单列表
-
             query_deal 判断订单状态--> 运行callback函数
-
 
             实盘涉及到外部订单问题: 
             及 订单的来源 不完全从QUANTAXIS中发出, 则QA无法记录来源 (标记为外部订单)
