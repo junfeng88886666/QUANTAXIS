@@ -29,7 +29,9 @@ from QUANTAXIS.QAEngine.QAThreadEngine import QA_Engine
 
 class QA_Trade():
     "多线程+generator模式"
-
+    '''
+    交易引擎前置
+    '''
     def __init__(self, *args, **kwargs):
         self.trade_engine = QA_Engine()
         self.event_queue = self.trade_engine.queue
