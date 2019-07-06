@@ -261,7 +261,7 @@ class QA_Order():
         输出格式化对象
         :return:  字符串
         '''
-        return '< QA_Order realorder_id {} datetime:{} code:{} amount:{} price:{} towards:{} btype:{} order_id:{} account:{} status:{} >'.format(
+        return '< QA_Order realorder_id:{} datetime:{} code:{} amount:{} price:{} towards:{} btype:{} order_id:{} account:{} status:{} >'.format(
             self.realorder_id,
             self.datetime,
             self.code,
