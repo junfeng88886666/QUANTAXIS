@@ -70,9 +70,10 @@ def set_JQDOTA_code_compare(method = 'http',reset = False,account = None, passwo
         if method == 'api':
             security_info = jqdatasdk.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
             # jqdatasdk.logout()
-        elif method == 'http': jqdatahttp.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
+        elif method == 'http': security_info = jqdatahttp.get_all_securities(['stock', 'fund', 'index', 'futures', 'etf', 'lof', 'fja', 'fjb'])
         security_info = security_info.reset_index().rename(columns = {'index':'jqcode'})
         security_info['jqcode_simple'] = list(map(lambda x:x.split('.')[0],security_info['jqcode']))
+        print(security_info)
         coll.insert_many(
                    QA_util_to_json_from_pandas(security_info)
                         )

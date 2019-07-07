@@ -81,7 +81,7 @@ def QA_SU_update_single(database_name = None,package = None,data_type = None, ui
 
         elif database_name == DATABASE_NAME.FUTURE_LIST: save_engine.QA_SU_save_future_list(package = package)
         elif database_name == DATABASE_NAME.FUTURE_DAY: save_engine.QA_SU_save_future_day(package = package,initial_start = '1990-01-01')
-        elif database_name == DATABASE_NAME.FUTURE_MIN: save_engine.QA_SU_save_future_min(package = package,data_type = data_type,num_threads = num_threads,initial_start = '2014-01-01')
+        elif database_name == DATABASE_NAME.FUTURE_MIN: save_engine.QA_SU_save_future_min(package = package,data_type = data_type,num_threads = num_threads,initial_start = '2010-01-01')
 
     else:
         QA_util_log_info('Error: DataBase: {}, package: {}, data type: {}; is not supported currently'.format(database_name,package,str(data_type)), ui_log)
